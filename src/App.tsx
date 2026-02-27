@@ -10,8 +10,6 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Trading from "./pages/Trading";
 import Profile from "./pages/Profile";
-import Verification from "./pages/Verification";
-import Deposit from "./pages/Deposit";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,12 +28,6 @@ const App = () => (
             <Route path="/dashboard" element={<AppLayout><Dashboard /></AppLayout>} />
             <Route path="/trading" element={<AppLayout><Trading /></AppLayout>} />
             <Route path="/profile" element={<AppLayout><Profile /></AppLayout>} />
-            <Route path="/verification" element={<AppLayout><Verification /></AppLayout>} />
-            <Route path="/deposit" element={<AppLayout><Deposit /></AppLayout>} />
-            <Route path="/withdraw" element={<AppLayout><Deposit /></AppLayout>} />
-            <Route path="/portfolio" element={<AppLayout><Dashboard /></AppLayout>} />
-            <Route path="/settings" element={<AppLayout><Profile /></AppLayout>} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
