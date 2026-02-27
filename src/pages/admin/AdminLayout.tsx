@@ -7,7 +7,6 @@ import {
   Users,
   TrendingUp,
   ArrowDownToLine,
-  ArrowUpFromLine,
   FileText,
   LogOut,
   Menu,
@@ -50,9 +49,7 @@ const navSections = [
   {
     title: "FİNANSAL",
     items: [
-      { key: "bank", label: "Banka Yönetimi", icon: Landmark },
-      { key: "deposits", label: "Para Yatırma", icon: ArrowDownToLine },
-      { key: "withdrawals", label: "Para Çekimi", icon: ArrowUpFromLine },
+      { key: "finance", label: "Finans Talepleri", icon: Landmark },
     ],
   },
   {
@@ -85,9 +82,7 @@ const AdminLayout = () => {
       case "dashboard": return <AdminDashboard onNavigate={setActiveTab} />;
       case "users": return <AdminUsers />;
       case "positions": return <AdminPositions />;
-      case "bank":
-      case "deposits":
-      case "withdrawals":
+      case "finance":
         return <AdminTransactions />;
       case "documents": return <AdminDocuments />;
       case "settings": return <AdminSettings />;
