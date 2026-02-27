@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Landmark,
+  Settings,
   TrendingUp as Logo,
 } from "lucide-react";
 import AdminDashboard from "./AdminDashboard";
@@ -20,6 +21,7 @@ import AdminUsers from "./AdminUsers";
 import AdminPositions from "./AdminPositions";
 import AdminTransactions from "./AdminTransactions";
 import AdminDocuments from "./AdminDocuments";
+import AdminSettings from "./AdminSettings";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const navSections = [
@@ -48,6 +50,12 @@ const navSections = [
       { key: "bank", label: "Banka Yönetimi", icon: Landmark },
       { key: "deposits", label: "Para Yatırma", icon: ArrowDownToLine },
       { key: "withdrawals", label: "Para Çekimi", icon: ArrowUpFromLine },
+    ],
+  },
+  {
+    title: "SİSTEM",
+    items: [
+      { key: "settings", label: "Sistem Ayarları", icon: Settings },
     ],
   },
 ];
@@ -79,6 +87,7 @@ const AdminLayout = () => {
       case "withdrawals":
         return <AdminTransactions />;
       case "documents": return <AdminDocuments />;
+      case "settings": return <AdminSettings />;
       default: return <AdminDashboard onNavigate={setActiveTab} />;
     }
   };
