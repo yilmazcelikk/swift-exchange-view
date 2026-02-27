@@ -275,23 +275,8 @@ const Trading = () => {
 
       {/* Order Panel */}
       <div className="border-t border-border bg-card p-3 space-y-3">
-        {/* Bid/Ask */}
-        <div className="grid grid-cols-2 gap-2">
-          <div className="p-2 rounded-lg bg-sell/10 border border-sell/20 text-center">
-            <p className="text-[10px] text-muted-foreground">Satış</p>
-            <p className="text-base font-bold font-mono text-sell">{formatPrice(bid)}</p>
-          </div>
-          <div className="p-2 rounded-lg bg-buy/10 border border-buy/20 text-center">
-            <p className="text-[10px] text-muted-foreground">Alış</p>
-            <p className="text-base font-bold font-mono text-buy">{formatPrice(ask)}</p>
-          </div>
-        </div>
-
-        {/* Leverage (read-only) + Lots row */}
+        {/* Lots row */}
         <div className="flex items-center gap-2">
-          <div className="flex items-center justify-center w-24 h-8 rounded-md bg-muted/50 border border-border text-xs font-mono font-medium text-muted-foreground">
-            {leverage}
-          </div>
           <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(Math.max(0.01, parseFloat((lots - 0.01).toFixed(2))))}>
             <Minus className="h-3 w-3" />
           </Button>
@@ -300,18 +285,6 @@ const Trading = () => {
             <Plus className="h-3 w-3" />
           </Button>
         </div>
-
-        {/* Margin info */}
-        {(() => {
-          const leverageNum = parseInt(leverage.split(":")[1]) || 200;
-          const margin = (lots * CONTRACT_SIZE * price) / leverageNum;
-          return (
-            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/40 border border-border">
-              <span className="text-[10px] text-muted-foreground">Gerekli Teminat</span>
-              <span className="text-xs font-mono font-semibold text-foreground">${margin.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-            </div>
-          );
-        })()}
 
         {/* Quick lots */}
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
