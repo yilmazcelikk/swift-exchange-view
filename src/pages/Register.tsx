@@ -4,6 +4,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Eye, EyeOff, TrendingUp } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -11,11 +13,34 @@ const Register = () => {
     userType: "", referralCode: "", acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    navigate("/dashboard");
+    if (formData.password !== formData.confirmPassword) {
+      toast.error("Şifreler eşleşmiyor");
+      return;
+    }
+    if (!formData.acceptTerms) {
+      toast.error("Kullanım şartlarını kabul etmelisiniz");
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.auth.signUp({
+      email: formData.email,
+      password: formData.password,
+      options: {
+        data: { full_name: formData.fullName },
+      },
+    });
+    setLoading(false);
+    if (error) {
+      toast.error("Kayıt başarısız: " + error.message);
+    } else {
+      toast.success("Kayıt başarılı! Giriş yapabilirsiniz.");
+      navigate("/login");
+    }
   };
 
   const update = (key: string, value: string | boolean) =>
@@ -37,7 +62,7 @@ const Register = () => {
             <h1 className="text-3xl font-bold">TradeHub</h1>
           </div>
           <h2 className="text-2xl font-bold">Yatırıma Bugün Başlayın</h2>
-          <p className="text-muted-foreground">Hızlı kayıt ile dakikalar içinde işlem yapmaya başlayın. Güvenli, şeffaf ve kolay.</p>
+          <p className="text-muted-foreground">Hızlı kayıt ile dakikalar içinde işlem yapmaya başlayın.</p>
           <div className="grid grid-cols-3 gap-4 pt-4">
             {[
               { label: "Aktif Kullanıcı", value: "50K+" },
@@ -62,12 +87,10 @@ const Register = () => {
             </div>
             <h1 className="text-2xl font-bold">TradeHub</h1>
           </div>
-
           <div>
             <h2 className="text-2xl font-bold">Kayıt Ol</h2>
             <p className="text-muted-foreground text-sm mt-1">Bilgilerinizi girerek hesap oluşturun.</p>
           </div>
-
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1.5 block">Ad Soyad</label>
@@ -80,20 +103,6 @@ const Register = () => {
             <div>
               <label className="text-sm font-medium mb-1.5 block">Telefon</label>
               <Input type="tel" placeholder="+90 5XX XXX XX XX" value={formData.phone} onChange={(e) => update("phone", e.target.value)} className="bg-muted/50" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Kullanıcı Tipi</label>
-              <Select onValueChange={(v) => update("userType", v)}>
-                <SelectTrigger className="bg-muted/50"><SelectValue placeholder="Seçiniz" /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="individual">Bireysel</SelectItem>
-                  <SelectItem value="corporate">Kurumsal</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Referans Kodu (Opsiyonel)</label>
-              <Input placeholder="REF123" value={formData.referralCode} onChange={(e) => update("referralCode", e.target.value)} className="bg-muted/50" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre</label>
@@ -112,9 +121,10 @@ const Register = () => {
               <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => update("acceptTerms", e.target.checked)} className="rounded border-border mt-0.5" />
               <span><a href="#" className="text-primary hover:underline">Kullanım Şartları</a> ve <a href="#" className="text-primary hover:underline">Gizlilik Politikası</a>'nı kabul ediyorum.</span>
             </label>
-            <Button type="submit" className="w-full h-11 font-semibold">Kayıt Ol</Button>
+            <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
+              {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
+            </Button>
           </form>
-
           <p className="text-center text-sm text-muted-foreground">
             Zaten hesabınız var mı? <Link to="/login" className="text-primary font-medium hover:underline">Giriş Yap</Link>
           </p>

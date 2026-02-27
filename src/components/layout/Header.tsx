@@ -1,15 +1,24 @@
-import { Bell, User } from "lucide-react";
 import { ThemeToggle } from "./ThemeToggle";
-import { mockUser } from "@/data/mockData";
-import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export function Header() {
-  const user = mockUser;
+  const { user } = useAuth();
+  const [profile, setProfile] = useState<{ balance: number; equity: number; free_margin: number } | null>(null);
+
+  useEffect(() => {
+    if (user) {
+      supabase.from("profiles").select("balance, equity, free_margin").eq("user_id", user.id).single().then(({ data }) => {
+        if (data) setProfile({ balance: Number(data.balance), equity: Number(data.equity), free_margin: Number(data.free_margin) });
+      });
+    }
+  }, [user]);
 
   const stats = [
-    { label: "Bakiye", value: `$${user.balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
-    { label: "Varlık", value: `$${user.equity.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
-    { label: "K&Z", value: `$${user.openPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}`, positive: user.openPnl >= 0 },
+    { label: "Bakiye", value: `$${(profile?.balance ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
+    { label: "Varlık", value: `$${(profile?.equity ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
+    { label: "Serbest", value: `$${(profile?.free_margin ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
   ];
 
   return (
@@ -18,23 +27,12 @@ export function Header() {
         {stats.map((stat) => (
           <div key={stat.label} className="flex items-center gap-1 whitespace-nowrap">
             <span className="text-[10px] md:text-xs text-muted-foreground">{stat.label}</span>
-            <span className={`text-xs md:text-sm font-semibold font-mono ${
-              'positive' in stat
-                ? stat.positive ? 'text-buy' : 'text-sell'
-                : 'text-foreground'
-            }`}>
-              {stat.value}
-            </span>
+            <span className="text-xs md:text-sm font-semibold font-mono text-foreground">{stat.value}</span>
           </div>
         ))}
       </div>
-
       <div className="flex items-center gap-1 md:gap-3 shrink-0">
         <ThemeToggle />
-        <Button variant="ghost" size="icon" className="relative h-8 w-8">
-          <Bell className="h-4 w-4" />
-          <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-sell" />
-        </Button>
       </div>
     </header>
   );
