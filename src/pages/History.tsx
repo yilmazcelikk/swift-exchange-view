@@ -62,7 +62,7 @@ const History = () => {
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Kâr/Zarar</span>
             <span className={`font-mono font-medium ${closedPnlTotal >= 0 ? 'text-buy' : 'text-sell'}`}>
-              {closedPnlTotal >= 0 ? '+' : ''}{closedPnlTotal.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+              {closedPnlTotal >= 0 ? '+' : ''}{closedPnlTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
             </span>
           </div>
           <div className="flex justify-between text-xs">
