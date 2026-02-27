@@ -27,13 +27,50 @@ const Dashboard = () => {
   useEffect(() => {
     if (authUser?.id) {
       loadData();
+
+      // Realtime subscription for profile changes
+      const profileChannel = supabase
+        .channel('dashboard-profile')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${authUser.id}`,
+        }, (payload) => {
+          if (payload.new) {
+            const d = payload.new as any;
+            setProfile({
+              balance: Number(d.balance),
+              equity: Number(d.equity),
+              freeMargin: Number(d.free_margin),
+            });
+          }
+        })
+        .subscribe();
+
+      // Realtime subscription for orders
+      const ordersChannel = supabase
+        .channel('dashboard-orders')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${authUser.id}`,
+        }, () => {
+          loadOrders();
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(profileChannel);
+        supabase.removeChannel(ordersChannel);
+      };
     }
   }, [authUser?.id]);
 
   const loadData = async () => {
-    const [profileRes, ordersRes] = await Promise.all([
+    const [profileRes] = await Promise.all([
       supabase.from("profiles").select("balance, equity, free_margin").eq("user_id", authUser!.id).single(),
-      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open"),
     ]);
 
     if (profileRes.data) {
@@ -44,8 +81,14 @@ const Dashboard = () => {
       });
     }
 
-    if (ordersRes.data) {
-      setOrders(ordersRes.data.map((o: any) => ({
+    await loadOrders();
+  };
+
+  const loadOrders = async () => {
+    const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
+
+    if (data) {
+      setOrders(data.map((o: any) => ({
         id: o.id,
         symbolId: o.symbol_id,
         symbolName: o.symbol_name,

@@ -9,9 +9,30 @@ export function Header() {
 
   useEffect(() => {
     if (user) {
+      // Initial load
       supabase.from("profiles").select("balance, equity, free_margin").eq("user_id", user.id).single().then(({ data }) => {
         if (data) setProfile({ balance: Number(data.balance), equity: Number(data.equity), free_margin: Number(data.free_margin) });
       });
+
+      // Realtime subscription
+      const channel = supabase
+        .channel('header-profile')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'profiles',
+          filter: `user_id=eq.${user.id}`,
+        }, (payload) => {
+          if (payload.new) {
+            const d = payload.new as any;
+            setProfile({ balance: Number(d.balance), equity: Number(d.equity), free_margin: Number(d.free_margin) });
+          }
+        })
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
   }, [user]);
 
