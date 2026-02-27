@@ -56,15 +56,22 @@ const AdminSettings = () => {
   const handleUpdateMarkets = async () => {
     setUpdating(true);
     try {
-      // Update updated_at to track refresh time
-      await supabase
-        .from("symbols")
-        .update({ updated_at: new Date().toISOString() })
-        .neq("id", "00000000-0000-0000-0000-000000000000");
+      const { data, error } = await supabase.functions.invoke("update-market-data");
+
+      if (error) {
+        toast.error("Güncelleme başarısız: " + error.message);
+        return;
+      }
+
+      if (data?.success) {
+        toast.success(`${data.updated}/${data.total} enstrüman güncellendi`);
+      } else {
+        toast.error("Güncelleme başarısız: " + (data?.error || "Bilinmeyen hata"));
+      }
 
       await loadSymbolStats();
-      toast.success("Piyasa verileri güncellendi");
-    } catch {
+    } catch (err) {
+      console.error("Market update error:", err);
       toast.error("Güncelleme sırasında hata oluştu");
     } finally {
       setUpdating(false);
