@@ -51,72 +51,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    let initialSessionHandled = false;
-    const forceStopLoading = window.setTimeout(() => {
-      setRoleResolved(true);
-      setLoading(false);
-    }, 5000);
+    let cancelled = false;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        try {
-          setSession(session);
-          setUser(session?.user ?? null);
-          setRoleResolved(false);
+    const resolveSession = async (nextSession: Session | null) => {
+      if (cancelled) return;
 
-          if (session?.user) {
-            await checkAdmin(session.user.id);
-          } else {
-            setIsAdmin(false);
-          }
+      setSession(nextSession);
+      setUser(nextSession?.user ?? null);
+      setRoleResolved(false);
 
-          setRoleResolved(true);
-        } catch (err) {
-          console.error("onAuthStateChange error:", err);
-          setIsAdmin(false);
-          setRoleResolved(true);
-        } finally {
-          setLoading(false);
-          window.clearTimeout(forceStopLoading);
-          initialSessionHandled = true;
-        }
-      }
-    );
-
-    // Only use getSession as fallback if onAuthStateChange hasn't fired yet
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
-      if (initialSessionHandled) return;
       try {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setRoleResolved(false);
-
-        if (session?.user) {
-          await checkAdmin(session.user.id);
+        if (nextSession?.user) {
+          await checkAdmin(nextSession.user.id);
         } else {
           setIsAdmin(false);
         }
-
-        setRoleResolved(true);
       } catch (err) {
-        console.error("getSession error:", err);
+        console.error("resolveSession error:", err);
         setIsAdmin(false);
-        setRoleResolved(true);
       } finally {
-        if (!initialSessionHandled) {
+        if (!cancelled) {
+          setRoleResolved(true);
           setLoading(false);
-          window.clearTimeout(forceStopLoading);
         }
       }
-    }).catch(() => {
-      if (!initialSessionHandled) {
+    };
+
+    const forceStopLoading = window.setTimeout(() => {
+      if (!cancelled) {
         setRoleResolved(true);
         setLoading(false);
-        window.clearTimeout(forceStopLoading);
       }
-    });
+    }, 7000);
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (_event, nextSession) => {
+        void resolveSession(nextSession);
+      }
+    );
+
+    void supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        void resolveSession(session);
+      })
+      .catch((err) => {
+        console.error("getSession error:", err);
+        if (!cancelled) {
+          setIsAdmin(false);
+          setRoleResolved(true);
+          setLoading(false);
+        }
+      });
 
     return () => {
+      cancelled = true;
       subscription.unsubscribe();
       window.clearTimeout(forceStopLoading);
     };
