@@ -33,15 +33,19 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = async (e?: any) => {
+  const handleLogout = (e?: any) => {
     e?.preventDefault();
     e?.stopPropagation();
-    try {
-      await signOut();
-    } finally {
-      navigate("/login", { replace: true });
-      window.location.assign("/login");
-    }
+
+    void signOut();
+    navigate("/login", { replace: true });
+
+    // Hard redirect fallback in case router state is stale
+    window.setTimeout(() => {
+      if (window.location.pathname !== "/login") {
+        window.location.assign("/login");
+      }
+    }, 100);
   };
 
   return (
@@ -82,7 +86,7 @@ export function AppSidebar() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
-              onClick={(e) => handleLogout(e)}
+              onClick={handleLogout}
               className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-destructive transition-colors cursor-pointer"
             >
               <LogOut className="h-5 w-5 shrink-0" />
