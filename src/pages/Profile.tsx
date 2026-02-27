@@ -24,6 +24,38 @@ const verificationSteps = [
   { id: 3, label: "Tamamlandı", description: "Doğrulama talebiniz alındı" },
 ];
 
+const ThemeCard = () => {
+  const { theme, setTheme } = useTheme();
+  return (
+    <Card className="bg-card border-border">
+      <CardHeader className="pb-3">
+        <CardTitle className="text-base flex items-center gap-2">
+          {theme === "dark" ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
+          Görünüm
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="flex gap-2">
+          <Button
+            variant={theme === "light" ? "default" : "outline"}
+            className="flex-1 gap-2"
+            onClick={() => setTheme("light")}
+          >
+            <Sun className="h-4 w-4" /> Açık
+          </Button>
+          <Button
+            variant={theme === "dark" ? "default" : "outline"}
+            className="flex-1 gap-2"
+            onClick={() => setTheme("dark")}
+          >
+            <Moon className="h-4 w-4" /> Koyu
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
 const Profile = () => {
   const { user: authUser } = useAuth();
   const [profile, setProfile] = useState({
