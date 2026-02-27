@@ -7,14 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
-  UserCircle, Plus, Upload, CheckCircle, Clock, ShieldCheck,
-  ArrowDownToLine, ArrowUpFromLine, Building2, CreditCard, XCircle,
+  UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
+  ArrowDownToLine, ArrowUpFromLine, Building2, XCircle, Pencil,
 } from "lucide-react";
 
-// ─── Payment Methods ───
+// ─── Payment Methods (only bank transfer now) ───
 const paymentMethods = [
   { id: "bank", label: "Banka Transferi", icon: Building2, description: "1-3 iş günü" },
-  { id: "card", label: "Kredi Kartı", icon: CreditCard, description: "Anında" },
 ];
 
 // ─── Verification Steps ───
@@ -33,6 +32,7 @@ const Profile = () => {
     birthDate: "",
     country: "",
   });
+  const [isEditing, setIsEditing] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [transactions, setTransactions] = useState<any[]>([]);
   const [bankAccounts, setBankAccounts] = useState<any[]>([]);
@@ -43,13 +43,16 @@ const Profile = () => {
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
   const [activeMoneyTab, setActiveMoneyTab] = useState<"deposit" | "withdraw">("deposit");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+
+  // Withdraw state
+  const [withdrawAccountName, setWithdrawAccountName] = useState("");
+  const [withdrawIban, setWithdrawIban] = useState("");
 
   // Verification state
   const [currentStep, setCurrentStep] = useState(1);
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [addressFile, setAddressFile] = useState<File | null>(null);
-
-  const quickAmounts = [1000, 5000, 10000, 25000];
 
   useEffect(() => {
     if (authUser) {
@@ -69,7 +72,7 @@ const Profile = () => {
 
   const loadProfile = async () => {
     setProfileLoading(true);
-    const { data, error } = await supabase
+    const { data } = await supabase
       .from("profiles")
       .select("*")
       .eq("user_id", authUser!.id)
@@ -112,6 +115,7 @@ const Profile = () => {
       toast.error("Güncelleme başarısız: " + error.message);
     } else {
       toast.success("Bilgileriniz güncellendi");
+      setIsEditing(false);
     }
   };
 
@@ -141,6 +145,9 @@ const Profile = () => {
     return "Reddedildi";
   };
 
+  const isDepositDisabled = !depositAmount || !receiptFile;
+  const isWithdrawDisabled = !withdrawAmount || !withdrawAccountName || !withdrawIban;
+
   if (!authUser || profileLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -164,16 +171,21 @@ const Profile = () => {
         {/* ─── Kişisel Bilgiler ─── */}
         <TabsContent value="info" className="space-y-4 mt-4">
           <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
+            <CardHeader className="pb-3 flex flex-row items-center justify-between">
               <CardTitle className="text-base flex items-center gap-2">
                 <UserCircle className="h-5 w-5 text-primary" />
                 Profil Bilgileri
               </CardTitle>
+              {!isEditing && (
+                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              )}
             </CardHeader>
             <CardContent className="space-y-3">
               <div>
                 <label className="text-sm font-medium mb-1 block">Ad Soyad</label>
-                <Input value={profile.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} className="bg-muted/50" />
+                <Input value={profile.fullName} disabled={!isEditing} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} className="bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">E-posta</label>
@@ -181,17 +193,22 @@ const Profile = () => {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Telefon</label>
-                <Input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="bg-muted/50" />
+                <Input value={profile.phone} disabled={!isEditing} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Doğum Tarihi</label>
-                <Input type="date" value={profile.birthDate} onChange={(e) => setProfile({ ...profile, birthDate: e.target.value })} className="bg-muted/50" />
+                <Input type="date" value={profile.birthDate} disabled={!isEditing} onChange={(e) => setProfile({ ...profile, birthDate: e.target.value })} className="bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Ülke</label>
-                <Input value={profile.country} onChange={(e) => setProfile({ ...profile, country: e.target.value })} className="bg-muted/50" />
+                <Input value={profile.country} disabled={!isEditing} onChange={(e) => setProfile({ ...profile, country: e.target.value })} className="bg-muted/50" />
               </div>
-              <Button className="w-full" onClick={handleUpdateProfile}>Bilgileri Güncelle</Button>
+              {isEditing && (
+                <div className="flex gap-2">
+                  <Button className="flex-1" onClick={handleUpdateProfile}>Kaydet</Button>
+                  <Button variant="outline" className="flex-1" onClick={() => setIsEditing(false)}>İptal</Button>
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -212,14 +229,14 @@ const Profile = () => {
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant={activeMoneyTab === "deposit" ? "default" : "outline"}
-              onClick={() => setActiveMoneyTab("deposit")}
+              onClick={() => { setActiveMoneyTab("deposit"); setSelectedMethod(null); }}
               className="gap-2"
             >
               <ArrowDownToLine className="h-4 w-4" /> Yatır
             </Button>
             <Button
               variant={activeMoneyTab === "withdraw" ? "default" : "outline"}
-              onClick={() => setActiveMoneyTab("withdraw")}
+              onClick={() => { setActiveMoneyTab("withdraw"); setSelectedMethod(null); }}
               className="gap-2"
             >
               <ArrowUpFromLine className="h-4 w-4" /> Çek
@@ -251,22 +268,16 @@ const Profile = () => {
             ))}
           </div>
 
-          {selectedMethod && (
+          {selectedMethod && activeMoneyTab === "deposit" && (
             <Card className="bg-card border-border">
               <CardContent className="p-4 space-y-3">
                 <div>
-                  <label className="text-sm font-medium mb-1 block">
-                    Tutar (TRY) — {activeMoneyTab === "deposit" ? "Yatırılacak" : "Çekilecek"}
-                  </label>
+                  <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
                   <Input
                     type="number"
                     placeholder="0.00"
-                    value={activeMoneyTab === "deposit" ? depositAmount : withdrawAmount}
-                    onChange={(e) =>
-                      activeMoneyTab === "deposit"
-                        ? setDepositAmount(e.target.value)
-                        : setWithdrawAmount(e.target.value)
-                    }
+                    value={depositAmount}
+                    onChange={(e) => setDepositAmount(e.target.value)}
                     className="bg-muted/50 font-mono text-lg h-12"
                   />
                 </div>
@@ -274,25 +285,82 @@ const Profile = () => {
                   {[1000, 5000, 10000, 25000].map((v) => (
                     <button
                       key={v}
-                      onClick={() =>
-                        activeMoneyTab === "deposit"
-                          ? setDepositAmount(v.toString())
-                          : setWithdrawAmount(v.toString())
-                      }
+                      onClick={() => setDepositAmount(v.toString())}
                       className="px-3 py-1.5 rounded text-xs font-mono font-medium bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
                     >
                       {v.toLocaleString("tr-TR")}
                     </button>
                   ))}
                 </div>
-                <Button className="w-full h-11 font-semibold">
-                  {activeMoneyTab === "deposit" ? "Para Yatır" : "Para Çek"}
+
+                {/* Receipt upload */}
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Dekont Yükle</label>
+                  <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
+                    <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                    <span className="text-xs text-muted-foreground">{receiptFile ? receiptFile.name : "Dekont seçin"}</span>
+                    <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
+                  </label>
+                </div>
+
+                <Button className="w-full h-11 font-semibold" disabled={isDepositDisabled}>
+                  Para Yatır
                 </Button>
               </CardContent>
             </Card>
           )}
 
-          {/* Recent Transactions from DB */}
+          {selectedMethod && activeMoneyTab === "withdraw" && (
+            <Card className="bg-card border-border">
+              <CardContent className="p-4 space-y-3">
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Hesap Adı</label>
+                  <Input
+                    placeholder="Ad Soyad"
+                    value={withdrawAccountName}
+                    onChange={(e) => setWithdrawAccountName(e.target.value)}
+                    className="bg-muted/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">IBAN</label>
+                  <Input
+                    placeholder="TR00 0000 0000 0000 0000 0000 00"
+                    value={withdrawIban}
+                    onChange={(e) => setWithdrawIban(e.target.value)}
+                    className="bg-muted/50 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
+                  <Input
+                    type="number"
+                    placeholder="0.00"
+                    value={withdrawAmount}
+                    onChange={(e) => setWithdrawAmount(e.target.value)}
+                    className="bg-muted/50 font-mono text-lg h-12"
+                  />
+                </div>
+                <div className="flex flex-wrap gap-1.5">
+                  {[1000, 5000, 10000, 25000].map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setWithdrawAmount(v.toString())}
+                      className="px-3 py-1.5 rounded text-xs font-mono font-medium bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
+                    >
+                      {v.toLocaleString("tr-TR")}
+                    </button>
+                  ))}
+                </div>
+
+                <Button className="w-full h-11 font-semibold" disabled={isWithdrawDisabled}>
+                  Para Çek
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Recent Transactions */}
           <Card className="bg-card border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Son Talepler</CardTitle>
@@ -321,7 +389,6 @@ const Profile = () => {
 
         {/* ─── Kimlik Doğrulama ─── */}
         <TabsContent value="verify" className="space-y-4 mt-4">
-          {/* Steps indicator */}
           <div className="flex items-center gap-2">
             {verificationSteps.map((step, i) => (
               <div key={step.id} className="flex items-center gap-2 flex-1">
