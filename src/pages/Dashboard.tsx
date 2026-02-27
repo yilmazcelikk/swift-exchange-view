@@ -151,18 +151,22 @@ const Dashboard = () => {
   const openOrders = orders.filter(o => o.status === 'open');
   const totalOpenPnl = openOrders.reduce((sum, o) => sum + o.pnl, 0);
 
+  // Dynamic equity = balance + unrealized PnL
+  const dynamicEquity = profile.balance + totalOpenPnl;
+
   // Calculate used margin from open orders
   const usedMargin = openOrders.reduce((sum, o) => {
-    const leverageNum = 200; // Default 1:200
+    const leverageNum = 200; // 1:200
     return sum + (o.lots * 100000 * o.entryPrice) / leverageNum;
   }, 0);
-  const marginLevel = usedMargin > 0 ? (profile.equity / usedMargin) * 100 : 0;
+  const dynamicFreeMargin = dynamicEquity - usedMargin;
+  const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
 
   const accountStats = [
     { label: "Bakiye", value: profile.balance },
-    { label: "Varlık", value: profile.equity },
+    { label: "Varlık", value: dynamicEquity },
     { label: "Teminat", value: usedMargin },
-    { label: "Serbest teminat", value: profile.freeMargin },
+    { label: "Serbest teminat", value: dynamicFreeMargin },
     { label: "Teminat seviyesi (%)", value: marginLevel },
   ];
 
