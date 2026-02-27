@@ -5,13 +5,25 @@ import { Input } from "@/components/ui/input";
 import { mockSymbols, symbolCategories, generateCandleData } from "@/data/mockData";
 import { Symbol } from "@/types";
 import { Star, Search, Minus, Plus, ChevronLeft } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { toast } from "sonner";
+
+const leverageOptions = [
+  { value: "1:10", label: "1:10" },
+  { value: "1:50", label: "1:50" },
+  { value: "1:100", label: "1:100" },
+  { value: "1:200", label: "1:200" },
+  { value: "1:500", label: "1:500" },
+];
 
 const Trading = () => {
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSymbol, setSelectedSymbol] = useState<Symbol | null>(null);
   const [lots, setLots] = useState(0.1);
-  const [orderType, setOrderType] = useState<"market" | "limit">("market");
+  const [leverage, setLeverage] = useState("1:100");
+  const [stopLoss, setStopLoss] = useState("");
+  const [takeProfit, setTakeProfit] = useState("");
 
   const filteredSymbols = mockSymbols.filter((s) => {
     const matchesCategory = selectedCategory === "all" || s.category === selectedCategory;
@@ -21,6 +33,13 @@ const Trading = () => {
   });
 
   const quickLots = [0.01, 0.05, 0.1, 0.5, 1.0, 5.0];
+
+  const handleOrder = (type: 'buy' | 'sell') => {
+    if (!selectedSymbol) return;
+    toast.success(`${selectedSymbol.name} ${type === 'buy' ? 'ALIŞ' : 'SATIŞ'} emri verildi`, {
+      description: `${lots} lot • Kaldıraç: ${leverage}`,
+    });
+  };
 
   // Mobile: show symbol list or detail
   if (!selectedSymbol) {
@@ -124,7 +143,7 @@ const Trading = () => {
         </div>
       </div>
 
-      {/* Order Panel (compact for mobile) */}
+      {/* Order Panel */}
       <div className="border-t border-border bg-card p-3 space-y-3">
         {/* Bid/Ask */}
         <div className="grid grid-cols-2 gap-2">
@@ -138,9 +157,19 @@ const Trading = () => {
           </div>
         </div>
 
-        {/* Lots */}
+        {/* Leverage + Lots row */}
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(Math.max(0.01, lots - 0.01))}>
+          <Select value={leverage} onValueChange={setLeverage}>
+            <SelectTrigger className="w-24 h-8 text-xs bg-muted/50">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {leverageOptions.map((l) => (
+                <SelectItem key={l.value} value={l.value} className="text-xs">{l.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(Math.max(0.01, parseFloat((lots - 0.01).toFixed(2))))}>
             <Minus className="h-3 w-3" />
           </Button>
           <Input
@@ -150,7 +179,7 @@ const Trading = () => {
             className="text-center font-mono bg-muted/50 h-8 text-sm"
             step={0.01}
           />
-          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(lots + 0.01)}>
+          <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(parseFloat((lots + 0.01).toFixed(2)))}>
             <Plus className="h-3 w-3" />
           </Button>
         </div>
@@ -170,10 +199,34 @@ const Trading = () => {
           ))}
         </div>
 
+        {/* SL / TP */}
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Zarar Durdur (SL)</label>
+            <Input
+              type="number"
+              placeholder="Opsiyonel"
+              value={stopLoss}
+              onChange={(e) => setStopLoss(e.target.value)}
+              className="bg-muted/50 h-8 text-xs font-mono"
+            />
+          </div>
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Kâr Al (TP)</label>
+            <Input
+              type="number"
+              placeholder="Opsiyonel"
+              value={takeProfit}
+              onChange={(e) => setTakeProfit(e.target.value)}
+              className="bg-muted/50 h-8 text-xs font-mono"
+            />
+          </div>
+        </div>
+
         {/* Buy / Sell */}
         <div className="grid grid-cols-2 gap-2">
-          <Button className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold">SAT</Button>
-          <Button className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold">AL</Button>
+          <Button onClick={() => handleOrder('sell')} className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold">SAT</Button>
+          <Button onClick={() => handleOrder('buy')} className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold">AL</Button>
         </div>
       </div>
     </div>

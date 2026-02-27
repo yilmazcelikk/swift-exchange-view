@@ -1,17 +1,32 @@
+import { useState } from "react";
 import { mockUser, mockOrders } from "@/data/mockData";
-import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Plus, X } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Order } from "@/types";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const user = mockUser;
   const navigate = useNavigate();
+  const [orders, setOrders] = useState(mockOrders);
+  const [closingOrder, setClosingOrder] = useState<Order | null>(null);
 
-  const openOrders = mockOrders.filter(o => o.status === 'open');
-  const closedOrders = mockOrders.filter(o => o.status === 'closed');
+  const openOrders = orders.filter(o => o.status === 'open');
+  const closedOrders = orders.filter(o => o.status === 'closed');
   const totalOpenPnl = openOrders.reduce((sum, o) => sum + o.pnl, 0);
+  const closedPnlTotal = closedOrders.reduce((sum, o) => sum + o.pnl, 0);
 
   const accountStats = [
     { label: "Bakiye", value: user.balance },
@@ -21,8 +36,15 @@ const Dashboard = () => {
     { label: "Teminat seviyesi (%)", value: 0 },
   ];
 
-  // History summary
-  const closedPnlTotal = closedOrders.reduce((sum, o) => sum + o.pnl, 0);
+  const handleClosePosition = (order: Order) => {
+    setOrders(prev => prev.map(o =>
+      o.id === order.id ? { ...o, status: 'closed' as const } : o
+    ));
+    setClosingOrder(null);
+    toast.success(`${order.symbolName} ${order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} ${order.lots} lot pozisyon kapatıldı`, {
+      description: `K/Z: ${order.pnl >= 0 ? '+' : ''}${order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD`,
+    });
+  };
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
@@ -75,16 +97,27 @@ const Dashboard = () => {
               {openOrders.map((order) => (
                 <div key={order.id} className="py-3">
                   <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
-                      {' '}
-                      <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                        {order.type} {order.lots}
-                      </span>
+                    <div className="flex items-center gap-2">
+                      <div>
+                        <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
+                        {' '}
+                        <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
+                          {order.type} {order.lots}
+                        </span>
+                      </div>
                     </div>
-                    <span className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                      {order.pnl >= 0 ? '+' : ''}{order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+                        {order.pnl >= 0 ? '+' : ''}{order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <button
+                        onClick={() => setClosingOrder(order)}
+                        className="p-1 rounded hover:bg-sell/10 text-muted-foreground hover:text-sell transition-colors"
+                        title="Pozisyonu Kapat"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
                   </div>
                   <p className="text-xs text-muted-foreground font-mono mt-0.5">
                     {order.entryPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} → {order.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
@@ -111,11 +144,9 @@ const Dashboard = () => {
                           {order.type} {order.lots}
                         </span>
                       </div>
-                      <div className="text-right">
-                        <span className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                          {order.pnl >= 0 ? '+' : ''}{order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                        </span>
-                      </div>
+                      <span className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+                        {order.pnl >= 0 ? '+' : ''}{order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between mt-0.5">
                       <p className="text-xs text-muted-foreground font-mono">
@@ -128,7 +159,6 @@ const Dashboard = () => {
                   </div>
                 ))}
               </div>
-              {/* History Summary */}
               <div className="mt-3 pt-3 border-t border-border space-y-1">
                 <div className="flex justify-between text-xs">
                   <span className="text-muted-foreground">Kâr</span>
@@ -149,6 +179,61 @@ const Dashboard = () => {
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Close Position Dialog */}
+      <AlertDialog open={!!closingOrder} onOpenChange={(open) => !open && setClosingOrder(null)}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Pozisyonu Kapat</AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-2">
+                <p>Bu pozisyonu kapatmak istediğinize emin misiniz?</p>
+                {closingOrder && (
+                  <div className="bg-muted/50 rounded-lg p-3 space-y-1">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Sembol</span>
+                      <span className="font-semibold">{closingOrder.symbolName}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Yön</span>
+                      <span className={closingOrder.type === 'buy' ? 'text-buy font-medium' : 'text-sell font-medium'}>
+                        {closingOrder.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Lot</span>
+                      <span className="font-mono">{closingOrder.lots}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Giriş Fiyatı</span>
+                      <span className="font-mono">{closingOrder.entryPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Güncel Fiyat</span>
+                      <span className="font-mono">{closingOrder.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between text-sm border-t border-border pt-1 mt-1">
+                      <span className="text-muted-foreground font-medium">K/Z</span>
+                      <span className={`font-mono font-bold ${closingOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+                        {closingOrder.pnl >= 0 ? '+' : ''}{closingOrder.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => closingOrder && handleClosePosition(closingOrder)}
+              className="bg-sell hover:bg-sell/90 text-sell-foreground"
+            >
+              Pozisyonu Kapat
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
