@@ -8,12 +8,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  ArrowDownToLine, ArrowUpFromLine, Building2, XCircle, Pencil,
+  ArrowDownToLine, ArrowUpFromLine, Building2, XCircle, Pencil, Copy,
 } from "lucide-react";
 
 // ─── Payment Methods (only bank transfer now) ───
 const paymentMethods = [
-  { id: "bank", label: "Banka Transferi", icon: Building2, description: "1-3 iş günü" },
+  { id: "bank", label: "Banka Transferi", icon: Building2 },
 ];
 
 // ─── Verification Steps ───
@@ -161,11 +161,10 @@ const Profile = () => {
       <h1 className="text-xl md:text-2xl font-bold">Hesabım</h1>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="w-full grid grid-cols-4 h-auto">
+        <TabsList className="w-full grid grid-cols-3 h-auto">
           <TabsTrigger value="info" className="text-xs px-1 py-2">Bilgilerim</TabsTrigger>
           <TabsTrigger value="money" className="text-xs px-1 py-2">Para İşlemleri</TabsTrigger>
           <TabsTrigger value="verify" className="text-xs px-1 py-2">Doğrulama</TabsTrigger>
-          <TabsTrigger value="bank" className="text-xs px-1 py-2">Banka</TabsTrigger>
         </TabsList>
 
         {/* ─── Kişisel Bilgiler ─── */}
@@ -261,7 +260,6 @@ const Profile = () => {
                   </div>
                   <div>
                     <p className="font-semibold text-sm">{method.label}</p>
-                    <p className="text-xs text-muted-foreground">{method.description}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -269,9 +267,38 @@ const Profile = () => {
           </div>
 
           {selectedMethod && activeMoneyTab === "deposit" && (
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 space-y-3">
-                <div>
+            <>
+              {/* Bank accounts for deposit */}
+              {bankAccounts.length > 0 && (
+                <Card className="bg-card border-border">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm">Yatırım Yapılacak Hesaplar</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {bankAccounts.map((acc: any) => (
+                      <div key={acc.id} className="p-3 rounded-lg bg-muted/50 space-y-1.5">
+                        <p className="font-semibold text-sm">{acc.bank_name}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-mono text-foreground">{acc.iban}</p>
+                          <button onClick={() => { navigator.clipboard.writeText(acc.iban); toast.success("IBAN kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-muted-foreground">{acc.account_holder}</p>
+                          <button onClick={() => { navigator.clipboard.writeText(acc.account_holder); toast.success("Hesap adı kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </CardContent>
+                </Card>
+              )}
+
+              <Card className="bg-card border-border">
+                <CardContent className="p-4 space-y-3">
+                  <div>
                   <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
                   <Input
                     type="number"
@@ -303,11 +330,12 @@ const Profile = () => {
                   </label>
                 </div>
 
-                <Button className="w-full h-11 font-semibold" disabled={isDepositDisabled}>
-                  Para Yatır
-                </Button>
-              </CardContent>
-            </Card>
+                  <Button className="w-full h-11 font-semibold" disabled={isDepositDisabled}>
+                    Para Yatır
+                  </Button>
+                </CardContent>
+              </Card>
+            </>
           )}
 
           {selectedMethod && activeMoneyTab === "withdraw" && (
@@ -450,28 +478,6 @@ const Profile = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="bank" className="space-y-4 mt-4">
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Para Yatırma Hesapları</CardTitle>
-              <p className="text-xs text-muted-foreground">Aşağıdaki hesaplara para yatırabilirsiniz</p>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {bankAccounts.length > 0 ? bankAccounts.map((acc: any) => (
-                <div key={acc.id} className="p-3 rounded-lg bg-muted/50 space-y-1">
-                  <div className="flex items-center justify-between">
-                    <p className="font-semibold text-sm">{acc.bank_name}</p>
-                    <span className="text-xs text-muted-foreground">{acc.currency}</span>
-                  </div>
-                  <p className="text-xs font-mono text-foreground">{acc.iban}</p>
-                  <p className="text-xs text-muted-foreground">{acc.account_holder}</p>
-                </div>
-              )) : (
-                <p className="text-sm text-muted-foreground text-center py-6">Henüz tanımlı hesap bulunmuyor.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );
