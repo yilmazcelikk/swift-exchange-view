@@ -51,6 +51,22 @@ const Profile = () => {
 
   const quickAmounts = [1000, 5000, 10000, 25000];
 
+  useEffect(() => {
+    if (authUser) {
+      loadProfile();
+      loadTransactions();
+      loadBankAccounts();
+    }
+  }, [authUser]);
+
+  const loadBankAccounts = async () => {
+    const { data } = await supabase
+      .from("bank_accounts")
+      .select("*")
+      .eq("is_active", true);
+    setBankAccounts(data || []);
+  };
+
   const loadProfile = async () => {
     setProfileLoading(true);
     const { data, error } = await supabase
