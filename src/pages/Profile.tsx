@@ -577,7 +577,7 @@ const Profile = () => {
                     <CheckCircle className="h-7 w-7 text-buy" />
                   </div>
                   <h3 className="font-bold">Belgeleriniz Alındı!</h3>
-                  <p className="text-xs text-muted-foreground">İnceleme 24-48 saat içinde tamamlanacaktır.</p>
+                  <p className="text-xs text-muted-foreground">Belgeleriniz kontrol ediliyor.</p>
                   <div className="flex items-center justify-center gap-2 text-warning">
                     <Clock className="h-4 w-4" />
                     <span className="text-xs font-medium">İnceleme Bekleniyor</span>
