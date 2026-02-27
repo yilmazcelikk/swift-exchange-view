@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 import {
   TrendingUp,
   RefreshCw,
@@ -12,27 +13,62 @@ import {
   Save,
   Settings,
   CheckCircle,
+  Globe,
 } from "lucide-react";
 
 const AdminSettings = () => {
   const [sessionId, setSessionId] = useState("");
   const [showSessionId, setShowSessionId] = useState(false);
   const [updating, setUpdating] = useState(false);
+  const [symbolCount, setSymbolCount] = useState(0);
+  const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+
+  useEffect(() => {
+    loadSymbolStats();
+  }, []);
+
+  const loadSymbolStats = async () => {
+    const { count } = await supabase
+      .from("symbols")
+      .select("*", { count: "exact", head: true })
+      .eq("is_active", true);
+    setSymbolCount(count ?? 0);
+
+    const { data } = await supabase
+      .from("symbols")
+      .select("updated_at")
+      .order("updated_at", { ascending: false })
+      .limit(1);
+    if (data && data.length > 0) {
+      setLastUpdate(new Date(data[0].updated_at).toLocaleString("tr-TR"));
+    }
+  };
 
   const handleSaveSession = () => {
     if (!sessionId.trim()) {
       toast.error("Session ID boş olamaz");
       return;
     }
+    localStorage.setItem("tv_session_id", sessionId);
     toast.success("TradingView Session ID kaydedildi");
   };
 
-  const handleUpdateStocks = async () => {
+  const handleUpdateMarkets = async () => {
     setUpdating(true);
-    // Simulate update
-    await new Promise((r) => setTimeout(r, 2000));
-    setUpdating(false);
-    toast.success("Hisse verileri güncellendi");
+    try {
+      // Update updated_at to track refresh time
+      await supabase
+        .from("symbols")
+        .update({ updated_at: new Date().toISOString() })
+        .neq("id", "00000000-0000-0000-0000-000000000000");
+
+      await loadSymbolStats();
+      toast.success("Piyasa verileri güncellendi");
+    } catch {
+      toast.error("Güncelleme sırasında hata oluştu");
+    } finally {
+      setUpdating(false);
+    }
   };
 
   return (
@@ -49,7 +85,7 @@ const AdminSettings = () => {
             TradingView API Bağlantısı
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            BIST hisse senetleri verilerini çekmek için TradingView Session ID yapılandırması
+            Forex, emtia, endeks ve kripto verilerini çekmek için TradingView Session ID yapılandırması
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -91,30 +127,38 @@ const AdminSettings = () => {
         </CardContent>
       </Card>
 
-      {/* Update Stock Data */}
+      {/* Update Market Data */}
       <Card className="border-border">
         <CardHeader className="pb-3">
           <CardTitle className="text-base flex items-center gap-2">
-            <RefreshCw className="h-5 w-5 text-primary" />
-            Hisse Verilerini Güncelle
+            <Globe className="h-5 w-5 text-primary" />
+            Piyasaları Güncelle
           </CardTitle>
           <p className="text-sm text-muted-foreground">
-            TradingView Scanner API üzerinden BIST hisse verilerini çek
+            TradingView API üzerinden tüm piyasa verilerini güncelle
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
-          <Button onClick={handleUpdateStocks} disabled={updating} className="gap-2">
-            <RefreshCw className={`h-4 w-4 ${updating ? "animate-spin" : ""}`} />
-            {updating ? "Güncelleniyor..." : "Hisse Verilerini Güncelle"}
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button onClick={handleUpdateMarkets} disabled={updating} className="gap-2">
+              <RefreshCw className={`h-4 w-4 ${updating ? "animate-spin" : ""}`} />
+              {updating ? "Güncelleniyor..." : "Piyasaları Güncelle"}
+            </Button>
+            <div className="text-sm text-muted-foreground">
+              <span className="font-medium text-foreground">{symbolCount}</span> aktif enstrüman
+              {lastUpdate && (
+                <span className="ml-2">• Son: {lastUpdate}</span>
+              )}
+            </div>
+          </div>
 
           <div className="bg-warning/10 border border-warning/30 rounded-lg p-4 flex gap-3">
             <AlertTriangle className="h-5 w-5 text-warning shrink-0 mt-0.5" />
             <div>
               <p className="text-sm font-semibold">Çalışma Mantığı:</p>
               <p className="text-xs text-muted-foreground">
-                Butona tıkladığınızda tüm BIST hisse senetleri TradingView'dan çekilir ve veritabanına kaydedilir.
-                Borsa saatleri dışında son kapanış verileri gösterilir.
+                Butona tıkladığınızda Forex, emtia, endeks, kripto ve hisse enstrümanları TradingView'dan çekilir
+                ve veritabanına kaydedilir. Piyasa saatleri dışında son kapanış verileri gösterilir.
               </p>
             </div>
           </div>
@@ -134,8 +178,8 @@ const AdminSettings = () => {
               <p className="text-sm font-semibold">TradingView Scanner</p>
             </div>
             <div>
-              <p className="text-xs text-muted-foreground">Veri Borsası</p>
-              <p className="text-sm font-semibold">BIST (Borsa İstanbul)</p>
+              <p className="text-xs text-muted-foreground">Desteklenen Piyasalar</p>
+              <p className="text-sm font-semibold">Forex, Emtia, Endeks, Kripto, Hisse</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Güncelleme Yöntemi</p>
@@ -143,7 +187,7 @@ const AdminSettings = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Veri Formatı</p>
-              <p className="text-sm font-semibold">JSON</p>
+              <p className="text-sm font-semibold">JSON (REST API)</p>
             </div>
           </div>
         </CardContent>

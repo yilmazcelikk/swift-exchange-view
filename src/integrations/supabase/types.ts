@@ -152,6 +152,57 @@ export type Database = {
         }
         Relationships: []
       }
+      symbols: {
+        Row: {
+          category: string
+          change_percent: number | null
+          created_at: string
+          current_price: number | null
+          description: string | null
+          display_name: string
+          exchange: string | null
+          high: number | null
+          id: string
+          is_active: boolean
+          low: number | null
+          name: string
+          updated_at: string
+          volume: number | null
+        }
+        Insert: {
+          category?: string
+          change_percent?: number | null
+          created_at?: string
+          current_price?: number | null
+          description?: string | null
+          display_name: string
+          exchange?: string | null
+          high?: number | null
+          id?: string
+          is_active?: boolean
+          low?: number | null
+          name: string
+          updated_at?: string
+          volume?: number | null
+        }
+        Update: {
+          category?: string
+          change_percent?: number | null
+          created_at?: string
+          current_price?: number | null
+          description?: string | null
+          display_name?: string
+          exchange?: string | null
+          high?: number | null
+          id?: string
+          is_active?: boolean
+          low?: number | null
+          name?: string
+          updated_at?: string
+          volume?: number | null
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
