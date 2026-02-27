@@ -51,11 +51,6 @@ const Profile = () => {
 
   const quickAmounts = [1000, 5000, 10000, 25000];
 
-  // Verification state
-  const [currentStep, setCurrentStep] = useState(1);
-  const [frontFile, setFrontFile] = useState<File | null>(null);
-  const [addressFile, setAddressFile] = useState<File | null>(null);
-
   const loadProfile = async () => {
     setProfileLoading(true);
     const { data, error } = await supabase
