@@ -27,6 +27,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [roleResolved, setRoleResolved] = useState(false);
 
   const checkAdmin = async (userId: string): Promise<boolean> => {
     try {
