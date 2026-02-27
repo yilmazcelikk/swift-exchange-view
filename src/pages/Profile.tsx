@@ -51,6 +51,7 @@ const Profile = () => {
 
   // Verification state
   const [currentStep, setCurrentStep] = useState(1);
+  const [verificationStatus, setVerificationStatus] = useState<string>("pending");
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [addressFile, setAddressFile] = useState<File | null>(null);
 
@@ -59,8 +60,43 @@ const Profile = () => {
       loadProfile();
       loadTransactions();
       loadBankAccounts();
+      loadVerificationStatus();
     }
   }, [authUser]);
+
+  const loadVerificationStatus = async () => {
+    // Check documents status
+    const { data: docs } = await supabase
+      .from("documents")
+      .select("type, status")
+      .eq("user_id", authUser!.id);
+
+    if (docs && docs.length > 0) {
+      const hasFront = docs.find(d => d.type === "identity_front");
+      const hasAddress = docs.find(d => d.type === "address_proof");
+
+      if (hasFront && hasAddress) {
+        // Both uploaded
+        const allApproved = docs.every(d => d.status === "approved");
+        const anyRejected = docs.some(d => d.status === "rejected");
+        setCurrentStep(3);
+        setVerificationStatus(allApproved ? "approved" : anyRejected ? "rejected" : "pending");
+      } else if (hasFront) {
+        setCurrentStep(2);
+      }
+    }
+
+    // Also check profile verification_status
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("verification_status")
+      .eq("user_id", authUser!.id)
+      .single();
+    if (profile?.verification_status === "verified") {
+      setVerificationStatus("approved");
+      setCurrentStep(3);
+    }
+  };
 
   const loadBankAccounts = async () => {
     const { data } = await supabase
@@ -574,15 +610,35 @@ const Profile = () => {
 
               {currentStep === 3 && (
                 <div className="text-center py-6 space-y-3">
-                  <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-buy/10">
-                    <CheckCircle className="h-7 w-7 text-buy" />
-                  </div>
-                  <h3 className="font-bold">Belgeleriniz Alındı!</h3>
-                  <p className="text-xs text-muted-foreground">Belgeleriniz kontrol ediliyor.</p>
-                  <div className="flex items-center justify-center gap-2 text-warning">
-                    <Clock className="h-4 w-4" />
-                    <span className="text-xs font-medium">İnceleme Bekleniyor</span>
-                  </div>
+                  {verificationStatus === "approved" ? (
+                    <>
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-buy/10">
+                        <ShieldCheck className="h-7 w-7 text-buy" />
+                      </div>
+                      <h3 className="font-bold text-buy">Hesabınız Doğrulandı</h3>
+                      <p className="text-xs text-muted-foreground">Tüm belgeleriniz onaylanmıştır.</p>
+                    </>
+                  ) : verificationStatus === "rejected" ? (
+                    <>
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-sell/10">
+                        <XCircle className="h-7 w-7 text-sell" />
+                      </div>
+                      <h3 className="font-bold text-sell">Belgeleriniz Reddedildi</h3>
+                      <p className="text-xs text-muted-foreground">Lütfen belgelerinizi tekrar yükleyin.</p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="inline-flex items-center justify-center w-14 h-14 rounded-full bg-buy/10">
+                        <CheckCircle className="h-7 w-7 text-buy" />
+                      </div>
+                      <h3 className="font-bold">Belgeleriniz Alındı!</h3>
+                      <p className="text-xs text-muted-foreground">Belgeleriniz kontrol ediliyor.</p>
+                      <div className="flex items-center justify-center gap-2 text-warning">
+                        <Clock className="h-4 w-4" />
+                        <span className="text-xs font-medium">İnceleme Bekleniyor</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </CardContent>
