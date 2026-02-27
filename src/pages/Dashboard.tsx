@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { mockUser, mockOrders } from "@/data/mockData";
 import { Button } from "@/components/ui/button";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Order } from "@/types";
 import {
@@ -46,21 +46,10 @@ const Dashboard = () => {
   return (
     <div className="flex flex-col h-full animate-slide-up">
       {/* Top PnL Display */}
-      <div className="flex items-center justify-between px-4 pt-4 pb-2">
-        <div className="flex-1" />
+      <div className="flex items-center justify-center px-4 pt-4 pb-2">
         <p className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
           {totalOpenPnl >= 0 ? '+' : ''}{totalOpenPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
         </p>
-        <div className="flex-1 flex justify-end">
-          <Button
-            variant="outline"
-            size="icon"
-            className="h-8 w-8 rounded-full"
-            onClick={() => navigate('/trading')}
-          >
-            <Plus className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
       {/* Account Stats */}
