@@ -18,7 +18,7 @@ import {
   RefreshCw,
 } from "lucide-react";
 
-const AdminDashboard = () => {
+const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
   const [stats, setStats] = useState({
     totalUsers: 0,
     verifiedUsers: 0,
@@ -94,12 +94,12 @@ const AdminDashboard = () => {
   ];
 
   const quickActions = [
-    { label: "Kullanıcılar", icon: UserPlus },
-    { label: "KYC İncele", icon: FileText },
-    { label: "Pozisyonlar", icon: BarChart3 },
-    { label: "Banka İşlemleri", icon: Landmark },
-    { label: "İşlem Logları", icon: ClipboardList },
-    { label: "Ayarlar", icon: Settings },
+    { label: "Kullanıcılar", icon: UserPlus, tab: "users" },
+    { label: "KYC İncele", icon: FileText, tab: "documents" },
+    { label: "Pozisyonlar", icon: BarChart3, tab: "positions" },
+    { label: "Banka İşlemleri", icon: Landmark, tab: "bank" },
+    { label: "İşlem Logları", icon: ClipboardList, tab: "bank" },
+    { label: "Ayarlar", icon: Settings, tab: "dashboard" },
   ];
 
   const systemStatus = [
@@ -156,6 +156,7 @@ const AdminDashboard = () => {
             {quickActions.map((a) => (
               <div
                 key={a.label}
+                onClick={() => onNavigate?.(a.tab)}
                 className="flex flex-col items-center gap-2 p-4 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
               >
                 <a.icon className="h-6 w-6 text-muted-foreground" />
