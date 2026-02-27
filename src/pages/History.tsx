@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { calculateCommission } from "@/lib/trading";
 
 interface ClosedOrder {
   id: string;
@@ -13,6 +14,8 @@ interface ClosedOrder {
   created_at: string;
   closed_at: string | null;
 }
+
+const formatUsd = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 const History = () => {
   const { user: authUser } = useAuth();
@@ -50,6 +53,9 @@ const History = () => {
   };
 
   const closedPnlTotal = closedOrders.reduce((sum, o) => sum + Number(o.pnl), 0);
+  const totalCommission = closedOrders.reduce((sum, o) => {
+    return sum + calculateCommission(o.symbol_name, Number(o.lots), Number(o.current_price));
+  }, 0);
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
@@ -62,12 +68,16 @@ const History = () => {
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Kâr/Zarar</span>
             <span className={`font-mono font-medium ${closedPnlTotal >= 0 ? 'text-buy' : 'text-sell'}`}>
-              {closedPnlTotal >= 0 ? '+' : ''}{closedPnlTotal.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD
+              {closedPnlTotal >= 0 ? '+' : ''}{formatUsd(closedPnlTotal)} USD
             </span>
           </div>
           <div className="flex justify-between text-xs">
+            <span className="text-muted-foreground">Komisyon</span>
+            <span className="font-mono font-medium text-sell">-{formatUsd(totalCommission)} USD</span>
+          </div>
+          <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Bakiye</span>
-            <span className="font-mono font-medium text-foreground">{balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
+            <span className="font-mono font-medium text-foreground">{formatUsd(balance)} USD</span>
           </div>
         </div>
 
@@ -75,31 +85,40 @@ const History = () => {
           <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
         ) : (
           <div className="divide-y divide-border">
-            {closedOrders.map((order) => (
-              <div key={order.id} className="py-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
-                    {' '}
-                    <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                      {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {Number(order.lots)}
-                    </span>
+            {closedOrders.map((order) => {
+              const commission = calculateCommission(order.symbol_name, Number(order.lots), Number(order.current_price));
+              const pnl = Number(order.pnl);
+              return (
+                <div key={order.id} className="py-3">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
+                      {' '}
+                      <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
+                        {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {Number(order.lots)}
+                      </span>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-sm font-mono font-bold ${pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+                        {pnl >= 0 ? '+' : ''}{formatUsd(pnl)} USD
+                      </span>
+                      <p className="text-[10px] text-muted-foreground font-mono">
+                        Komisyon: -{formatUsd(commission)}
+                      </p>
+                    </div>
                   </div>
-                  <span className={`text-sm font-mono font-bold ${Number(order.pnl) >= 0 ? 'text-buy' : 'text-sell'}`}>
-                    {Number(order.pnl) >= 0 ? '+' : ''}{Number(order.pnl).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                  </span>
+                  <div className="flex items-center justify-between mt-0.5">
+                    <p className="text-xs text-muted-foreground font-mono">
+                      {formatUsd(Number(order.entry_price))} → {formatUsd(Number(order.current_price))}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {order.closed_at ? new Date(order.closed_at).toLocaleDateString('tr-TR') : new Date(order.created_at).toLocaleDateString('tr-TR')}{' '}
+                      {order.closed_at ? new Date(order.closed_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between mt-0.5">
-                  <p className="text-xs text-muted-foreground font-mono">
-                    {Number(order.entry_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} → {Number(order.current_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
-                  </p>
-                  <p className="text-[10px] text-muted-foreground">
-                    {order.closed_at ? new Date(order.closed_at).toLocaleDateString('tr-TR') : new Date(order.created_at).toLocaleDateString('tr-TR')}{' '}
-                    {order.closed_at ? new Date(order.closed_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}
-                  </p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

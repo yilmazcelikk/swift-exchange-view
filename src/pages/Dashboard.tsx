@@ -89,6 +89,15 @@ const Dashboard = () => {
     }
   }, [authUser?.id]);
 
+  // Poll data every second for real-time updates
+  useEffect(() => {
+    if (!authUser?.id) return;
+    const interval = setInterval(() => {
+      loadOrders();
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [authUser?.id]);
+
   const loadData = async () => {
     const [profileRes] = await Promise.all([
       supabase.from("profiles").select("balance, equity, free_margin").eq("user_id", authUser!.id).single(),
