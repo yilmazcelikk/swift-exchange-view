@@ -334,8 +334,8 @@ const Trading = () => {
 
         {/* Buy / Sell */}
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => handleOrder("sell")} className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold">SAT</Button>
-          <Button onClick={() => handleOrder("buy")} className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold">AL</Button>
+          <Button onClick={() => handleOrder("sell")} disabled={orderLoading} className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold">SAT</Button>
+          <Button onClick={() => handleOrder("buy")} disabled={orderLoading} className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold">AL</Button>
         </div>
       </div>
     </div>
