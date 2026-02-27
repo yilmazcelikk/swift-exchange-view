@@ -145,8 +145,114 @@ const Profile = () => {
     return "Reddedildi";
   };
 
-  const isDepositDisabled = !depositAmount || !receiptFile;
-  const isWithdrawDisabled = !withdrawAmount || !withdrawAccountName || !withdrawIban;
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleDeposit = async () => {
+    if (!authUser || !depositAmount || !receiptFile) return;
+    setSubmitting(true);
+    try {
+      // Upload receipt
+      const fileExt = receiptFile.name.split(".").pop();
+      const filePath = `${authUser.id}/${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, receiptFile);
+      if (uploadError) throw uploadError;
+
+      // Create transaction
+      const { error } = await supabase.from("transactions").insert({
+        user_id: authUser.id,
+        type: "deposit",
+        amount: parseFloat(depositAmount),
+        method: "bank_transfer",
+        currency: "TRY",
+      });
+      if (error) throw error;
+
+      toast.success("Para yatırma talebi oluşturuldu");
+      setDepositAmount("");
+      setReceiptFile(null);
+      setSelectedMethod(null);
+      loadTransactions();
+    } catch (err: any) {
+      toast.error("İşlem başarısız: " + err.message);
+    }
+    setSubmitting(false);
+  };
+
+  const handleWithdraw = async () => {
+    if (!authUser || !withdrawAmount || !withdrawAccountName || !withdrawIban) return;
+    setSubmitting(true);
+    try {
+      const { error } = await supabase.from("transactions").insert({
+        user_id: authUser.id,
+        type: "withdrawal",
+        amount: parseFloat(withdrawAmount),
+        method: "bank_transfer",
+        currency: "TRY",
+      });
+      if (error) throw error;
+
+      toast.success("Para çekme talebi oluşturuldu");
+      setWithdrawAmount("");
+      setWithdrawAccountName("");
+      setWithdrawIban("");
+      setSelectedMethod(null);
+      loadTransactions();
+    } catch (err: any) {
+      toast.error("İşlem başarısız: " + err.message);
+    }
+    setSubmitting(false);
+  };
+
+  const handleVerificationUpload = async () => {
+    if (!authUser || !frontFile) return;
+    setSubmitting(true);
+    try {
+      // Upload front ID
+      const frontExt = frontFile.name.split(".").pop();
+      const frontPath = `${authUser.id}/id_front_${Date.now()}.${frontExt}`;
+      const { error: frontUploadErr } = await supabase.storage.from("documents").upload(frontPath, frontFile);
+      if (frontUploadErr) throw frontUploadErr;
+
+      const { data: frontUrlData } = supabase.storage.from("documents").getPublicUrl(frontPath);
+
+      await supabase.from("documents").insert({
+        user_id: authUser.id,
+        type: "identity_front",
+        file_url: frontPath,
+      });
+
+      setCurrentStep(2);
+    } catch (err: any) {
+      toast.error("Yükleme başarısız: " + err.message);
+    }
+    setSubmitting(false);
+  };
+
+  const handleAddressUpload = async () => {
+    if (!authUser || !addressFile) return;
+    setSubmitting(true);
+    try {
+      const addrExt = addressFile.name.split(".").pop();
+      const addrPath = `${authUser.id}/address_${Date.now()}.${addrExt}`;
+      const { error: addrUploadErr } = await supabase.storage.from("documents").upload(addrPath, addressFile);
+      if (addrUploadErr) throw addrUploadErr;
+
+      await supabase.from("documents").insert({
+        user_id: authUser.id,
+        type: "address_proof",
+        file_url: addrPath,
+      });
+
+      toast.success("Belgeleriniz gönderildi");
+      setCurrentStep(3);
+    } catch (err: any) {
+      toast.error("Yükleme başarısız: " + err.message);
+    }
+    setSubmitting(false);
+  };
+
+  const isDepositDisabled = !depositAmount || !receiptFile || submitting;
+  const isWithdrawDisabled = !withdrawAmount || !withdrawAccountName || !withdrawIban || submitting;
 
   if (!authUser || profileLoading) {
     return (
