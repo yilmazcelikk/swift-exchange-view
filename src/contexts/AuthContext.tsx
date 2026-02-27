@@ -95,10 +95,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    setUser(null);
-    setSession(null);
-    setIsAdmin(false);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        console.error("signOut global error:", error);
+        await supabase.auth.signOut({ scope: "local" });
+      }
+    } catch (err) {
+      console.error("signOut unexpected error:", err);
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch (localErr) {
+        console.error("signOut local fallback error:", localErr);
+      }
+    } finally {
+      // Force-clear local auth cache keys in case SDK cache gets stuck
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("sb-") && key.includes("-auth-token")) {
+          localStorage.removeItem(key);
+        }
+      });
+      setUser(null);
+      setSession(null);
+      setIsAdmin(false);
+    }
   };
 
   return (
