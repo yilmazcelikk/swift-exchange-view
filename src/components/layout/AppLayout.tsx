@@ -1,6 +1,7 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Header } from "./Header";
+import { BottomNav } from "./BottomNav";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -10,16 +11,23 @@ export function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
-        <AppSidebar />
+        {/* Desktop sidebar */}
+        <div className="hidden md:block">
+          <AppSidebar />
+        </div>
+
         <div className="flex-1 flex flex-col min-w-0">
           <Header />
-          <div className="flex items-center h-0">
+          <div className="hidden md:flex items-center h-0">
             <SidebarTrigger className="ml-2 absolute z-10" />
           </div>
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto pb-16 md:pb-0">
             {children}
           </main>
         </div>
+
+        {/* Mobile bottom nav */}
+        <BottomNav />
       </div>
     </SidebarProvider>
   );
