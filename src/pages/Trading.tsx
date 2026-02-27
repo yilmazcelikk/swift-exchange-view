@@ -6,7 +6,7 @@ import { generateCandleData } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Minus, Plus, ChevronLeft, TrendingUp, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
 import { toast } from "sonner";
 
 interface DBSymbol {
@@ -31,13 +31,7 @@ const categories = [
   { key: "stock", label: "Hisse", icon: Building2 },
 ];
 
-const leverageOptions = [
-  { value: "1:10", label: "1:10" },
-  { value: "1:50", label: "1:50" },
-  { value: "1:100", label: "1:100" },
-  { value: "1:200", label: "1:200" },
-  { value: "1:500", label: "1:500" },
-];
+const CONTRACT_SIZE = 100000; // Standard forex lot size
 
 const Trading = () => {
   const { user: authUser } = useAuth();
@@ -47,9 +41,18 @@ const Trading = () => {
   const [symbols, setSymbols] = useState<DBSymbol[]>([]);
   const [loading, setLoading] = useState(true);
   const [lots, setLots] = useState(0.1);
-  const [leverage, setLeverage] = useState("1:100");
+  const [leverage, setLeverage] = useState("1:200");
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
+
+  // Load user leverage from profile
+  useEffect(() => {
+    if (authUser) {
+      supabase.from("profiles").select("leverage").eq("user_id", authUser.id).single().then(({ data }) => {
+        if (data?.leverage) setLeverage(data.leverage);
+      });
+    }
+  }, [authUser]);
 
   useEffect(() => {
     loadSymbols();
@@ -284,18 +287,11 @@ const Trading = () => {
           </div>
         </div>
 
-        {/* Leverage + Lots row */}
+        {/* Leverage (read-only) + Lots row */}
         <div className="flex items-center gap-2">
-          <Select value={leverage} onValueChange={setLeverage}>
-            <SelectTrigger className="w-24 h-8 text-xs bg-muted/50">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {leverageOptions.map((l) => (
-                <SelectItem key={l.value} value={l.value} className="text-xs">{l.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex items-center justify-center w-24 h-8 rounded-md bg-muted/50 border border-border text-xs font-mono font-medium text-muted-foreground">
+            {leverage}
+          </div>
           <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(Math.max(0.01, parseFloat((lots - 0.01).toFixed(2))))}>
             <Minus className="h-3 w-3" />
           </Button>
@@ -304,6 +300,18 @@ const Trading = () => {
             <Plus className="h-3 w-3" />
           </Button>
         </div>
+
+        {/* Margin info */}
+        {(() => {
+          const leverageNum = parseInt(leverage.split(":")[1]) || 200;
+          const margin = (lots * CONTRACT_SIZE * price) / leverageNum;
+          return (
+            <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/40 border border-border">
+              <span className="text-[10px] text-muted-foreground">Gerekli Teminat</span>
+              <span className="text-xs font-mono font-semibold text-foreground">${margin.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+            </div>
+          );
+        })()}
 
         {/* Quick lots */}
         <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
