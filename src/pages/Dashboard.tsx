@@ -163,7 +163,7 @@ const Dashboard = () => {
   const handleClosePosition = async (order: Order) => {
     setClosingOrder(null);
     
-    // Calculate commission (0.04% of notional value)
+    // Calculate commission (0.2% of notional value)
     const commission = calculateCommission(order.symbolName, order.lots, order.currentPrice);
     const netPnl = order.pnl - commission;
 
@@ -211,12 +211,14 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
-      {/* Top PnL Display */}
-      <div className="flex items-center justify-center px-4 pt-4 pb-2">
-        <p className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-          {totalOpenPnl >= 0 ? '+' : ''}{formatUsd(totalOpenPnl)} USD
-        </p>
-      </div>
+      {/* Top PnL Display - only show when there are open orders */}
+      {openOrders.length > 0 && (
+        <div className="flex items-center justify-center px-4 pt-4 pb-2">
+          <p className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+            {totalOpenPnl >= 0 ? '+' : ''}{formatUsd(totalOpenPnl)} USD
+          </p>
+        </div>
+      )}
 
       {/* Account Stats */}
       <div className="px-4 pb-3 space-y-1">

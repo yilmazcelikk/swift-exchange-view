@@ -78,7 +78,7 @@ export function calculateMargin(
 /**
  * Commission rate: 0.04% of notional value
  */
-export const COMMISSION_RATE = 0.0004;
+export const COMMISSION_RATE = 0.002;
 
 /**
  * Calculate commission for closing a position
