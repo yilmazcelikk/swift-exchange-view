@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   CheckCircle, XCircle, ArrowDownToLine, ArrowUpFromLine,
-  RefreshCw, Plus, Landmark, FileText, Trash2, Wallet, Clock,
+  RefreshCw, Plus, Landmark, FileText, Trash2, Wallet, Clock, Eye, User,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -31,6 +31,8 @@ interface TransactionRow {
   status: string;
   method: string | null;
   created_at: string;
+  receipt_url?: string | null;
+  user_name?: string;
 }
 
 type TabKey = "all" | "deposits" | "withdrawals" | "bank";
@@ -49,6 +51,8 @@ const AdminTransactions = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newAccount, setNewAccount] = useState({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
+  const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -59,7 +63,23 @@ const AdminTransactions = () => {
       supabase.from("transactions").select("*").order("created_at", { ascending: false }),
     ]);
     setBankAccounts((bankRes.data as BankAccount[]) || []);
-    setTransactions((txRes.data as TransactionRow[]) || []);
+    
+    const txData = (txRes.data || []) as any[];
+    // Fetch user names
+    if (txData.length > 0) {
+      const userIds = [...new Set(txData.map(t => t.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", userIds);
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+      setTransactions(txData.map(t => ({
+        ...t,
+        user_name: profileMap.get(t.user_id) || t.user_id.slice(0, 8) + "...",
+      })));
+    } else {
+      setTransactions([]);
+    }
     setLoading(false);
   };
 
@@ -269,6 +289,7 @@ const AdminTransactions = () => {
                       <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Kullanıcı</th>
                       <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Tarih</th>
                       <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Tutar</th>
+                      <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Dekont</th>
                       <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
                       <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
                     </tr>
@@ -287,7 +308,15 @@ const AdminTransactions = () => {
                             <span className="text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">{tx.user_name || tx.user_id.slice(0, 8)}</p>
+                              <p className="text-[10px] font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</p>
+                            </div>
+                          </div>
+                        </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
                           {new Date(tx.created_at).toLocaleDateString("tr-TR")}
                         </td>
@@ -295,6 +324,28 @@ const AdminTransactions = () => {
                           <span className="text-sm font-mono font-bold">
                             {Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {tx.receipt_url ? (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-primary hover:bg-primary/10"
+                              onClick={async () => {
+                                const { data } = await supabase.storage.from("receipts").createSignedUrl(tx.receipt_url!, 300);
+                                if (data?.signedUrl) {
+                                  setReceiptPreviewUrl(data.signedUrl);
+                                  setReceiptPreviewOpen(true);
+                                } else {
+                                  toast.error("Dekont yüklenemedi");
+                                }
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
@@ -357,6 +408,24 @@ const AdminTransactions = () => {
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>İptal</Button>
             <Button onClick={handleAddAccount}>Ekle</Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Receipt Preview Dialog */}
+      <Dialog open={receiptPreviewOpen} onOpenChange={setReceiptPreviewOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Dekont Önizleme</DialogTitle>
+          </DialogHeader>
+          {receiptPreviewUrl && (
+            <div className="flex items-center justify-center overflow-auto max-h-[65vh]">
+              {receiptPreviewUrl.includes(".pdf") ? (
+                <iframe src={receiptPreviewUrl} className="w-full h-[60vh] rounded-lg border" />
+              ) : (
+                <img src={receiptPreviewUrl} alt="Dekont" className="max-w-full max-h-[60vh] rounded-lg object-contain" />
+              )}
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
