@@ -18,12 +18,35 @@ const Login = () => {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    setLoading(false);
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
     if (error) {
+      setLoading(false);
       toast.error("Giriş başarısız: " + error.message);
+      return;
     }
-    // Auth state change in context will handle navigation
+
+    const userId = data.user?.id;
+    if (!userId) {
+      setLoading(false);
+      toast.error("Kullanıcı bilgisi alınamadı.");
+      return;
+    }
+
+    const { data: adminData, error: adminError } = await supabase.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+
+    setLoading(false);
+
+    if (adminError) {
+      toast.error("Rol kontrolü başarısız: " + adminError.message);
+      return;
+    }
+
+    navigate(adminData ? "/admin" : "/dashboard", { replace: true });
   };
 
   const topGainers = [
