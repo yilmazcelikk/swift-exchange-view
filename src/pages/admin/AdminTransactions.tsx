@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import {
   CheckCircle, XCircle, ArrowDownToLine, ArrowUpFromLine,
-  RefreshCw, Plus, Landmark, FileText, Trash2, Wallet, Clock,
+  RefreshCw, Plus, Landmark, FileText, Trash2, Wallet, Clock, Eye, User,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -31,6 +31,8 @@ interface TransactionRow {
   status: string;
   method: string | null;
   created_at: string;
+  receipt_url?: string | null;
+  user_name?: string;
 }
 
 type TabKey = "all" | "deposits" | "withdrawals" | "bank";
