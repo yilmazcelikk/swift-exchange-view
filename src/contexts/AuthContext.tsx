@@ -53,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let initialSessionHandled = false;
     const forceStopLoading = window.setTimeout(() => {
+      setRoleResolved(true);
       setLoading(false);
     }, 5000);
 
@@ -61,14 +62,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         try {
           setSession(session);
           setUser(session?.user ?? null);
+          setRoleResolved(false);
+
           if (session?.user) {
             await checkAdmin(session.user.id);
           } else {
             setIsAdmin(false);
           }
+
+          setRoleResolved(true);
         } catch (err) {
           console.error("onAuthStateChange error:", err);
           setIsAdmin(false);
+          setRoleResolved(true);
         } finally {
           setLoading(false);
           window.clearTimeout(forceStopLoading);
@@ -83,12 +89,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setSession(session);
         setUser(session?.user ?? null);
+        setRoleResolved(false);
+
         if (session?.user) {
           await checkAdmin(session.user.id);
+        } else {
+          setIsAdmin(false);
         }
+
+        setRoleResolved(true);
       } catch (err) {
         console.error("getSession error:", err);
         setIsAdmin(false);
+        setRoleResolved(true);
       } finally {
         if (!initialSessionHandled) {
           setLoading(false);
@@ -97,6 +110,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }).catch(() => {
       if (!initialSessionHandled) {
+        setRoleResolved(true);
         setLoading(false);
         window.clearTimeout(forceStopLoading);
       }
