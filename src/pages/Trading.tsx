@@ -138,7 +138,6 @@ const Trading = () => {
               >
                 <cat.icon className="h-3 w-3" />
                 {cat.label}
-                <span className="opacity-70">({countByCategory(cat.key)})</span>
               </button>
             ))}
           </div>
