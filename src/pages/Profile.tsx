@@ -157,14 +157,15 @@ const Profile = () => {
       const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, receiptFile);
       if (uploadError) throw uploadError;
 
-      // Create transaction
+      // Create transaction with receipt link
       const { error } = await supabase.from("transactions").insert({
         user_id: authUser.id,
         type: "deposit",
         amount: parseFloat(depositAmount),
         method: "bank_transfer",
         currency: "TRY",
-      });
+        receipt_url: filePath,
+      } as any);
       if (error) throw error;
 
       toast.success("Para yatırma talebi oluşturuldu");
