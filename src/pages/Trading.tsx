@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateCandleData } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Search, Minus, Plus, ChevronLeft, TrendingUp, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -39,6 +40,7 @@ const leverageOptions = [
 ];
 
 const Trading = () => {
+  const { user: authUser } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSymbol, setSelectedSymbol] = useState<DBSymbol | null>(null);
@@ -101,11 +103,36 @@ const Trading = () => {
     return price * 0.001;
   };
 
-  const handleOrder = (type: "buy" | "sell") => {
-    if (!selectedSymbol) return;
-    toast.success(`${selectedSymbol.name} ${type === "buy" ? "ALIŞ" : "SATIŞ"} emri verildi`, {
-      description: `${lots} lot • Kaldıraç: ${leverage}`,
-    });
+  const [orderLoading, setOrderLoading] = useState(false);
+
+  const handleOrder = async (type: "buy" | "sell") => {
+    if (!selectedSymbol || !authUser) return;
+    setOrderLoading(true);
+    try {
+      const price = selectedSymbol.current_price || 0;
+      const { error } = await supabase.from("orders").insert({
+        user_id: authUser.id,
+        symbol_id: selectedSymbol.id,
+        symbol_name: selectedSymbol.name,
+        type,
+        order_type: "market",
+        lots,
+        leverage,
+        entry_price: price,
+        current_price: price,
+        stop_loss: stopLoss ? parseFloat(stopLoss) : null,
+        take_profit: takeProfit ? parseFloat(takeProfit) : null,
+      });
+      if (error) throw error;
+      toast.success(`${selectedSymbol.name} ${type === "buy" ? "ALIŞ" : "SATIŞ"} emri verildi`, {
+        description: `${lots} lot • Kaldıraç: ${leverage}`,
+      });
+      setStopLoss("");
+      setTakeProfit("");
+    } catch (err: any) {
+      toast.error("Emir başarısız: " + err.message);
+    }
+    setOrderLoading(false);
   };
 
   const categoryLabel = (cat: string) => categories.find((c) => c.key === cat)?.label ?? cat;
@@ -307,8 +334,8 @@ const Trading = () => {
 
         {/* Buy / Sell */}
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => handleOrder("sell")} className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold">SAT</Button>
-          <Button onClick={() => handleOrder("buy")} className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold">AL</Button>
+          <Button onClick={() => handleOrder("sell")} disabled={orderLoading} className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold">SAT</Button>
+          <Button onClick={() => handleOrder("buy")} disabled={orderLoading} className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold">AL</Button>
         </div>
       </div>
     </div>
