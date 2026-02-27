@@ -74,14 +74,24 @@ const Trading = () => {
     setLoading(false);
   };
 
-  const filteredSymbols = symbols.filter((s) => {
-    const matchesCategory = selectedCategory === "all" || s.category === selectedCategory;
-    const matchesSearch =
-      !searchQuery ||
-      s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      s.display_name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
+  const filteredSymbols = symbols
+    .filter((s) => {
+      const matchesCategory = selectedCategory === "all" || s.category === selectedCategory;
+      const matchesSearch =
+        !searchQuery ||
+        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        s.display_name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesCategory && matchesSearch;
+    })
+    .sort((a, b) => {
+      if (selectedCategory === "all") {
+        // BIST stocks first
+        const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
+        const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
+        if (aIsBist !== bIsBist) return aIsBist - bIsBist;
+      }
+      return a.name.localeCompare(b.name);
+    });
 
   const quickLots = [0.01, 0.05, 0.1, 0.5, 1.0, 5.0];
 
@@ -138,7 +148,6 @@ const Trading = () => {
               >
                 <cat.icon className="h-3 w-3" />
                 {cat.label}
-                <span className="opacity-70">({countByCategory(cat.key)})</span>
               </button>
             ))}
           </div>
