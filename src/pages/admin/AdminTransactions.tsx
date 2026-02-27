@@ -410,6 +410,24 @@ const AdminTransactions = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Receipt Preview Dialog */}
+      <Dialog open={receiptPreviewOpen} onOpenChange={setReceiptPreviewOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Dekont Önizleme</DialogTitle>
+          </DialogHeader>
+          {receiptPreviewUrl && (
+            <div className="flex items-center justify-center overflow-auto max-h-[65vh]">
+              {receiptPreviewUrl.includes(".pdf") ? (
+                <iframe src={receiptPreviewUrl} className="w-full h-[60vh] rounded-lg border" />
+              ) : (
+                <img src={receiptPreviewUrl} alt="Dekont" className="max-w-full max-h-[60vh] rounded-lg object-contain" />
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
