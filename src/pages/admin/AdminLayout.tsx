@@ -6,11 +6,13 @@ import {
   LayoutDashboard,
   Users,
   TrendingUp,
-  DollarSign,
+  ArrowDownToLine,
+  ArrowUpFromLine,
   FileText,
   LogOut,
   Menu,
   X,
+  Landmark,
   TrendingUp as Logo,
 } from "lucide-react";
 import AdminDashboard from "./AdminDashboard";
@@ -20,12 +22,34 @@ import AdminTransactions from "./AdminTransactions";
 import AdminDocuments from "./AdminDocuments";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
-const navItems = [
-  { key: "dashboard", label: "Pozisyonlar", icon: LayoutDashboard },
-  { key: "users", label: "Kullanıcılar", icon: Users },
-  { key: "positions", label: "Açık İşlemler", icon: TrendingUp },
-  { key: "transactions", label: "Para İşlemleri", icon: DollarSign },
-  { key: "documents", label: "Evraklar", icon: FileText },
+const navSections = [
+  {
+    title: "GENEL",
+    items: [
+      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+    ],
+  },
+  {
+    title: "İŞLEM YÖNETİMİ",
+    items: [
+      { key: "positions", label: "Pozisyonlar", icon: TrendingUp },
+    ],
+  },
+  {
+    title: "KULLANICI",
+    items: [
+      { key: "users", label: "Kullanıcılar", icon: Users },
+      { key: "documents", label: "KYC", icon: FileText },
+    ],
+  },
+  {
+    title: "FİNANSAL",
+    items: [
+      { key: "transactions", label: "Para İşlemleri", icon: Landmark },
+      { key: "deposits", label: "Para Yatırma", icon: ArrowDownToLine },
+      { key: "withdrawals", label: "Para Çekimi", icon: ArrowUpFromLine },
+    ],
+  },
 ];
 
 const AdminLayout = () => {
@@ -50,7 +74,10 @@ const AdminLayout = () => {
       case "dashboard": return <AdminDashboard />;
       case "users": return <AdminUsers />;
       case "positions": return <AdminPositions />;
-      case "transactions": return <AdminTransactions />;
+      case "transactions":
+      case "deposits":
+      case "withdrawals":
+        return <AdminTransactions />;
       case "documents": return <AdminDocuments />;
       default: return <AdminDashboard />;
     }
@@ -72,29 +99,38 @@ const AdminLayout = () => {
           </Button>
         </div>
 
-        <nav className="p-3 space-y-1">
-          {navItems.map((item) => (
-            <button
-              key={item.key}
-              onClick={() => { setActiveTab(item.key); setSidebarOpen(false); }}
-              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
-                activeTab === item.key
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              <item.icon className="h-5 w-5 shrink-0" />
-              {item.label}
-            </button>
+        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-7rem)]">
+          {navSections.map((section) => (
+            <div key={section.title}>
+              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1">
+                {section.title}
+              </p>
+              <div className="space-y-0.5">
+                {section.items.map((item) => (
+                  <button
+                    key={item.key}
+                    onClick={() => { setActiveTab(item.key); setSidebarOpen(false); }}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
+                      activeTab === item.key
+                        ? "bg-primary/10 text-primary font-medium"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    <item.icon className="h-4 w-4 shrink-0" />
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border">
           <button
             onClick={signOut}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-sell transition-colors"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
           >
-            <LogOut className="h-5 w-5 shrink-0" />
+            <LogOut className="h-4 w-4 shrink-0" />
             Çıkış Yap
           </button>
         </div>
