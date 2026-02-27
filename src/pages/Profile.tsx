@@ -367,26 +367,25 @@ const Profile = () => {
           </Card>
         </TabsContent>
 
-        {/* ─── Banka Hesapları ─── */}
         <TabsContent value="bank" className="space-y-4 mt-4">
           <Card className="bg-card border-border">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Banka Hesaplarım</CardTitle>
-              <Button size="sm" variant="outline" className="gap-1 text-xs">
-                <Plus className="h-3 w-3" /> Ekle
-              </Button>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Para Yatırma Hesapları</CardTitle>
+              <p className="text-xs text-muted-foreground">Aşağıdaki hesaplara para yatırabilirsiniz</p>
             </CardHeader>
             <CardContent className="space-y-2">
-              {bankAccounts.map((acc) => (
-                <div key={acc.id} className="p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="font-semibold text-sm">{acc.bankName}</p>
-                    <Button variant="ghost" size="sm" className="text-sell text-xs h-7">Sil</Button>
+              {bankAccounts.length > 0 ? bankAccounts.map((acc: any) => (
+                <div key={acc.id} className="p-3 rounded-lg bg-muted/50 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <p className="font-semibold text-sm">{acc.bank_name}</p>
+                    <span className="text-xs text-muted-foreground">{acc.currency}</span>
                   </div>
-                  <p className="text-xs text-muted-foreground font-mono">{acc.iban}</p>
-                  <p className="text-xs text-muted-foreground">{acc.accountHolder}</p>
+                  <p className="text-xs font-mono text-foreground">{acc.iban}</p>
+                  <p className="text-xs text-muted-foreground">{acc.account_holder}</p>
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-muted-foreground text-center py-6">Henüz tanımlı hesap bulunmuyor.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
