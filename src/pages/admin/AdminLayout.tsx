@@ -14,6 +14,7 @@ import {
   X,
   Landmark,
   Settings,
+  ShoppingBag,
   TrendingUp as Logo,
 } from "lucide-react";
 import AdminDashboard from "./AdminDashboard";
@@ -36,6 +37,7 @@ const navSections = [
     title: "İŞLEM YÖNETİMİ",
     items: [
       { key: "positions", label: "Pozisyonlar", icon: TrendingUp },
+      { key: "products", label: "Ürünler", icon: ShoppingBag },
     ],
   },
   {
@@ -89,6 +91,7 @@ const AdminLayout = () => {
         return <AdminTransactions />;
       case "documents": return <AdminDocuments />;
       case "settings": return <AdminSettings />;
+      case "products": return <AdminProducts />;
       default: return <AdminDashboard onNavigate={setActiveTab} />;
     }
   };
