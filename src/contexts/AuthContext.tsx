@@ -127,6 +127,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setRoleResolved(true);
 
     try {
       const timeoutPromise = new Promise((_, reject) =>
