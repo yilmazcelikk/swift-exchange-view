@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   Landmark,
+  Settings,
   TrendingUp as Logo,
 } from "lucide-react";
 import AdminDashboard from "./AdminDashboard";
@@ -20,6 +21,7 @@ import AdminUsers from "./AdminUsers";
 import AdminPositions from "./AdminPositions";
 import AdminTransactions from "./AdminTransactions";
 import AdminDocuments from "./AdminDocuments";
+import AdminSettings from "./AdminSettings";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const navSections = [
