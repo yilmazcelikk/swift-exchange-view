@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
 import {
   CheckCircle, XCircle, ArrowDownToLine, ArrowUpFromLine,
-  RefreshCw, Plus, Landmark, FileText, Trash2,
+  RefreshCw, Plus, Landmark, FileText, Trash2, Wallet, Clock,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
@@ -32,16 +33,24 @@ interface TransactionRow {
   created_at: string;
 }
 
+type TabKey = "all" | "deposits" | "withdrawals" | "bank";
+
+const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
+  { key: "all", label: "Tümü", icon: Wallet },
+  { key: "deposits", label: "Yatırma", icon: ArrowDownToLine },
+  { key: "withdrawals", label: "Çekme", icon: ArrowUpFromLine },
+  { key: "bank", label: "Banka Hesapları", icon: Landmark },
+];
+
 const AdminTransactions = () => {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newAccount, setNewAccount] = useState({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
 
-  useEffect(() => {
-    loadAll();
-  }, []);
+  useEffect(() => { loadAll(); }, []);
 
   const loadAll = async () => {
     setLoading(true);
@@ -65,14 +74,11 @@ const AdminTransactions = () => {
       iban: newAccount.iban,
       currency: newAccount.currency,
     });
-    if (error) {
-      toast.error("Ekleme başarısız: " + error.message);
-    } else {
-      toast.success("Banka hesabı eklendi");
-      setNewAccount({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
-      setShowAddDialog(false);
-      loadAll();
-    }
+    if (error) { toast.error("Ekleme başarısız: " + error.message); return; }
+    toast.success("Banka hesabı eklendi");
+    setNewAccount({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
+    setShowAddDialog(false);
+    loadAll();
   };
 
   const toggleAccount = async (id: string, currentActive: boolean) => {
@@ -89,163 +95,238 @@ const AdminTransactions = () => {
 
   const updateTxStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("transactions").update({ status }).eq("id", id);
-    if (error) {
-      toast.error("Güncelleme başarısız");
-    } else {
-      toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
-      loadAll();
-    }
+    if (error) { toast.error("Güncelleme başarısız"); return; }
+    toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
+    loadAll();
   };
 
-  const activeAccounts = bankAccounts.filter((a) => a.is_active);
-  const currencies = new Set(bankAccounts.map((a) => a.currency));
+  const pendingCount = transactions.filter((t) => t.status === "pending").length;
+  const depositTotal = transactions.filter((t) => t.type === "deposit" && t.status === "approved").reduce((s, t) => s + Number(t.amount), 0);
+  const withdrawTotal = transactions.filter((t) => t.type === "withdrawal" && t.status === "approved").reduce((s, t) => s + Number(t.amount), 0);
+
+  const filteredTx = transactions.filter((tx) => {
+    if (activeTab === "deposits") return tx.type === "deposit";
+    if (activeTab === "withdrawals") return tx.type === "withdrawal";
+    return true;
+  });
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold">Banka Yönetimi</h2>
-          <p className="text-sm text-muted-foreground">Banka hesapları ve para transferi işlemleri</p>
+          <h2 className="text-2xl font-bold">Finans Talepleri</h2>
+          <p className="text-sm text-muted-foreground">Banka hesapları ve para transferi talepleri</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
-            Yenile
-          </Button>
-          <Button size="sm" onClick={() => setShowAddDialog(true)} className="gap-1">
-            <Plus className="h-4 w-4" /> Hesap Ekle
-          </Button>
-        </div>
+        <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+          Yenile
+        </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <Card className="border-border">
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Toplam Banka</p>
-            <p className="text-2xl font-bold text-primary">{bankAccounts.length}</p>
-          </CardContent>
-        </Card>
-        <Card className="border-border">
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Aktif Hesap</p>
-            <p className="text-2xl font-bold text-primary">
-              {activeAccounts.length} / {bankAccounts.length}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border-border">
-          <CardContent className="p-4 text-center">
-            <p className="text-xs text-muted-foreground mb-1">Para Birimleri</p>
-            <p className="text-2xl font-bold text-primary">{currencies.size}</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Bank Accounts List */}
+      {/* Stats — matches AdminSettings system info style */}
       <Card className="border-border">
-        <CardContent className="p-0">
-          {bankAccounts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <FileText className="h-10 w-10 mb-3 opacity-40" />
-              <p className="text-sm">Henüz tanımlı banka bulunmuyor.</p>
+        <CardContent className="divide-y divide-border p-0">
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold">Bekleyen Talepler</p>
+              <p className="text-xs text-muted-foreground">Onay bekleyen yatırma/çekme</p>
             </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {bankAccounts.map((acc) => (
-                <div key={acc.id} className="flex items-center justify-between p-4 hover:bg-muted/30 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10">
-                      <Landmark className="h-5 w-5 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-semibold">{acc.bank_name}</p>
-                      <p className="text-xs text-muted-foreground">{acc.account_holder}</p>
-                      <p className="text-xs font-mono text-muted-foreground">{acc.iban}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-medium text-muted-foreground">{acc.currency}</span>
-                    <Button
-                      size="sm"
-                      variant={acc.is_active ? "default" : "outline"}
-                      className="text-xs h-7 px-2"
-                      onClick={() => toggleAccount(acc.id, acc.is_active)}
-                    >
-                      {acc.is_active ? "Aktif" : "Pasif"}
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-7 w-7 text-muted-foreground hover:text-destructive"
-                      onClick={() => deleteAccount(acc.id)}
-                    >
-                      <Trash2 className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              ))}
+            <span className={`flex items-center gap-1.5 text-sm font-bold ${pendingCount > 0 ? "text-warning" : "text-buy"}`}>
+              <Clock className="h-4 w-4" />
+              {pendingCount}
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold">Toplam Yatırma</p>
+              <p className="text-xs text-muted-foreground">Onaylanan yatırma toplamı</p>
             </div>
-          )}
+            <span className="text-sm font-mono font-bold text-buy">
+              {depositTotal.toLocaleString("tr-TR")} ₺
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold">Toplam Çekim</p>
+              <p className="text-xs text-muted-foreground">Onaylanan çekim toplamı</p>
+            </div>
+            <span className="text-sm font-mono font-bold text-sell">
+              {withdrawTotal.toLocaleString("tr-TR")} ₺
+            </span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <div>
+              <p className="text-sm font-semibold">Banka Hesapları</p>
+              <p className="text-xs text-muted-foreground">Aktif / Toplam</p>
+            </div>
+            <span className="flex items-center gap-1.5 text-sm font-bold text-buy">
+              <CheckCircle className="h-4 w-4" />
+              {bankAccounts.filter((a) => a.is_active).length} / {bankAccounts.length}
+            </span>
+          </div>
         </CardContent>
       </Card>
 
-      {/* Transactions */}
-      {transactions.length > 0 && (
+      {/* Tabs */}
+      <div className="flex gap-2 flex-wrap">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              activeTab === tab.key
+                ? "bg-primary text-primary-foreground"
+                : "bg-muted text-muted-foreground hover:bg-muted/80"
+            }`}
+          >
+            <tab.icon className="h-4 w-4" />
+            {tab.label}
+            {tab.key === "all" && <span className="text-xs opacity-70">({transactions.length})</span>}
+            {tab.key === "deposits" && <span className="text-xs opacity-70">({transactions.filter((t) => t.type === "deposit").length})</span>}
+            {tab.key === "withdrawals" && <span className="text-xs opacity-70">({transactions.filter((t) => t.type === "withdrawal").length})</span>}
+            {tab.key === "bank" && <span className="text-xs opacity-70">({bankAccounts.length})</span>}
+          </button>
+        ))}
+      </div>
+
+      {/* Bank Accounts Tab */}
+      {activeTab === "bank" && (
         <>
-          <h3 className="text-lg font-bold">Para Transferi İşlemleri</h3>
-          <div className="space-y-2">
-            {transactions.map((tx) => (
-              <Card key={tx.id} className="bg-card border-border">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className={`p-2 rounded-lg ${tx.type === "deposit" ? "bg-buy/10" : "bg-sell/10"}`}>
-                        {tx.type === "deposit" ? (
-                          <ArrowDownToLine className="h-4 w-4 text-buy" />
-                        ) : (
-                          <ArrowUpFromLine className="h-4 w-4 text-sell" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="text-sm font-semibold">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleDateString("tr-TR")} • {tx.method || "—"}
-                        </p>
-                        <p className="text-[10px] text-muted-foreground font-mono">{tx.user_id.slice(0, 8)}...</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <div className="text-right">
-                        <p className="text-sm font-mono font-bold">
-                          {Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}
-                        </p>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          tx.status === "approved" ? "bg-buy/20 text-buy" :
-                          tx.status === "pending" ? "bg-warning/20 text-warning" :
-                          "bg-sell/20 text-sell"
-                        }`}>
-                          {tx.status === "approved" ? "Onaylı" : tx.status === "pending" ? "Bekliyor" : "Reddedildi"}
-                        </span>
-                      </div>
-                      {tx.status === "pending" && (
-                        <div className="flex gap-1">
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-buy hover:bg-buy/10" onClick={() => updateTxStatus(tx.id, "approved")}>
-                            <CheckCircle className="h-4 w-4" />
-                          </Button>
-                          <Button size="icon" variant="ghost" className="h-8 w-8 text-sell hover:bg-sell/10" onClick={() => updateTxStatus(tx.id, "rejected")}>
-                            <XCircle className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="flex justify-end">
+            <Button size="sm" onClick={() => setShowAddDialog(true)} className="gap-1">
+              <Plus className="h-4 w-4" /> Hesap Ekle
+            </Button>
           </div>
+          <Card className="border-border">
+            <CardContent className="p-0">
+              {bankAccounts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                  <FileText className="h-10 w-10 mb-3 opacity-40" />
+                  <p className="text-sm">Henüz tanımlı banka bulunmuyor.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border">
+                        <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Banka</th>
+                        <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Hesap Sahibi</th>
+                        <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">IBAN</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Birim</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
+                        <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {bankAccounts.map((acc) => (
+                        <tr key={acc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="p-1.5 rounded-lg bg-primary/10">
+                                <Landmark className="h-4 w-4 text-primary" />
+                              </div>
+                              <span className="text-sm font-semibold">{acc.bank_name}</span>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm">{acc.account_holder}</td>
+                          <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{acc.iban}</td>
+                          <td className="px-4 py-3 text-center text-xs font-medium">{acc.currency}</td>
+                          <td className="px-4 py-3 text-center">
+                            <Switch checked={acc.is_active} onCheckedChange={() => toggleAccount(acc.id, acc.is_active)} />
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteAccount(acc.id)}>
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         </>
+      )}
+
+      {/* Transactions List */}
+      {activeTab !== "bank" && (
+        <Card className="border-border">
+          <CardContent className="p-0">
+            {filteredTx.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <Wallet className="h-10 w-10 mb-3 opacity-40" />
+                <p className="text-sm">İşlem bulunamadı.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Tür</th>
+                      <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Kullanıcı</th>
+                      <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Tarih</th>
+                      <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Tutar</th>
+                      <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
+                      <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredTx.map((tx) => (
+                      <tr key={tx.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <div className={`p-1.5 rounded-lg ${tx.type === "deposit" ? "bg-buy/10" : "bg-sell/10"}`}>
+                              {tx.type === "deposit"
+                                ? <ArrowDownToLine className="h-4 w-4 text-buy" />
+                                : <ArrowUpFromLine className="h-4 w-4 text-sell" />
+                              }
+                            </div>
+                            <span className="text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</td>
+                        <td className="px-4 py-3 text-xs text-muted-foreground">
+                          {new Date(tx.created_at).toLocaleDateString("tr-TR")}
+                        </td>
+                        <td className="px-4 py-3 text-right">
+                          <span className="text-sm font-mono font-bold">
+                            {Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`text-xs px-2 py-0.5 rounded-full ${
+                            tx.status === "approved" ? "bg-buy/20 text-buy" :
+                            tx.status === "pending" ? "bg-warning/20 text-warning" :
+                            "bg-sell/20 text-sell"
+                          }`}>
+                            {tx.status === "approved" ? "Onaylı" : tx.status === "pending" ? "Bekliyor" : "Reddedildi"}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {tx.status === "pending" ? (
+                            <div className="flex justify-center gap-1">
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-buy hover:bg-buy/10" onClick={() => updateTxStatus(tx.id, "approved")}>
+                                <CheckCircle className="h-4 w-4" />
+                              </Button>
+                              <Button size="icon" variant="ghost" className="h-7 w-7 text-sell hover:bg-sell/10" onClick={() => updateTxStatus(tx.id, "rejected")}>
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       )}
 
       {/* Add Account Dialog */}
@@ -257,39 +338,19 @@ const AdminTransactions = () => {
           <div className="space-y-3">
             <div>
               <label className="text-sm font-medium mb-1 block">Banka Adı</label>
-              <Input
-                placeholder="Örn: Ziraat Bankası"
-                value={newAccount.bank_name}
-                onChange={(e) => setNewAccount({ ...newAccount, bank_name: e.target.value })}
-                className="bg-muted/50"
-              />
+              <Input placeholder="Örn: Ziraat Bankası" value={newAccount.bank_name} onChange={(e) => setNewAccount({ ...newAccount, bank_name: e.target.value })} className="bg-muted/50" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Hesap Sahibi</label>
-              <Input
-                placeholder="Ad Soyad"
-                value={newAccount.account_holder}
-                onChange={(e) => setNewAccount({ ...newAccount, account_holder: e.target.value })}
-                className="bg-muted/50"
-              />
+              <Input placeholder="Ad Soyad" value={newAccount.account_holder} onChange={(e) => setNewAccount({ ...newAccount, account_holder: e.target.value })} className="bg-muted/50" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">IBAN</label>
-              <Input
-                placeholder="TR00 0000 0000 0000 0000 0000 00"
-                value={newAccount.iban}
-                onChange={(e) => setNewAccount({ ...newAccount, iban: e.target.value })}
-                className="bg-muted/50 font-mono"
-              />
+              <Input placeholder="TR00 0000 0000 0000 0000 0000 00" value={newAccount.iban} onChange={(e) => setNewAccount({ ...newAccount, iban: e.target.value })} className="bg-muted/50 font-mono" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Para Birimi</label>
-              <Input
-                placeholder="TRY"
-                value={newAccount.currency}
-                onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value.toUpperCase() })}
-                className="bg-muted/50"
-              />
+              <Input placeholder="TRY" value={newAccount.currency} onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value.toUpperCase() })} className="bg-muted/50" />
             </div>
           </div>
           <DialogFooter>
