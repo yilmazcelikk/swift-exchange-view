@@ -110,6 +110,7 @@ export type Database = {
           full_name: string | null
           id: string
           leverage: string
+          meta_id: number
           phone: string | null
           updated_at: string
           user_id: string
@@ -126,6 +127,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           leverage?: string
+          meta_id?: number
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -142,6 +144,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           leverage?: string
+          meta_id?: number
           phone?: string | null
           updated_at?: string
           user_id?: string
