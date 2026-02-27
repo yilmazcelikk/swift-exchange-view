@@ -52,13 +52,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
+    let lastSessionId: string | null = null;
 
     const resolveSession = async (nextSession: Session | null) => {
       if (cancelled) return;
 
+      // Avoid reprocessing the same session
+      const nextId = nextSession?.access_token ?? null;
+      if (nextId && nextId === lastSessionId) return;
+      lastSessionId = nextId;
+
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
-      setRoleResolved(false);
 
       try {
         if (nextSession?.user) {

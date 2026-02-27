@@ -45,7 +45,7 @@ const navSections = [
   {
     title: "FİNANSAL",
     items: [
-      { key: "transactions", label: "Para İşlemleri", icon: Landmark },
+      { key: "bank", label: "Banka Yönetimi", icon: Landmark },
       { key: "deposits", label: "Para Yatırma", icon: ArrowDownToLine },
       { key: "withdrawals", label: "Para Çekimi", icon: ArrowUpFromLine },
     ],
@@ -71,15 +71,15 @@ const AdminLayout = () => {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "dashboard": return <AdminDashboard />;
+      case "dashboard": return <AdminDashboard onNavigate={setActiveTab} />;
       case "users": return <AdminUsers />;
       case "positions": return <AdminPositions />;
-      case "transactions":
+      case "bank":
       case "deposits":
       case "withdrawals":
         return <AdminTransactions />;
       case "documents": return <AdminDocuments />;
-      default: return <AdminDashboard />;
+      default: return <AdminDashboard onNavigate={setActiveTab} />;
     }
   };
 
