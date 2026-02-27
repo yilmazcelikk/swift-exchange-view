@@ -52,6 +52,12 @@ const navSections = [
       { key: "withdrawals", label: "Para Çekimi", icon: ArrowUpFromLine },
     ],
   },
+  {
+    title: "SİSTEM",
+    items: [
+      { key: "settings", label: "Sistem Ayarları", icon: Settings },
+    ],
+  },
 ];
 
 const AdminLayout = () => {
@@ -81,6 +87,7 @@ const AdminLayout = () => {
       case "withdrawals":
         return <AdminTransactions />;
       case "documents": return <AdminDocuments />;
+      case "settings": return <AdminSettings />;
       default: return <AdminDashboard onNavigate={setActiveTab} />;
     }
   };
