@@ -27,11 +27,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const checkAdmin = async (userId: string) => {
-    const { data } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "admin",
-    });
-    setIsAdmin(!!data);
+    try {
+      const { data, error } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
+      if (error) {
+        console.error("checkAdmin error:", error);
+        setIsAdmin(false);
+      } else {
+        setIsAdmin(!!data);
+      }
+    } catch (err) {
+      console.error("checkAdmin unexpected error:", err);
+      setIsAdmin(false);
+    }
   };
 
   useEffect(() => {
@@ -48,12 +58,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        checkAdmin(session.user.id);
+        await checkAdmin(session.user.id);
       }
+      setLoading(false);
+    }).catch(() => {
       setLoading(false);
     });
 
