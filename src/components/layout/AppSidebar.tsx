@@ -2,6 +2,7 @@ import {
   LayoutDashboard,
   TrendingUp,
   UserCircle,
+  History,
   LogOut,
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
@@ -18,8 +19,9 @@ import {
 } from "@/components/ui/sidebar";
 
 const navItems = [
-  { title: "Panel", url: "/dashboard", icon: LayoutDashboard },
+  { title: "İşlem", url: "/dashboard", icon: LayoutDashboard },
   { title: "Piyasalar", url: "/trading", icon: TrendingUp },
+  { title: "Geçmiş", url: "/history", icon: History },
   { title: "Hesabım", url: "/profile", icon: UserCircle },
 ];
 
