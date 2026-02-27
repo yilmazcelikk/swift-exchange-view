@@ -19,34 +19,22 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    try {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
 
-    if (error) {
+      if (error) {
+        toast.error("Giriş başarısız: " + error.message);
+        return;
+      }
+
+      // Yönlendirmeyi AuthContext + route guard yönetir
+      navigate("/", { replace: true });
+    } catch (err) {
+      console.error("Login unexpected error:", err);
+      toast.error("Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.");
+    } finally {
       setLoading(false);
-      toast.error("Giriş başarısız: " + error.message);
-      return;
     }
-
-    const userId = data.user?.id;
-    if (!userId) {
-      setLoading(false);
-      toast.error("Kullanıcı bilgisi alınamadı.");
-      return;
-    }
-
-    const { data: adminData, error: adminError } = await supabase.rpc("has_role", {
-      _user_id: userId,
-      _role: "admin",
-    });
-
-    setLoading(false);
-
-    if (adminError) {
-      toast.error("Rol kontrolü başarısız: " + adminError.message);
-      return;
-    }
-
-    navigate(adminData ? "/admin" : "/dashboard", { replace: true });
   };
 
   const topGainers = [
