@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { mockUser, mockTransactions } from "@/data/mockData";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import {
   UserCircle, Plus, Upload, CheckCircle, Clock, ShieldCheck,
   ArrowDownToLine, ArrowUpFromLine, Building2, CreditCard, XCircle,
@@ -23,8 +25,17 @@ const verificationSteps = [
 ];
 
 const Profile = () => {
-  const [user, setUser] = useState(mockUser);
+  const { user: authUser } = useAuth();
+  const [profile, setProfile] = useState({
+    fullName: "",
+    email: "",
+    phone: "",
+    birthDate: "",
+    country: "",
+  });
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
+  const [transactions, setTransactions] = useState<any[]>([]);
+  const [profileLoading, setProfileLoading] = useState(true);
 
   // Deposit state
   const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
@@ -38,8 +49,77 @@ const Profile = () => {
   const [addressFile, setAddressFile] = useState<File | null>(null);
 
   const bankAccounts = [
-    { id: "1", bankName: "Ziraat Bankası", iban: "TR33 0001 0009 4537 1234 5678 90", accountHolder: "Ahmet Yılmaz" },
+    { id: "1", bankName: "Ziraat Bankası", iban: "TR33 0001 0009 4537 1234 5678 90", accountHolder: profile.fullName || "—" },
   ];
+
+  useEffect(() => {
+    if (authUser?.id) {
+      loadProfile();
+      loadTransactions();
+    }
+  }, [authUser?.id]);
+
+  const loadProfile = async () => {
+    setProfileLoading(true);
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", authUser!.id)
+      .single();
+
+    if (data) {
+      setProfile({
+        fullName: data.full_name || "",
+        email: authUser?.email || "",
+        phone: data.phone || "",
+        birthDate: data.birth_date || "",
+        country: data.country || "",
+      });
+    }
+    setProfileLoading(false);
+  };
+
+  const loadTransactions = async () => {
+    const { data } = await supabase
+      .from("transactions")
+      .select("*")
+      .eq("user_id", authUser!.id)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    setTransactions(data || []);
+  };
+
+  const handleUpdateProfile = async () => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        full_name: profile.fullName,
+        phone: profile.phone,
+        birth_date: profile.birthDate,
+        country: profile.country,
+      })
+      .eq("user_id", authUser!.id);
+
+    if (error) {
+      toast.error("Güncelleme başarısız: " + error.message);
+    } else {
+      toast.success("Bilgileriniz güncellendi");
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (passwords.new !== passwords.confirm) {
+      toast.error("Yeni şifreler eşleşmiyor");
+      return;
+    }
+    const { error } = await supabase.auth.updateUser({ password: passwords.new });
+    if (error) {
+      toast.error("Şifre değiştirilemedi: " + error.message);
+    } else {
+      toast.success("Şifreniz güncellendi");
+      setPasswords({ current: "", new: "", confirm: "" });
+    }
+  };
 
   const statusIcon = (status: string) => {
     if (status === "approved") return <CheckCircle className="h-4 w-4 text-buy" />;
@@ -52,6 +132,14 @@ const Profile = () => {
     if (status === "pending") return "Bekliyor";
     return "Reddedildi";
   };
+
+  if (profileLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4 animate-slide-up pb-24 md:pb-6">
@@ -77,25 +165,25 @@ const Profile = () => {
             <CardContent className="space-y-3">
               <div>
                 <label className="text-sm font-medium mb-1 block">Ad Soyad</label>
-                <Input value={user.fullName} onChange={(e) => setUser({ ...user, fullName: e.target.value })} className="bg-muted/50" />
+                <Input value={profile.fullName} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} className="bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">E-posta</label>
-                <Input value={user.email} onChange={(e) => setUser({ ...user, email: e.target.value })} className="bg-muted/50" />
+                <Input value={profile.email} disabled className="bg-muted/50 opacity-60" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Telefon</label>
-                <Input value={user.phone} onChange={(e) => setUser({ ...user, phone: e.target.value })} className="bg-muted/50" />
+                <Input value={profile.phone} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Doğum Tarihi</label>
-                <Input type="date" value={user.birthDate || ""} onChange={(e) => setUser({ ...user, birthDate: e.target.value })} className="bg-muted/50" />
+                <Input type="date" value={profile.birthDate} onChange={(e) => setProfile({ ...profile, birthDate: e.target.value })} className="bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1 block">Ülke</label>
-                <Input value={user.country || ""} onChange={(e) => setUser({ ...user, country: e.target.value })} className="bg-muted/50" />
+                <Input value={profile.country} onChange={(e) => setProfile({ ...profile, country: e.target.value })} className="bg-muted/50" />
               </div>
-              <Button className="w-full">Bilgileri Güncelle</Button>
+              <Button className="w-full" onClick={handleUpdateProfile}>Bilgileri Güncelle</Button>
             </CardContent>
           </Card>
 
@@ -104,10 +192,9 @@ const Profile = () => {
               <CardTitle className="text-base">Şifre Değiştir</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              <Input type="password" placeholder="Mevcut Şifre" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="bg-muted/50" />
               <Input type="password" placeholder="Yeni Şifre" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="bg-muted/50" />
               <Input type="password" placeholder="Yeni Şifre Tekrar" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="bg-muted/50" />
-              <Button variant="outline" className="w-full">Şifre Değiştir</Button>
+              <Button variant="outline" className="w-full" onClick={handleChangePassword}>Şifre Değiştir</Button>
             </CardContent>
           </Card>
         </TabsContent>
@@ -197,27 +284,29 @@ const Profile = () => {
             </Card>
           )}
 
-          {/* Recent Transactions */}
+          {/* Recent Transactions from DB */}
           <Card className="bg-card border-border">
             <CardHeader className="pb-3">
               <CardTitle className="text-base">Son Talepler</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              {mockTransactions.map((tx) => (
+              {transactions.length > 0 ? transactions.map((tx) => (
                 <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                   <div className="flex items-center gap-2">
                     {statusIcon(tx.status)}
                     <div>
                       <p className="text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(tx.createdAt).toLocaleDateString("tr-TR")}</p>
+                      <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("tr-TR")}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm font-mono font-semibold">{tx.amount.toLocaleString("tr-TR")} ₺</p>
+                    <p className="text-sm font-mono font-semibold">{Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}</p>
                     <p className="text-xs text-muted-foreground">{statusLabel(tx.status)}</p>
                   </div>
                 </div>
-              ))}
+              )) : (
+                <p className="text-sm text-muted-foreground text-center py-4">Henüz işlem yok.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

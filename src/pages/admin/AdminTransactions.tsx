@@ -40,8 +40,8 @@ const AdminTransactions = () => {
 
   return (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold">Para İşlemleri</h2>
-      <p className="text-sm text-muted-foreground">Yatırma ve çekme taleplerini yönetin</p>
+      <h2 className="text-2xl font-bold">Banka Yönetimi</h2>
+      <p className="text-sm text-muted-foreground">Banka hesapları ve para transferi işlemleri</p>
 
       <div className="space-y-2">
         {transactions.map((tx) => (
