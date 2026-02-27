@@ -56,9 +56,26 @@ const Trading = () => {
 
   useEffect(() => {
     loadSymbols();
-    // Auto-refresh every 30 seconds
-    const interval = setInterval(loadSymbols, 30000);
-    return () => clearInterval(interval);
+
+    // Realtime subscription for symbols
+    const channel = supabase
+      .channel('trading-symbols')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'symbols',
+      }, (payload) => {
+        if (payload.new) {
+          const updated = payload.new as any;
+          setSymbols(prev => prev.map(s => s.id === updated.id ? { ...s, ...updated } as DBSymbol : s));
+          setSelectedSymbol(prev => prev && prev.id === updated.id ? { ...prev, ...updated } as DBSymbol : prev);
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const loadSymbols = async () => {
@@ -70,10 +87,9 @@ const Trading = () => {
       .order("name");
     if (!error && data) {
       setSymbols(data as DBSymbol[]);
-      // Update selected symbol if it exists
       if (selectedSymbol) {
-        const updated = data.find((s: any) => s.id === selectedSymbol.id);
-        if (updated) setSelectedSymbol(updated as DBSymbol);
+        const upd = data.find((s: any) => s.id === selectedSymbol.id);
+        if (upd) setSelectedSymbol(upd as DBSymbol);
       }
     }
     setLoading(false);
