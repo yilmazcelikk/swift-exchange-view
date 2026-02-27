@@ -29,7 +29,7 @@ export interface Symbol {
   isFavorite?: boolean;
 }
 
-export type SymbolCategory = 'emtia' | 'doviz' | 'endeks' | 'bist' | 'hisse' | 'kripto';
+export type SymbolCategory = 'emtia' | 'doviz' | 'endeks' | 'bist' | 'hisse' | 'kripto' | 'forex' | 'commodity' | 'index' | 'crypto' | 'stock';
 
 export interface CandleData {
   time: string;
