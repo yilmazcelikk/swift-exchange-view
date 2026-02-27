@@ -16,6 +16,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 
 const Dashboard = () => {
   const { user: authUser } = useAuth();
@@ -28,7 +29,6 @@ const Dashboard = () => {
     if (authUser?.id) {
       loadData();
 
-      // Realtime subscription for profile changes
       const profileChannel = supabase
         .channel('dashboard-profile')
         .on('postgres_changes', {
@@ -48,7 +48,6 @@ const Dashboard = () => {
         })
         .subscribe();
 
-      // Realtime subscription for orders
       const ordersChannel = supabase
         .channel('dashboard-orders')
         .on('postgres_changes', {
@@ -61,7 +60,6 @@ const Dashboard = () => {
         })
         .subscribe();
 
-      // Realtime subscription for symbol price updates -> recalculate P/L
       const symbolsChannel = supabase
         .channel('dashboard-symbols')
         .on('postgres_changes', {
@@ -74,10 +72,7 @@ const Dashboard = () => {
             setOrders(prev => prev.map(o => {
               if (o.symbolId === updated.id && updated.current_price) {
                 const newPrice = Number(updated.current_price);
-                const priceDiff = o.type === 'buy'
-                  ? newPrice - o.entryPrice
-                  : o.entryPrice - newPrice;
-                const newPnl = priceDiff * o.lots * 100000;
+                const newPnl = calculatePnl(o.symbolName, o.type, o.lots, o.entryPrice, newPrice);
                 return { ...o, currentPrice: newPrice, pnl: newPnl };
               }
               return o;
@@ -114,7 +109,6 @@ const Dashboard = () => {
     const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
 
     if (data) {
-      // Also fetch current prices for the symbols
       const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
       const { data: symbolsData } = await supabase
         .from("symbols")
@@ -124,10 +118,7 @@ const Dashboard = () => {
 
       setOrders(data.map((o: any) => {
         const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
-        const priceDiff = o.type === 'buy'
-          ? currentPrice - Number(o.entry_price)
-          : Number(o.entry_price) - currentPrice;
-        const pnl = priceDiff * Number(o.lots) * 100000;
+        const pnl = calculatePnl(o.symbol_name, o.type, Number(o.lots), Number(o.entry_price), currentPrice);
 
         return {
           id: o.id,
@@ -154,10 +145,9 @@ const Dashboard = () => {
   // Dynamic equity = balance + unrealized PnL
   const dynamicEquity = profile.balance + totalOpenPnl;
 
-  // Calculate used margin from open orders
+  // Calculate used margin from open orders using correct contract sizes
   const usedMargin = openOrders.reduce((sum, o) => {
-    const leverageNum = 200; // 1:200
-    return sum + (o.lots * 100000 * o.entryPrice) / leverageNum;
+    return sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, 200);
   }, 0);
   const dynamicFreeMargin = dynamicEquity - usedMargin;
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
@@ -173,13 +163,17 @@ const Dashboard = () => {
   const handleClosePosition = async (order: Order) => {
     setClosingOrder(null);
     
+    // Calculate commission (0.04% of notional value)
+    const commission = calculateCommission(order.symbolName, order.lots, order.currentPrice);
+    const netPnl = order.pnl - commission;
+
     const { error } = await supabase
       .from("orders")
       .update({ 
         status: "closed", 
         closed_at: new Date().toISOString(),
         current_price: order.currentPrice,
-        pnl: order.pnl,
+        pnl: netPnl,
       })
       .eq("id", order.id);
 
@@ -188,8 +182,8 @@ const Dashboard = () => {
       return;
     }
 
-    // Update balance with realized PnL
-    const newBalance = profile.balance + order.pnl;
+    // Update balance with realized PnL (after commission)
+    const newBalance = profile.balance + netPnl;
     await supabase
       .from("profiles")
       .update({ 
@@ -201,19 +195,26 @@ const Dashboard = () => {
 
     setOrders(prev => prev.filter(o => o.id !== order.id));
     toast.success(`${order.symbolName} ${order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} ${order.lots} lot pozisyon kapatıldı`, {
-      description: `K/Z: ${order.pnl >= 0 ? '+' : ''}${order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD`,
+      description: `K/Z: ${netPnl >= 0 ? '+' : ''}${netPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD (Komisyon: ${commission.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD)`,
     });
 
-    // Reload profile data
     loadData();
   };
+
+  // Commission preview for dialog
+  const closingCommission = closingOrder
+    ? calculateCommission(closingOrder.symbolName, closingOrder.lots, closingOrder.currentPrice)
+    : 0;
+  const closingNetPnl = closingOrder ? closingOrder.pnl - closingCommission : 0;
+
+  const formatUsd = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
       {/* Top PnL Display */}
       <div className="flex items-center justify-center px-4 pt-4 pb-2">
         <p className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-          {totalOpenPnl >= 0 ? '+' : ''}{totalOpenPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
+          {totalOpenPnl >= 0 ? '+' : ''}{formatUsd(totalOpenPnl)} USD
         </p>
       </div>
 
@@ -223,7 +224,7 @@ const Dashboard = () => {
           <div key={stat.label} className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">{stat.label}:</span>
             <span className="text-xs font-mono font-medium text-foreground">
-              {stat.value.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+              {stat.label.includes('%') ? formatUsd(stat.value) : `${formatUsd(stat.value)} USD`}
             </span>
           </div>
         ))}
@@ -247,12 +248,12 @@ const Dashboard = () => {
                     <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
                     {' '}
                     <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                      {order.type} {order.lots}
+                      {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {order.lots}
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                      {order.pnl >= 0 ? '+' : ''}{order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                      {order.pnl >= 0 ? '+' : ''}{formatUsd(order.pnl)}
                     </span>
                     <button
                       onClick={() => setClosingOrder(order)}
@@ -264,7 +265,7 @@ const Dashboard = () => {
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                  {order.entryPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} → {order.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                  {formatUsd(order.entryPrice)} → {formatUsd(order.currentPrice)}
                 </p>
               </div>
             ))}
@@ -298,16 +299,26 @@ const Dashboard = () => {
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Giriş Fiyatı</span>
-                      <span className="font-mono">{closingOrder.entryPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-mono">{formatUsd(closingOrder.entryPrice)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Güncel Fiyat</span>
-                      <span className="font-mono">{closingOrder.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+                      <span className="font-mono">{formatUsd(closingOrder.currentPrice)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Brüt K/Z</span>
+                      <span className={`font-mono ${closingOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+                        {closingOrder.pnl >= 0 ? '+' : ''}{formatUsd(closingOrder.pnl)} USD
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Komisyon (%0.04)</span>
+                      <span className="font-mono text-sell">-{formatUsd(closingCommission)} USD</span>
                     </div>
                     <div className="flex justify-between text-sm border-t border-border pt-1 mt-1">
-                      <span className="text-muted-foreground font-medium">K/Z</span>
-                      <span className={`font-mono font-bold ${closingOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                        {closingOrder.pnl >= 0 ? '+' : ''}{closingOrder.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD
+                      <span className="text-muted-foreground font-medium">Net K/Z</span>
+                      <span className={`font-mono font-bold ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+                        {closingNetPnl >= 0 ? '+' : ''}{formatUsd(closingNetPnl)} USD
                       </span>
                     </div>
                   </div>

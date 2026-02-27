@@ -67,7 +67,7 @@ const History = () => {
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Bakiye</span>
-            <span className="font-mono font-medium text-foreground">{balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
+            <span className="font-mono font-medium text-foreground">{balance.toLocaleString('en-US', { minimumFractionDigits: 2 })} USD</span>
           </div>
         </div>
 
