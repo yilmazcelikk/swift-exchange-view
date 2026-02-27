@@ -61,9 +61,35 @@ const Dashboard = () => {
         })
         .subscribe();
 
+      // Realtime subscription for symbol price updates -> recalculate P/L
+      const symbolsChannel = supabase
+        .channel('dashboard-symbols')
+        .on('postgres_changes', {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'symbols',
+        }, (payload) => {
+          if (payload.new) {
+            const updated = payload.new as any;
+            setOrders(prev => prev.map(o => {
+              if (o.symbolId === updated.id && updated.current_price) {
+                const newPrice = Number(updated.current_price);
+                const priceDiff = o.type === 'buy'
+                  ? newPrice - o.entryPrice
+                  : o.entryPrice - newPrice;
+                const newPnl = priceDiff * o.lots * 100000;
+                return { ...o, currentPrice: newPrice, pnl: newPnl };
+              }
+              return o;
+            }));
+          }
+        })
+        .subscribe();
+
       return () => {
         supabase.removeChannel(profileChannel);
         supabase.removeChannel(ordersChannel);
+        supabase.removeChannel(symbolsChannel);
       };
     }
   }, [authUser?.id]);
@@ -88,21 +114,37 @@ const Dashboard = () => {
     const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
 
     if (data) {
-      setOrders(data.map((o: any) => ({
-        id: o.id,
-        symbolId: o.symbol_id,
-        symbolName: o.symbol_name,
-        type: o.type as "buy" | "sell",
-        orderType: (o.order_type || "market") as "market" | "limit",
-        lots: Number(o.lots),
-        entryPrice: Number(o.entry_price),
-        currentPrice: Number(o.current_price),
-        stopLoss: o.stop_loss ? Number(o.stop_loss) : undefined,
-        takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
-        pnl: Number(o.pnl),
-        status: o.status as "open" | "closed",
-        createdAt: o.created_at,
-      })));
+      // Also fetch current prices for the symbols
+      const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
+      const { data: symbolsData } = await supabase
+        .from("symbols")
+        .select("id, current_price")
+        .in("id", symbolIds);
+      const priceMap = new Map(symbolsData?.map(s => [s.id, Number(s.current_price)]) || []);
+
+      setOrders(data.map((o: any) => {
+        const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
+        const priceDiff = o.type === 'buy'
+          ? currentPrice - Number(o.entry_price)
+          : Number(o.entry_price) - currentPrice;
+        const pnl = priceDiff * Number(o.lots) * 100000;
+
+        return {
+          id: o.id,
+          symbolId: o.symbol_id,
+          symbolName: o.symbol_name,
+          type: o.type as "buy" | "sell",
+          orderType: (o.order_type || "market") as "market" | "limit",
+          lots: Number(o.lots),
+          entryPrice: Number(o.entry_price),
+          currentPrice,
+          stopLoss: o.stop_loss ? Number(o.stop_loss) : undefined,
+          takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
+          pnl,
+          status: o.status as "open" | "closed",
+          createdAt: o.created_at,
+        };
+      }));
     }
   };
 

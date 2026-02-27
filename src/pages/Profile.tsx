@@ -8,8 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  ArrowDownToLine, ArrowUpFromLine, Building2, XCircle, Pencil, Copy,
+  ArrowDownToLine, ArrowUpFromLine, Building2, XCircle, Pencil, Copy, Sun, Moon,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 
 // ─── Payment Methods (only bank transfer now) ───
 const paymentMethods = [
@@ -364,6 +365,8 @@ const Profile = () => {
               <Button variant="outline" className="w-full" onClick={handleChangePassword}>Şifre Değiştir</Button>
             </CardContent>
           </Card>
+
+          <ThemeCard />
         </TabsContent>
 
         {/* ─── Para İşlemleri ─── */}
