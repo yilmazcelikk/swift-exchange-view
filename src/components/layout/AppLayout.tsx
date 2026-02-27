@@ -1,4 +1,4 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "./AppSidebar";
 import { Header } from "./Header";
 import { BottomNav } from "./BottomNav";
@@ -18,9 +18,6 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         <div className="flex-1 flex flex-col min-w-0">
           <Header />
-          <div className="hidden md:flex items-center h-0">
-            <SidebarTrigger className="ml-2 absolute z-10" />
-          </div>
           <main className="flex-1 overflow-auto pb-16 md:pb-0">
             {children}
           </main>
