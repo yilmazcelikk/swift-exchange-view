@@ -243,6 +243,7 @@ export type Database = {
           currency: string
           id: string
           method: string | null
+          receipt_url: string | null
           status: string
           type: string
           user_id: string
@@ -253,6 +254,7 @@ export type Database = {
           currency?: string
           id?: string
           method?: string | null
+          receipt_url?: string | null
           status?: string
           type: string
           user_id: string
@@ -263,6 +265,7 @@ export type Database = {
           currency?: string
           id?: string
           method?: string | null
+          receipt_url?: string | null
           status?: string
           type?: string
           user_id?: string
