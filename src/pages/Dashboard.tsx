@@ -316,18 +316,8 @@ const Dashboard = () => {
                       <span className="text-muted-foreground">Güncel Fiyat</span>
                       <span className="font-mono">{formatUsd(closingOrder.currentPrice)}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Brüt K/Z</span>
-                      <span className={`font-mono ${closingOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                        {closingOrder.pnl >= 0 ? '+' : ''}{formatUsd(closingOrder.pnl)} USD
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Komisyon (%0.002)</span>
-                      <span className="font-mono text-sell">-{formatUsd(closingCommission)} USD</span>
-                    </div>
                     <div className="flex justify-between text-sm border-t border-border pt-1 mt-1">
-                      <span className="text-muted-foreground font-medium">Net K/Z</span>
+                      <span className="text-muted-foreground font-medium">K/Z</span>
                       <span className={`font-mono font-bold ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
                         {closingNetPnl >= 0 ? '+' : ''}{formatUsd(closingNetPnl)} USD
                       </span>
