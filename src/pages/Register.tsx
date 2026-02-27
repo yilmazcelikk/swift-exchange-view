@@ -9,7 +9,7 @@ import { toast } from "sonner";
 
 const Register = () => {
   const [formData, setFormData] = useState({
-    fullName: "", email: "", phone: "", password: "", confirmPassword: "",
+    firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "",
     userType: "", referralCode: "", acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -31,7 +31,7 @@ const Register = () => {
       email: formData.email,
       password: formData.password,
       options: {
-        data: { full_name: formData.fullName },
+        data: { full_name: `${formData.firstName} ${formData.lastName}` },
       },
     });
     setLoading(false);
@@ -92,9 +92,15 @@ const Register = () => {
             <p className="text-muted-foreground text-sm mt-1">Bilgilerinizi girerek hesap oluşturun.</p>
           </div>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1.5 block">Ad Soyad</label>
-              <Input placeholder="Ahmet Yılmaz" value={formData.fullName} onChange={(e) => update("fullName", e.target.value)} className="bg-muted/50" />
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Ad</label>
+                <Input placeholder="Ahmet" value={formData.firstName} onChange={(e) => update("firstName", e.target.value)} className="bg-muted/50" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Soyad</label>
+                <Input placeholder="Yılmaz" value={formData.lastName} onChange={(e) => update("lastName", e.target.value)} className="bg-muted/50" />
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">E-posta</label>
@@ -102,7 +108,20 @@ const Register = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Telefon</label>
-              <Input type="tel" placeholder="+90 5XX XXX XX XX" value={formData.phone} onChange={(e) => update("phone", e.target.value)} className="bg-muted/50" />
+              <div className="flex gap-2">
+                <div className="flex items-center px-3 h-10 rounded-md border border-input bg-muted/50 text-sm text-muted-foreground shrink-0">+90</div>
+                <Input
+                  type="tel"
+                  placeholder="5XX XXX XX XX"
+                  value={formData.phone}
+                  onChange={(e) => {
+                    const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                    update("phone", val);
+                  }}
+                  maxLength={10}
+                  className="bg-muted/50"
+                />
+              </div>
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre</label>
