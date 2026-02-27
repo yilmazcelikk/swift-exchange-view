@@ -14,16 +14,207 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      documents: {
+        Row: {
+          created_at: string
+          file_url: string | null
+          id: string
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          file_url?: string | null
+          id?: string
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      orders: {
+        Row: {
+          closed_at: string | null
+          created_at: string
+          current_price: number
+          entry_price: number
+          id: string
+          leverage: string
+          lots: number
+          order_type: string
+          pnl: number
+          status: string
+          stop_loss: number | null
+          symbol_id: string
+          symbol_name: string
+          take_profit: number | null
+          type: string
+          user_id: string
+        }
+        Insert: {
+          closed_at?: string | null
+          created_at?: string
+          current_price: number
+          entry_price: number
+          id?: string
+          leverage?: string
+          lots: number
+          order_type?: string
+          pnl?: number
+          status?: string
+          stop_loss?: number | null
+          symbol_id: string
+          symbol_name: string
+          take_profit?: number | null
+          type: string
+          user_id: string
+        }
+        Update: {
+          closed_at?: string | null
+          created_at?: string
+          current_price?: number
+          entry_price?: number
+          id?: string
+          leverage?: string
+          lots?: number
+          order_type?: string
+          pnl?: number
+          status?: string
+          stop_loss?: number | null
+          symbol_id?: string
+          symbol_name?: string
+          take_profit?: number | null
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          balance: number
+          birth_date: string | null
+          country: string | null
+          created_at: string
+          credit: number
+          equity: number
+          free_margin: number
+          full_name: string | null
+          id: string
+          leverage: string
+          phone: string | null
+          updated_at: string
+          user_id: string
+          verification_status: string
+        }
+        Insert: {
+          balance?: number
+          birth_date?: string | null
+          country?: string | null
+          created_at?: string
+          credit?: number
+          equity?: number
+          free_margin?: number
+          full_name?: string | null
+          id?: string
+          leverage?: string
+          phone?: string | null
+          updated_at?: string
+          user_id: string
+          verification_status?: string
+        }
+        Update: {
+          balance?: number
+          birth_date?: string | null
+          country?: string | null
+          created_at?: string
+          credit?: number
+          equity?: number
+          free_margin?: number
+          full_name?: string | null
+          id?: string
+          leverage?: string
+          phone?: string | null
+          updated_at?: string
+          user_id?: string
+          verification_status?: string
+        }
+        Relationships: []
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          id: string
+          method: string | null
+          status: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          status?: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          id?: string
+          method?: string | null
+          status?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +341,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
