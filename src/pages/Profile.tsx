@@ -550,7 +550,9 @@ const Profile = () => {
                     <span className="text-xs text-muted-foreground">{frontFile ? frontFile.name : "Dosya seçin"}</span>
                     <input type="file" className="hidden" accept="image/*" onChange={(e) => setFrontFile(e.target.files?.[0] || null)} />
                   </label>
-                  <Button onClick={() => setCurrentStep(2)} disabled={!frontFile} className="w-full">Devam Et</Button>
+                  <Button onClick={handleVerificationUpload} disabled={!frontFile || submitting} className="w-full">
+                    {submitting ? "Yükleniyor..." : "Devam Et"}
+                  </Button>
                 </div>
               )}
 
@@ -563,7 +565,9 @@ const Profile = () => {
                     <span className="text-xs text-muted-foreground">{addressFile ? addressFile.name : "Dosya seçin"}</span>
                     <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => setAddressFile(e.target.files?.[0] || null)} />
                   </label>
-                  <Button onClick={() => setCurrentStep(3)} disabled={!addressFile} className="w-full">Gönder</Button>
+                  <Button onClick={handleAddressUpload} disabled={!addressFile || submitting} className="w-full">
+                    {submitting ? "Yükleniyor..." : "Gönder"}
+                  </Button>
                 </div>
               )}
 
