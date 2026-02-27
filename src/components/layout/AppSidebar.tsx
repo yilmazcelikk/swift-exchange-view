@@ -33,7 +33,7 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = async (e?: React.MouseEvent) => {
+  const handleLogout = async (e?: any) => {
     e?.preventDefault();
     e?.stopPropagation();
     try {
