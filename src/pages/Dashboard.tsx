@@ -50,6 +50,7 @@ const Dashboard = () => {
         symbolId: o.symbol_id,
         symbolName: o.symbol_name,
         type: o.type as "buy" | "sell",
+        orderType: (o.order_type || "market") as "market" | "limit",
         lots: Number(o.lots),
         entryPrice: Number(o.entry_price),
         currentPrice: Number(o.current_price),
@@ -57,7 +58,7 @@ const Dashboard = () => {
         takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
         pnl: Number(o.pnl),
         status: o.status as "open" | "closed",
-        openTime: o.created_at,
+        createdAt: o.created_at,
       })));
     }
   };
