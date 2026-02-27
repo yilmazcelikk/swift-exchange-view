@@ -26,7 +26,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  const checkAdmin = async (userId: string) => {
+  const checkAdmin = async (userId: string): Promise<boolean> => {
     try {
       const { data, error } = await supabase.rpc("has_role", {
         _user_id: userId,
@@ -35,16 +35,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (error) {
         console.error("checkAdmin error:", error);
         setIsAdmin(false);
+        return false;
       } else {
         setIsAdmin(!!data);
+        return !!data;
       }
     } catch (err) {
       console.error("checkAdmin unexpected error:", err);
       setIsAdmin(false);
+      return false;
     }
   };
 
   useEffect(() => {
+    let initialSessionHandled = false;
     const forceStopLoading = window.setTimeout(() => {
       setLoading(false);
     }, 5000);
@@ -65,11 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
           setLoading(false);
           window.clearTimeout(forceStopLoading);
+          initialSessionHandled = true;
         }
       }
     );
 
+    // Only use getSession as fallback if onAuthStateChange hasn't fired yet
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (initialSessionHandled) return;
       try {
         setSession(session);
         setUser(session?.user ?? null);
@@ -80,12 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("getSession error:", err);
         setIsAdmin(false);
       } finally {
+        if (!initialSessionHandled) {
+          setLoading(false);
+          window.clearTimeout(forceStopLoading);
+        }
+      }
+    }).catch(() => {
+      if (!initialSessionHandled) {
         setLoading(false);
         window.clearTimeout(forceStopLoading);
       }
-    }).catch(() => {
-      setLoading(false);
-      window.clearTimeout(forceStopLoading);
     });
 
     return () => {
