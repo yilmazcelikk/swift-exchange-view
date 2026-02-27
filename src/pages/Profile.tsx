@@ -436,8 +436,8 @@ const Profile = () => {
                   </label>
                 </div>
 
-                  <Button className="w-full h-11 font-semibold" disabled={isDepositDisabled}>
-                    Para Yatır
+                  <Button className="w-full h-11 font-semibold" disabled={isDepositDisabled} onClick={handleDeposit}>
+                    {submitting ? "Gönderiliyor..." : "Para Yatır"}
                   </Button>
                 </CardContent>
               </Card>
@@ -487,8 +487,8 @@ const Profile = () => {
                   ))}
                 </div>
 
-                <Button className="w-full h-11 font-semibold" disabled={isWithdrawDisabled}>
-                  Para Çek
+                <Button className="w-full h-11 font-semibold" disabled={isWithdrawDisabled} onClick={handleWithdraw}>
+                  {submitting ? "Gönderiliyor..." : "Para Çek"}
                 </Button>
               </CardContent>
             </Card>
