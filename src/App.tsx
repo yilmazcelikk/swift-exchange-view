@@ -13,6 +13,7 @@ import Trading from "./pages/Trading";
 import History from "./pages/History";
 import Profile from "./pages/Profile";
 import AdminLayout from "./pages/admin/AdminLayout";
+import { AdminCrashGuard } from "@/components/admin/AdminCrashGuard";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -62,7 +63,7 @@ const AppRoutes = () => (
     <Route path="/trading" element={<ProtectedRoute><AppLayout><Trading /></AppLayout></ProtectedRoute>} />
     <Route path="/history" element={<ProtectedRoute><AppLayout><History /></AppLayout></ProtectedRoute>} />
     <Route path="/profile" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
-    <Route path="/admin" element={<AdminRoute><AdminLayout /></AdminRoute>} />
+    <Route path="/admin" element={<AdminRoute><AdminCrashGuard><AdminLayout /></AdminCrashGuard></AdminRoute>} />
     <Route path="*" element={<NotFound />} />
   </Routes>
 );
