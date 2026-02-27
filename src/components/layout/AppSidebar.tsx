@@ -33,9 +33,19 @@ export function AppSidebar() {
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await signOut();
-    navigate("/login");
+  const handleLogout = (e?: any) => {
+    e?.preventDefault();
+    e?.stopPropagation();
+
+    void signOut();
+    navigate("/login", { replace: true });
+
+    // Hard redirect fallback in case router state is stale
+    window.setTimeout(() => {
+      if (window.location.pathname !== "/login") {
+        window.location.assign("/login");
+      }
+    }, 100);
   };
 
   return (

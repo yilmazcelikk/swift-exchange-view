@@ -95,10 +95,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Immediately clear local auth state so UI can redirect without waiting network
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+
+    try {
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("signOut timeout")), 2000)
+      );
+
+      const result = await Promise.race([
+        supabase.auth.signOut(),
+        timeoutPromise,
+      ]) as { error?: { message?: string } };
+
+      if (result?.error) {
+        console.error("signOut global error:", result.error);
+        await supabase.auth.signOut({ scope: "local" });
+      }
+    } catch (err) {
+      console.error("signOut unexpected error:", err);
+      try {
+        await supabase.auth.signOut({ scope: "local" });
+      } catch (localErr) {
+        console.error("signOut local fallback error:", localErr);
+      }
+    } finally {
+      Object.keys(localStorage).forEach((key) => {
+        if (key.startsWith("sb-") && key.includes("-auth-token")) {
+          localStorage.removeItem(key);
+        }
+      });
+    }
   };
 
   return (
