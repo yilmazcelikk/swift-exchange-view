@@ -45,31 +45,53 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    const forceStopLoading = window.setTimeout(() => {
+      setLoading(false);
+    }, 5000);
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        if (session?.user) {
-          await checkAdmin(session.user.id);
-        } else {
+        try {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session?.user) {
+            await checkAdmin(session.user.id);
+          } else {
+            setIsAdmin(false);
+          }
+        } catch (err) {
+          console.error("onAuthStateChange error:", err);
           setIsAdmin(false);
+        } finally {
+          setLoading(false);
+          window.clearTimeout(forceStopLoading);
         }
-        setLoading(false);
       }
     );
 
     supabase.auth.getSession().then(async ({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        await checkAdmin(session.user.id);
+      try {
+        setSession(session);
+        setUser(session?.user ?? null);
+        if (session?.user) {
+          await checkAdmin(session.user.id);
+        }
+      } catch (err) {
+        console.error("getSession error:", err);
+        setIsAdmin(false);
+      } finally {
+        setLoading(false);
+        window.clearTimeout(forceStopLoading);
       }
-      setLoading(false);
     }).catch(() => {
       setLoading(false);
+      window.clearTimeout(forceStopLoading);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      window.clearTimeout(forceStopLoading);
+    };
   }, []);
 
   const signOut = async () => {
