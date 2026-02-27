@@ -51,6 +51,8 @@ const AdminTransactions = () => {
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [newAccount, setNewAccount] = useState({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
+  const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
+  const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
 
   useEffect(() => { loadAll(); }, []);
 
@@ -61,7 +63,23 @@ const AdminTransactions = () => {
       supabase.from("transactions").select("*").order("created_at", { ascending: false }),
     ]);
     setBankAccounts((bankRes.data as BankAccount[]) || []);
-    setTransactions((txRes.data as TransactionRow[]) || []);
+    
+    const txData = (txRes.data || []) as any[];
+    // Fetch user names
+    if (txData.length > 0) {
+      const userIds = [...new Set(txData.map(t => t.user_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", userIds);
+      const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
+      setTransactions(txData.map(t => ({
+        ...t,
+        user_name: profileMap.get(t.user_id) || t.user_id.slice(0, 8) + "...",
+      })));
+    } else {
+      setTransactions([]);
+    }
     setLoading(false);
   };
 
