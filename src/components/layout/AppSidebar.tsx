@@ -75,14 +75,12 @@ export function AppSidebar() {
       <SidebarFooter className="border-t border-sidebar-border p-2">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <button
-                onClick={handleLogout}
-                className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sell transition-colors"
-              >
-                <LogOut className="h-5 w-5 shrink-0" />
-                {!collapsed && <span className="text-sm">Çıkış Yap</span>}
-              </button>
+            <SidebarMenuButton
+              onClick={handleLogout}
+              className="flex items-center gap-3 px-3 py-2 w-full rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-destructive transition-colors cursor-pointer"
+            >
+              <LogOut className="h-5 w-5 shrink-0" />
+              {!collapsed && <span className="text-sm">Çıkış Yap</span>}
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
