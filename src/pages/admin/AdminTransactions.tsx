@@ -114,8 +114,51 @@ const AdminTransactions = () => {
   };
 
   const updateTxStatus = async (id: string, status: string) => {
+    // Get transaction details first
+    const tx = transactions.find(t => t.id === id);
     const { error } = await supabase.from("transactions").update({ status }).eq("id", id);
     if (error) { toast.error("Güncelleme başarısız"); return; }
+
+    // If approving a deposit, add amount to user's balance
+    if (status === "approved" && tx && tx.type === "deposit") {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("balance, equity, free_margin")
+        .eq("user_id", tx.user_id)
+        .single();
+
+      if (profile) {
+        const newBalance = Number(profile.balance) + Number(tx.amount);
+        const newEquity = Number(profile.equity) + Number(tx.amount);
+        const newFreeMargin = Number(profile.free_margin) + Number(tx.amount);
+        await supabase.from("profiles").update({
+          balance: newBalance,
+          equity: newEquity,
+          free_margin: newFreeMargin,
+        }).eq("user_id", tx.user_id);
+      }
+    }
+
+    // If approving a withdrawal, subtract from balance
+    if (status === "approved" && tx && tx.type === "withdrawal") {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("balance, equity, free_margin")
+        .eq("user_id", tx.user_id)
+        .single();
+
+      if (profile) {
+        const newBalance = Number(profile.balance) - Number(tx.amount);
+        const newEquity = Number(profile.equity) - Number(tx.amount);
+        const newFreeMargin = Number(profile.free_margin) - Number(tx.amount);
+        await supabase.from("profiles").update({
+          balance: newBalance,
+          equity: newEquity,
+          free_margin: newFreeMargin,
+        }).eq("user_id", tx.user_id);
+      }
+    }
+
     toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
     loadAll();
   };
