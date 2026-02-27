@@ -289,6 +289,7 @@ const AdminTransactions = () => {
                       <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Kullanıcı</th>
                       <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Tarih</th>
                       <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Tutar</th>
+                      <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Dekont</th>
                       <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
                       <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
                     </tr>
@@ -307,7 +308,15 @@ const AdminTransactions = () => {
                             <span className="text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</span>
                           </div>
                         </td>
-                        <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-2">
+                            <User className="h-3.5 w-3.5 text-muted-foreground" />
+                            <div>
+                              <p className="text-sm font-medium">{tx.user_name || tx.user_id.slice(0, 8)}</p>
+                              <p className="text-[10px] font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</p>
+                            </div>
+                          </div>
+                        </td>
                         <td className="px-4 py-3 text-xs text-muted-foreground">
                           {new Date(tx.created_at).toLocaleDateString("tr-TR")}
                         </td>
@@ -315,6 +324,28 @@ const AdminTransactions = () => {
                           <span className="text-sm font-mono font-bold">
                             {Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}
                           </span>
+                        </td>
+                        <td className="px-4 py-3 text-center">
+                          {tx.receipt_url ? (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-7 w-7 text-primary hover:bg-primary/10"
+                              onClick={async () => {
+                                const { data } = await supabase.storage.from("receipts").createSignedUrl(tx.receipt_url!, 300);
+                                if (data?.signedUrl) {
+                                  setReceiptPreviewUrl(data.signedUrl);
+                                  setReceiptPreviewOpen(true);
+                                } else {
+                                  toast.error("Dekont yüklenemedi");
+                                }
+                              }}
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
                         </td>
                         <td className="px-4 py-3 text-center">
                           <span className={`text-xs px-2 py-0.5 rounded-full ${
