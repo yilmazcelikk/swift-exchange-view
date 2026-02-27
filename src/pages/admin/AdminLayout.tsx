@@ -22,6 +22,7 @@ import AdminPositions from "./AdminPositions";
 import AdminTransactions from "./AdminTransactions";
 import AdminDocuments from "./AdminDocuments";
 import AdminSettings from "./AdminSettings";
+import AdminProducts from "./AdminProducts";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const navSections = [
