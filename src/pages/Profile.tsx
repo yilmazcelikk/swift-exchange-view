@@ -35,6 +35,7 @@ const Profile = () => {
   });
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
   const [transactions, setTransactions] = useState<any[]>([]);
+  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
 
   // Deposit state
@@ -48,16 +49,12 @@ const Profile = () => {
   const [frontFile, setFrontFile] = useState<File | null>(null);
   const [addressFile, setAddressFile] = useState<File | null>(null);
 
-  const bankAccounts = [
-    { id: "1", bankName: "Ziraat Bankası", iban: "TR33 0001 0009 4537 1234 5678 90", accountHolder: profile.fullName || "—" },
-  ];
+  const quickAmounts = [1000, 5000, 10000, 25000];
 
-  useEffect(() => {
-    if (authUser?.id) {
-      loadProfile();
-      loadTransactions();
-    }
-  }, [authUser?.id]);
+  // Verification state
+  const [currentStep, setCurrentStep] = useState(1);
+  const [frontFile, setFrontFile] = useState<File | null>(null);
+  const [addressFile, setAddressFile] = useState<File | null>(null);
 
   const loadProfile = async () => {
     setProfileLoading(true);
