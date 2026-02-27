@@ -1,0 +1,128 @@
+import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Navigate } from "react-router-dom";
+import { Button } from "@/components/ui/button";
+import {
+  LayoutDashboard,
+  Users,
+  TrendingUp,
+  DollarSign,
+  FileText,
+  LogOut,
+  Menu,
+  X,
+  TrendingUp as Logo,
+} from "lucide-react";
+import AdminDashboard from "./AdminDashboard";
+import AdminUsers from "./AdminUsers";
+import AdminPositions from "./AdminPositions";
+import AdminTransactions from "./AdminTransactions";
+import AdminDocuments from "./AdminDocuments";
+import { ThemeToggle } from "@/components/layout/ThemeToggle";
+
+const navItems = [
+  { key: "dashboard", label: "Pozisyonlar", icon: LayoutDashboard },
+  { key: "users", label: "Kullanıcılar", icon: Users },
+  { key: "positions", label: "Açık İşlemler", icon: TrendingUp },
+  { key: "transactions", label: "Para İşlemleri", icon: DollarSign },
+  { key: "documents", label: "Evraklar", icon: FileText },
+];
+
+const AdminLayout = () => {
+  const { isAdmin, loading, signOut } = useAuth();
+  const [activeTab, setActiveTab] = useState("dashboard");
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!isAdmin) {
+    return <Navigate to="/login" replace />;
+  }
+
+  const renderContent = () => {
+    switch (activeTab) {
+      case "dashboard": return <AdminDashboard />;
+      case "users": return <AdminUsers />;
+      case "positions": return <AdminPositions />;
+      case "transactions": return <AdminTransactions />;
+      case "documents": return <AdminDocuments />;
+      default: return <AdminDashboard />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex bg-background">
+      {/* Sidebar */}
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="h-14 flex items-center justify-between px-4 border-b border-border">
+          <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-primary rounded-lg">
+              <Logo className="h-5 w-5 text-primary-foreground" />
+            </div>
+            <h1 className="text-lg font-bold">TradeHub</h1>
+          </div>
+          <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSidebarOpen(false)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+
+        <nav className="p-3 space-y-1">
+          {navItems.map((item) => (
+            <button
+              key={item.key}
+              onClick={() => { setActiveTab(item.key); setSidebarOpen(false); }}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-colors ${
+                activeTab === item.key
+                  ? "bg-primary/10 text-primary font-medium"
+                  : "text-muted-foreground hover:bg-muted hover:text-foreground"
+              }`}
+            >
+              <item.icon className="h-5 w-5 shrink-0" />
+              {item.label}
+            </button>
+          ))}
+        </nav>
+
+        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border">
+          <button
+            onClick={signOut}
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-sell transition-colors"
+          >
+            <LogOut className="h-5 w-5 shrink-0" />
+            Çıkış Yap
+          </button>
+        </div>
+      </aside>
+
+      {/* Overlay */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-40 bg-black/50 md:hidden" onClick={() => setSidebarOpen(false)} />
+      )}
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col min-w-0">
+        <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">
+          <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSidebarOpen(true)}>
+            <Menu className="h-5 w-5" />
+          </Button>
+          <div className="flex items-center gap-2 ml-auto">
+            <ThemeToggle />
+            <span className="text-xs text-muted-foreground bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">Admin</span>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto p-4 md:p-6">
+          {renderContent()}
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default AdminLayout;

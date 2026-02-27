@@ -1,6 +1,5 @@
 import { LayoutDashboard, TrendingUp, UserCircle, History } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 
 const navItems = [
   { title: "İşlem", url: "/dashboard", icon: LayoutDashboard },
@@ -10,8 +9,6 @@ const navItems = [
 ];
 
 export function BottomNav() {
-  const location = useLocation();
-
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border safe-area-bottom">
       <div className="flex items-center justify-around h-16">
