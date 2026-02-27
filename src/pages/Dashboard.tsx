@@ -166,14 +166,42 @@ const Dashboard = () => {
     { label: "Teminat seviyesi (%)", value: marginLevel },
   ];
 
-  const handleClosePosition = (order: Order) => {
-    setOrders(prev => prev.map(o =>
-      o.id === order.id ? { ...o, status: 'closed' as const } : o
-    ));
+  const handleClosePosition = async (order: Order) => {
     setClosingOrder(null);
+    
+    const { error } = await supabase
+      .from("orders")
+      .update({ 
+        status: "closed", 
+        closed_at: new Date().toISOString(),
+        current_price: order.currentPrice,
+        pnl: order.pnl,
+      })
+      .eq("id", order.id);
+
+    if (error) {
+      toast.error("Pozisyon kapatılamadı: " + error.message);
+      return;
+    }
+
+    // Update balance with realized PnL
+    const newBalance = profile.balance + order.pnl;
+    await supabase
+      .from("profiles")
+      .update({ 
+        balance: newBalance,
+        equity: newBalance,
+        free_margin: newBalance,
+      })
+      .eq("user_id", authUser!.id);
+
+    setOrders(prev => prev.filter(o => o.id !== order.id));
     toast.success(`${order.symbolName} ${order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} ${order.lots} lot pozisyon kapatıldı`, {
       description: `K/Z: ${order.pnl >= 0 ? '+' : ''}${order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD`,
     });
+
+    // Reload profile data
+    loadData();
   };
 
   return (

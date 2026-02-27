@@ -1,8 +1,55 @@
-import { mockOrders } from "@/data/mockData";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+interface ClosedOrder {
+  id: string;
+  symbol_name: string;
+  type: string;
+  lots: number;
+  entry_price: number;
+  current_price: number;
+  pnl: number;
+  created_at: string;
+  closed_at: string | null;
+}
 
 const History = () => {
-  const closedOrders = mockOrders.filter(o => o.status === 'closed');
-  const closedPnlTotal = closedOrders.reduce((sum, o) => sum + o.pnl, 0);
+  const { user: authUser } = useAuth();
+  const [closedOrders, setClosedOrders] = useState<ClosedOrder[]>([]);
+  const [balance, setBalance] = useState(0);
+
+  useEffect(() => {
+    if (authUser?.id) {
+      loadHistory();
+
+      const channel = supabase
+        .channel('history-orders')
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'orders',
+          filter: `user_id=eq.${authUser.id}`,
+        }, () => {
+          loadHistory();
+        })
+        .subscribe();
+
+      return () => { supabase.removeChannel(channel); };
+    }
+  }, [authUser?.id]);
+
+  const loadHistory = async () => {
+    const [ordersRes, profileRes] = await Promise.all([
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: false }),
+      supabase.from("profiles").select("balance").eq("user_id", authUser!.id).single(),
+    ]);
+
+    if (ordersRes.data) setClosedOrders(ordersRes.data as ClosedOrder[]);
+    if (profileRes.data) setBalance(Number(profileRes.data.balance));
+  };
+
+  const closedPnlTotal = closedOrders.reduce((sum, o) => sum + Number(o.pnl), 0);
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
@@ -11,7 +58,6 @@ const History = () => {
       </div>
 
       <div className="flex-1 overflow-auto px-4 pb-4">
-        {/* Summary always visible */}
         <div className="mb-3 pt-1 border-b border-border pb-3 space-y-1">
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Kâr/Zarar</span>
@@ -21,15 +67,7 @@ const History = () => {
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Bakiye</span>
-            <span className="font-mono font-medium text-foreground">0.00</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Swap</span>
-            <span className="font-mono font-medium text-foreground">0.00</span>
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Komisyon</span>
-            <span className="font-mono font-medium text-foreground">0.00</span>
+            <span className="font-mono font-medium text-foreground">{balance.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}</span>
           </div>
         </div>
 
@@ -41,22 +79,23 @@ const History = () => {
               <div key={order.id} className="py-3">
                 <div className="flex items-start justify-between">
                   <div>
-                    <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
+                    <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
                     {' '}
                     <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                      {order.type} {order.lots}
+                      {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {Number(order.lots)}
                     </span>
                   </div>
-                  <span className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                    {order.pnl >= 0 ? '+' : ''}{order.pnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                  <span className={`text-sm font-mono font-bold ${Number(order.pnl) >= 0 ? 'text-buy' : 'text-sell'}`}>
+                    {Number(order.pnl) >= 0 ? '+' : ''}{Number(order.pnl).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                   </span>
                 </div>
                 <div className="flex items-center justify-between mt-0.5">
                   <p className="text-xs text-muted-foreground font-mono">
-                    {order.entryPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} → {order.currentPrice.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
+                    {Number(order.entry_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })} → {Number(order.current_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}
                   </p>
                   <p className="text-[10px] text-muted-foreground">
-                    {new Date(order.createdAt).toLocaleDateString('tr-TR')} {new Date(order.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' })}
+                    {order.closed_at ? new Date(order.closed_at).toLocaleDateString('tr-TR') : new Date(order.created_at).toLocaleDateString('tr-TR')}{' '}
+                    {order.closed_at ? new Date(order.closed_at).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }) : ''}
                   </p>
                 </div>
               </div>
