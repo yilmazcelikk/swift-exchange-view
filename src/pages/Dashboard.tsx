@@ -1,8 +1,9 @@
-import { useState } from "react";
-import { mockUser, mockOrders } from "@/data/mockData";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Order } from "@/types";
 import {
   AlertDialog,
@@ -17,19 +18,58 @@ import {
 import { toast } from "sonner";
 
 const Dashboard = () => {
-  const user = mockUser;
+  const { user: authUser } = useAuth();
   const navigate = useNavigate();
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
+  const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0 });
+
+  useEffect(() => {
+    if (authUser?.id) {
+      loadData();
+    }
+  }, [authUser?.id]);
+
+  const loadData = async () => {
+    const [profileRes, ordersRes] = await Promise.all([
+      supabase.from("profiles").select("balance, equity, free_margin").eq("user_id", authUser!.id).single(),
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open"),
+    ]);
+
+    if (profileRes.data) {
+      setProfile({
+        balance: Number(profileRes.data.balance),
+        equity: Number(profileRes.data.equity),
+        freeMargin: Number(profileRes.data.free_margin),
+      });
+    }
+
+    if (ordersRes.data) {
+      setOrders(ordersRes.data.map((o: any) => ({
+        id: o.id,
+        symbolId: o.symbol_id,
+        symbolName: o.symbol_name,
+        type: o.type as "buy" | "sell",
+        lots: Number(o.lots),
+        entryPrice: Number(o.entry_price),
+        currentPrice: Number(o.current_price),
+        stopLoss: o.stop_loss ? Number(o.stop_loss) : undefined,
+        takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
+        pnl: Number(o.pnl),
+        status: o.status as "open" | "closed",
+        openTime: o.created_at,
+      })));
+    }
+  };
 
   const openOrders = orders.filter(o => o.status === 'open');
   const totalOpenPnl = openOrders.reduce((sum, o) => sum + o.pnl, 0);
 
   const accountStats = [
-    { label: "Bakiye", value: user.balance },
-    { label: "Varlık", value: user.equity },
+    { label: "Bakiye", value: profile.balance },
+    { label: "Varlık", value: profile.equity },
     { label: "Teminat", value: 0 },
-    { label: "Serbest teminat", value: user.freeMargin },
+    { label: "Serbest teminat", value: profile.freeMargin },
     { label: "Teminat seviyesi (%)", value: 0 },
   ];
 
