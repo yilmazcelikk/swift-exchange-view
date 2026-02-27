@@ -48,6 +48,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
+    let initialSessionHandled = false;
     const forceStopLoading = window.setTimeout(() => {
       setLoading(false);
     }, 5000);
@@ -68,11 +69,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } finally {
           setLoading(false);
           window.clearTimeout(forceStopLoading);
+          initialSessionHandled = true;
         }
       }
     );
 
+    // Only use getSession as fallback if onAuthStateChange hasn't fired yet
     supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (initialSessionHandled) return;
       try {
         setSession(session);
         setUser(session?.user ?? null);
@@ -83,12 +87,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error("getSession error:", err);
         setIsAdmin(false);
       } finally {
+        if (!initialSessionHandled) {
+          setLoading(false);
+          window.clearTimeout(forceStopLoading);
+        }
+      }
+    }).catch(() => {
+      if (!initialSessionHandled) {
         setLoading(false);
         window.clearTimeout(forceStopLoading);
       }
-    }).catch(() => {
-      setLoading(false);
-      window.clearTimeout(forceStopLoading);
     });
 
     return () => {
