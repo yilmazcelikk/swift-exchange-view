@@ -323,7 +323,7 @@ const Dashboard = () => {
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Komisyon (%0.2)</span>
+                      <span className="text-muted-foreground">Komisyon (%0.002)</span>
                       <span className="font-mono text-sell">-{formatUsd(closingCommission)} USD</span>
                     </div>
                     <div className="flex justify-between text-sm border-t border-border pt-1 mt-1">

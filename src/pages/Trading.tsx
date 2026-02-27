@@ -73,8 +73,14 @@ const Trading = () => {
       })
       .subscribe();
 
+    // 1-second polling for real-time price updates
+    const interval = setInterval(() => {
+      loadSymbols();
+    }, 1000);
+
     return () => {
       supabase.removeChannel(channel);
+      clearInterval(interval);
     };
   }, []);
 
