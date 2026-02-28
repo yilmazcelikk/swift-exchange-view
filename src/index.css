@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
 @layer base {
   :root {
@@ -62,57 +62,57 @@
   }
 
   .dark {
-    --background: 230 25% 7%;
-    --foreground: 210 40% 98%;
+    --background: 228 28% 6%;
+    --foreground: 210 20% 95%;
 
-    --card: 230 20% 10%;
-    --card-foreground: 210 40% 98%;
+    --card: 228 24% 9%;
+    --card-foreground: 210 20% 95%;
 
-    --popover: 230 20% 10%;
-    --popover-foreground: 210 40% 98%;
+    --popover: 228 24% 9%;
+    --popover-foreground: 210 20% 95%;
 
-    --primary: 217 91% 60%;
+    --primary: 213 94% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 230 18% 16%;
-    --secondary-foreground: 210 40% 98%;
+    --secondary: 228 20% 14%;
+    --secondary-foreground: 210 20% 95%;
 
-    --muted: 230 18% 16%;
-    --muted-foreground: 220 9% 56%;
+    --muted: 228 20% 14%;
+    --muted-foreground: 218 12% 52%;
 
-    --accent: 230 18% 16%;
-    --accent-foreground: 210 40% 98%;
+    --accent: 228 20% 14%;
+    --accent-foreground: 210 20% 95%;
 
     --destructive: 0 63% 31%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive-foreground: 210 20% 95%;
 
-    --success: 142 71% 45%;
+    --success: 152 60% 42%;
     --success-foreground: 0 0% 100%;
 
     --warning: 38 92% 50%;
     --warning-foreground: 0 0% 100%;
 
-    --buy: 142 71% 45%;
+    --buy: 152 60% 42%;
     --buy-foreground: 0 0% 100%;
 
-    --sell: 0 84% 60%;
+    --sell: 0 72% 55%;
     --sell-foreground: 0 0% 100%;
 
-    --border: 230 18% 18%;
-    --input: 230 18% 18%;
-    --ring: 217 91% 60%;
+    --border: 228 18% 16%;
+    --input: 228 18% 16%;
+    --ring: 213 94% 56%;
 
-    --sidebar-background: 230 25% 5%;
-    --sidebar-foreground: 210 40% 98%;
-    --sidebar-primary: 217 91% 60%;
+    --sidebar-background: 228 28% 5%;
+    --sidebar-foreground: 210 20% 95%;
+    --sidebar-primary: 213 94% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 230 18% 14%;
-    --sidebar-accent-foreground: 210 40% 98%;
-    --sidebar-border: 230 18% 15%;
-    --sidebar-ring: 217 91% 60%;
+    --sidebar-accent: 228 20% 12%;
+    --sidebar-accent-foreground: 210 20% 95%;
+    --sidebar-border: 228 18% 13%;
+    --sidebar-ring: 213 94% 56%;
 
-    --chart-up: 142 71% 45%;
-    --chart-down: 0 84% 60%;
+    --chart-up: 152 60% 42%;
+    --chart-down: 0 72% 55%;
   }
 }
 
@@ -123,13 +123,14 @@
 
   body {
     @apply bg-background text-foreground font-sans antialiased;
-    font-family: 'Inter', sans-serif;
+    font-family: 'IBM Plex Sans', sans-serif;
+    letter-spacing: -0.01em;
   }
 }
 
 @layer utilities {
   .font-mono {
-    font-family: 'JetBrains Mono', monospace;
+    font-family: 'IBM Plex Mono', monospace;
   }
 
   .no-scrollbar::-webkit-scrollbar {
