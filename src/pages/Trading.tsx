@@ -408,7 +408,7 @@ const Trading = () => {
                 {currentMarketStatus.label}
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">{selectedSymbol.display_name} • {currentMarketStatus.scheduleLabel}</p>
+            <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
           </div>
         </div>
         <AnimatedPrice value={price} className="text-lg font-bold font-mono" />
