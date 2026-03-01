@@ -22,7 +22,10 @@ interface CandleRow {
 
 const TIMEFRAMES = [
   { key: "1m", label: "1D" },
+  { key: "15m", label: "15D" },
   { key: "1h", label: "1S" },
+  { key: "4h", label: "4S" },
+  { key: "1d", label: "1G" },
 ] as const;
 
 type Timeframe = typeof TIMEFRAMES[number]["key"];
