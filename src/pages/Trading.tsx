@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
+import { resolveLogoUrl } from "@/data/symbolLogos";
 import { getMarketStatus } from "@/lib/marketHours";
 import { toast } from "sonner";
 
