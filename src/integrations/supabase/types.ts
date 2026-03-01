@@ -65,6 +65,45 @@ export type Database = {
         }
         Relationships: []
       }
+      candles: {
+        Row: {
+          bucket_time: string
+          close: number
+          created_at: string
+          high: number
+          id: string
+          low: number
+          open: number
+          symbol_id: string
+          timeframe: string
+          volume: number
+        }
+        Insert: {
+          bucket_time: string
+          close?: number
+          created_at?: string
+          high?: number
+          id?: string
+          low?: number
+          open?: number
+          symbol_id: string
+          timeframe?: string
+          volume?: number
+        }
+        Update: {
+          bucket_time?: string
+          close?: number
+          created_at?: string
+          high?: number
+          id?: string
+          low?: number
+          open?: number
+          symbol_id?: string
+          timeframe?: string
+          volume?: number
+        }
+        Relationships: []
+      }
       documents: {
         Row: {
           created_at: string
