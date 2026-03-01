@@ -1,11 +1,18 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Eye, EyeOff, TrendingUp } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Register = () => {
   const [formData, setFormData] = useState({
@@ -132,7 +139,55 @@ const Register = () => {
             </div>
             <label className="flex items-start gap-2 text-sm">
               <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => update("acceptTerms", e.target.checked)} className="rounded border-border mt-0.5" />
-              <span><a href="#" className="text-primary hover:underline">Kullanım Şartları</a> ve <a href="#" className="text-primary hover:underline">Gizlilik Politikası</a>'nı kabul ediyorum.</span>
+              <span>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button type="button" className="text-primary hover:underline">Kişisel Verilerimin İşlenmesi</button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg max-h-[80vh]">
+                    <DialogHeader>
+                      <DialogTitle>Kişisel Verilerin İşlenmesi (KVKK)</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[60vh] pr-4">
+                      <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                        <h3 className="font-semibold text-foreground">Bilgileriniz Güvende</h3>
+                        <p>
+                          Kişisel Verilerin Saklanması ve Kullanım Koşulları ve haklarınız ile ilgili bilgilendirme yapmak amacıyla erişiminize sunulmuştur.
+                        </p>
+                        <p>
+                          İşbu bilgilendirme ve aydınlatma duyurusu 6698 sayılı "Kişisel Verilerin Korunması Kanunu" (KVKK) 10. maddesi gereği hazırlanmış olup, bu beyan; kişisel verilerinizin işlenmesine ve aktarılmasına ilişkin yöntem, amaç, hukuki sebepleri içermektedir. Aynı zamanda kişisel verilerinizin korunmasına ilişkin haklarınız hakkında Veri Sorumlusu sıfatlıyla Tacirler Yatırım Menkul Değerler A.Ş. (Tacirler Yatırım) internet sitesi/siteleri aracılığıyla tarafınızı aydınlatma ve bilgilendirmeyi amaçlamaktadır.
+                        </p>
+                      </div>
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+                {" ve "}
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <button type="button" className="text-primary hover:underline">Gizlilik Politikası</button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-lg max-h-[80vh]">
+                    <DialogHeader>
+                      <DialogTitle>Gizlilik Politikası</DialogTitle>
+                    </DialogHeader>
+                    <ScrollArea className="h-[60vh] pr-4">
+                      <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+                        <h3 className="font-semibold text-foreground">Bilgilerinizin Gizliliği Güvende</h3>
+                        <p>
+                          Tacirler Yatırım'ın işlettiği web sitelerini (tacirlermenkulkiymetler.com) kullanarak bu sitelere münhasır "Kullanım ve Gizlilik Politikası'nı" kabul etmiş bulunmaktasınız. Tacirler Yatırım, kendi istek ve kararları doğrultusunda bu sitelerde yer alan program ve metinlerde ve bunlara ilişkin politikalarda her zaman değişiklik, ekleme veya çıkartma yapma hakkını saklı tuttuğunu açıkça beyan eder.
+                        </p>
+                        <p>
+                          Burada belirtilen tüm hüküm ve şartları kabul etmeniz halinde, web sitelerimizi kullanmaya devam etmeniz sonrasında, yukarıda belirtilen olası değişiklikleri de kabul ettiğiniz anlamına gelecektir.
+                        </p>
+                        <p>
+                          Bu nedenlerle "Kullanım ve Gizlilik Politikası" metnimizi ve sitelerimizde olası değişiklikleri, ekleme veya çıkartmaları düzenli olarak kontrol etmenizi önermekteyiz.
+                        </p>
+                      </div>
+                    </ScrollArea>
+                  </DialogContent>
+                </Dialog>
+                'nı kabul ediyorum.
+              </span>
             </label>
             <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
               {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
