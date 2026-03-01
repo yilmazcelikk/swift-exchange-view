@@ -122,6 +122,12 @@ const Trading = () => {
       return a.name.localeCompare(b.name);
     });
 
+  // Memoize candle data so it doesn't regenerate on every render/poll
+  const candleData = useMemo(
+    () => generateCandleData(selectedSymbol?.current_price || 100, 80),
+    [selectedSymbol?.id]
+  );
+
   const quickLots = [0.01, 0.05, 0.1, 0.5, 1.0, 5.0];
 
   const getSpread = (price: number) => {
