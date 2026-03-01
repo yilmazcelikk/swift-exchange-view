@@ -52,9 +52,11 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <div className="h-14 flex items-center justify-center border-b border-sidebar-border px-4">
         {!collapsed ? (
-          <h1 className="text-lg font-bold text-primary tracking-tight">TradeHub</h1>
+          <div className="flex items-center gap-2">
+            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-8 w-auto rounded" />
+          </div>
         ) : (
-          <span className="text-lg font-bold text-primary">T</span>
+          <img src="/tacirler-favicon.png" alt="Tacirler" className="h-6 w-6 rounded" />
         )}
       </div>
 

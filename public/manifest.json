@@ -1,7 +1,7 @@
 {
-  "name": "TradeHub",
-  "short_name": "TradeHub",
-  "description": "Gerçek zamanlı borsa işlem platformu",
+  "name": "Tacirler Yatırım",
+  "short_name": "Tacirler",
+  "description": "Tacirler Yatırım - Yatırım Bize Danışılır",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0a0e27",

@@ -55,10 +55,7 @@ const Login = () => {
         </div>
         <div className="relative z-10 space-y-8 w-full max-w-md">
           <div className="flex items-center gap-3 mb-8">
-            <div className="p-2 bg-primary rounded-xl">
-              <TrendingUp className="h-8 w-8 text-primary-foreground" />
-            </div>
-            <h1 className="text-3xl font-bold">TradeHub</h1>
+            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-12 w-auto" />
           </div>
           <div>
             <h2 className="text-2xl font-bold mb-2">Piyasalara Hükmedin</h2>
@@ -85,10 +82,7 @@ const Login = () => {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="lg:hidden flex items-center gap-3 mb-4">
-            <div className="p-2 bg-primary rounded-xl">
-              <TrendingUp className="h-6 w-6 text-primary-foreground" />
-            </div>
-            <h1 className="text-2xl font-bold">TradeHub</h1>
+            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-10 w-auto" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">Giriş Yap</h2>
