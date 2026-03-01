@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
-import { SymbolLogo } from "@/components/SymbolLogo";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -257,7 +256,7 @@ const Dashboard = () => {
             {openOrders.map((order) => (
               <div key={order.id} className="py-3">
                 <div className="flex items-center gap-3">
-                  <SymbolLogo symbol={order.symbolName} size="sm" />
+                  <div className="flex-1 min-w-0">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
