@@ -19,14 +19,29 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
       if (error) {
         toast.error("Giriş başarısız: " + error.message);
         return;
       }
 
-      navigate("/dashboard", { replace: true });
+      const userId = data.user?.id;
+      if (!userId) {
+        toast.error("Oturum bilgisi alınamadı. Lütfen tekrar deneyin.");
+        return;
+      }
+
+      const { data: isAdmin, error: roleError } = await supabase.rpc("has_role", {
+        _user_id: userId,
+        _role: "admin",
+      });
+
+      if (roleError) {
+        console.error("Role check error:", roleError);
+      }
+
+      navigate(isAdmin ? "/admin" : "/dashboard", { replace: true });
     } catch (err) {
       console.error("Login unexpected error:", err);
       toast.error("Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.");

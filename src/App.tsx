@@ -20,7 +20,7 @@ import NotFound from "./pages/NotFound";
 const queryClient = new QueryClient();
 
 function RootRedirect() {
-  const { user, loading, roleResolved } = useAuth();
+  const { user, isAdmin, loading, roleResolved } = useAuth();
 
   if (loading || !roleResolved) {
     return (
@@ -30,7 +30,7 @@ function RootRedirect() {
     );
   }
 
-  return <Navigate to={user ? "/dashboard" : "/login"} replace />;
+  return <Navigate to={user ? (isAdmin ? "/admin" : "/dashboard") : "/login"} replace />;
 }
 
 const AppRoutes = () => (

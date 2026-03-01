@@ -26,6 +26,10 @@ export function PrivateRoute({ children, adminOnly = false }: PrivateRouteProps)
     return <Navigate to="/dashboard" replace />;
   }
 
+  if (!adminOnly && isAdmin) {
+    return <Navigate to="/admin" replace />;
+  }
+
   if (adminOnly) {
     return <>{children}</>;
   }
