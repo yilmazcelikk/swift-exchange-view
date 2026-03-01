@@ -55,7 +55,7 @@ const LOGO_URLS: Record<string, string> = {
   "MCD": "https://logo.clearbit.com/mcdonalds.com",
   "SBUX": "https://logo.clearbit.com/starbucks.com",
 
-  // BIST Turkish Stocks
+  // BIST Turkish Stocks - Official websites
   "THYAO": "https://logo.clearbit.com/turkishairlines.com",
   "GARAN": "https://logo.clearbit.com/garantibbva.com.tr",
   "AKBNK": "https://logo.clearbit.com/akbank.com",
@@ -87,8 +87,27 @@ const LOGO_URLS: Record<string, string> = {
   "HALKB": "https://logo.clearbit.com/halkbank.com.tr",
   "VAKBN": "https://logo.clearbit.com/vakifbank.com.tr",
   "SMRTG": "https://logo.clearbit.com/smart-group.com",
+  "IPEKE": "https://logo.clearbit.com/ipek.com.tr",
+  "ISBTR": "https://logo.clearbit.com/isbank.com.tr",
+  "ISDMR": "https://logo.clearbit.com/iskenderundemir.com.tr",
+  "ISFIN": "https://logo.clearbit.com/isfinansalkiarlama.com.tr",
+  "ISGSY": "https://logo.clearbit.com/isgirisim.com.tr",
+  "ISGYO": "https://logo.clearbit.com/isgyo.com.tr",
+  "ISKPL": "https://logo.clearbit.com/isikplastik.com.tr",
+  "KLNMA": "https://logo.clearbit.com/kalkinma.com.tr",
+  "KARTN": "https://logo.clearbit.com/kartonsan.com.tr",
+  "KORDS": "https://logo.clearbit.com/kordsa.com",
+  "KOZAA": "https://logo.clearbit.com/kozaaltin.com.tr",
+  "MPARK": "https://logo.clearbit.com/miapark.com.tr",
+  "OYAKC": "https://logo.clearbit.com/oyakcimento.com.tr",
+  "OTKAR": "https://logo.clearbit.com/otokar.com.tr",
+  "PRKME": "https://logo.clearbit.com/parkmetal.com.tr",
+  "SOKM": "https://logo.clearbit.com/sokmarket.com.tr",
+  "TKFEN": "https://logo.clearbit.com/tekfen.com.tr",
+  "TTRAK": "https://logo.clearbit.com/turktraktor.com.tr",
+  "ULKER": "https://logo.clearbit.com/ulker.com.tr",
 
-  // Crypto - CoinGecko & cryptocurrency-icons
+  // Crypto - CoinGecko
   "BTCUSD": "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
   "ETHUSD": "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
   "BNBUSD": "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
@@ -166,25 +185,25 @@ export const SymbolLogo = memo(function SymbolLogo({ symbol, size = "md" }: Symb
   const [imgError, setImgError] = useState(false);
 
   const sizeClasses = {
-    sm: "h-7 w-7 text-[9px]",
-    md: "h-9 w-9 text-[10px]",
-    lg: "h-11 w-11 text-xs",
+    sm: "h-8 w-8 text-[9px]",
+    md: "h-10 w-10 text-[10px]",
+    lg: "h-12 w-12 text-xs",
   };
 
   const imgSizeClasses = {
-    sm: "h-5 w-5",
-    md: "h-6 w-6",
-    lg: "h-7 w-7",
+    sm: "h-6 w-6",
+    md: "h-7 w-7",
+    lg: "h-8 w-8",
   };
 
   // Real image logo
   if (logoUrl && !imgError) {
     return (
-      <div className={`${sizeClasses[size]} rounded-xl bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
+      <div className={`${sizeClasses[size]} rounded-full bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
         <img
           src={logoUrl}
           alt={symbol}
-          className={`${imgSizeClasses[size]} object-contain rounded-sm`}
+          className={`${imgSizeClasses[size]} object-contain`}
           onError={() => setImgError(true)}
           loading="lazy"
           crossOrigin="anonymous"
@@ -196,7 +215,7 @@ export const SymbolLogo = memo(function SymbolLogo({ symbol, size = "md" }: Symb
   // Styled gradient text fallback
   if (fallback) {
     return (
-      <div className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br ${fallback.bg} flex items-center justify-center shrink-0 shadow-sm`}>
+      <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${fallback.bg} flex items-center justify-center shrink-0 shadow-sm`}>
         <span className="font-bold text-white leading-none drop-shadow-sm">{fallback.text}</span>
       </div>
     );
@@ -204,7 +223,7 @@ export const SymbolLogo = memo(function SymbolLogo({ symbol, size = "md" }: Symb
 
   // Generic fallback
   return (
-    <div className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center shrink-0 border border-border/50`}>
+    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center shrink-0 border border-border/50`}>
       <span className="font-bold text-muted-foreground leading-none">{normalized.slice(0, 2)}</span>
     </div>
   );

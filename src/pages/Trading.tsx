@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { generateCandleData } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Minus, Plus, ChevronLeft, TrendingUp, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
+import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
 
@@ -26,11 +26,10 @@ interface DBSymbol {
 
 const categories = [
   { key: "all", label: "Tümü", icon: Globe },
-  { key: "forex", label: "Forex", icon: TrendingUp },
+  { key: "stock", label: "Hisse", icon: Building2 },
   { key: "commodity", label: "Emtia", icon: Gem },
   { key: "index", label: "Endeks", icon: BarChart3 },
   { key: "crypto", label: "Kripto", icon: Bitcoin },
-  { key: "stock", label: "Hisse", icon: Building2 },
 ];
 
 const CONTRACT_SIZE = 100000; // Standard forex lot size
@@ -134,6 +133,19 @@ const Trading = () => {
 
   const handleOrder = async (type: "buy" | "sell") => {
     if (!selectedSymbol || !authUser) return;
+
+    // Check balance
+    const { data: profileData } = await supabase
+      .from("profiles")
+      .select("balance")
+      .eq("user_id", authUser.id)
+      .single();
+
+    if (!profileData || profileData.balance <= 0) {
+      toast.error("Yetersiz bakiye. İşlem açmak için hesabınıza para yatırın.");
+      return;
+    }
+
     setOrderLoading(true);
     try {
       const price = selectedSymbol.current_price || 0;

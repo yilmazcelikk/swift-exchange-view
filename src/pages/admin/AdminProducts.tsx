@@ -33,11 +33,11 @@ interface Symbol {
 
 const categories = [
   { key: "all", label: "Tümü", icon: BarChart3 },
-  { key: "forex", label: "Forex", icon: TrendingUp },
+  { key: "stock", label: "Hisse", icon: Building2 },
   { key: "commodity", label: "Emtia", icon: Gem },
   { key: "index", label: "Endeks", icon: BarChart3 },
   { key: "crypto", label: "Kripto", icon: Bitcoin },
-  { key: "stock", label: "Hisse", icon: Building2 },
+  { key: "forex", label: "Forex", icon: TrendingUp },
 ];
 
 const AdminProducts = () => {
