@@ -244,7 +244,7 @@ const Trading = () => {
                   onClick={() => setSelectedSymbol(symbol)}
                   className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-all border-b border-border/30"
                 >
-                  <SymbolLogo symbol={symbol.name} />
+                  <SymbolLogo symbol={symbol.name} category={symbol.category} />
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{symbol.name}</p>
                     <p className="text-[11px] text-muted-foreground truncate">{symbol.display_name}</p>
