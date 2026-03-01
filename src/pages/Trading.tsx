@@ -261,19 +261,20 @@ const Trading = () => {
         </button>
         <div className="flex-1 flex items-center gap-2">
           <SymbolLogo symbol={selectedSymbol.name} size="sm" />
-          <div className="flex items-center gap-2">
-            <h2 className="text-base font-bold">{selectedSymbol.name}</h2>
-            <span
-              className={`text-xs font-mono font-semibold ${
-                (selectedSymbol.change_percent ?? 0) >= 0 ? "text-buy" : "text-sell"
-              }`}
-            >
-              {(selectedSymbol.change_percent ?? 0) >= 0 ? "+" : ""}
-              {(selectedSymbol.change_percent ?? 0).toFixed(2)}%
-            </span>
+          <div>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold">{selectedSymbol.name}</h2>
+              <span
+                className={`text-xs font-mono font-semibold ${
+                  (selectedSymbol.change_percent ?? 0) >= 0 ? "text-buy" : "text-sell"
+                }`}
+              >
+                {(selectedSymbol.change_percent ?? 0) >= 0 ? "+" : ""}
+                {(selectedSymbol.change_percent ?? 0).toFixed(2)}%
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
           </div>
-          <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
-        </div>
         </div>
         <AnimatedPrice value={price} className="text-lg font-bold font-mono" />
       </div>
