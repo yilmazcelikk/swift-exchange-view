@@ -259,8 +259,7 @@ const Trading = () => {
         <button onClick={() => setSelectedSymbol(null)} className="p-1 hover:bg-muted rounded">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <div className="flex-1 flex items-center gap-2">
-          <SymbolLogo symbol={selectedSymbol.name} size="sm" />
+        <div className="flex-1">
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-base font-bold">{selectedSymbol.name}</h2>
