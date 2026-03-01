@@ -47,8 +47,8 @@ const Login = () => {
 
         <div className="relative z-10 space-y-8 w-full max-w-lg text-center">
           {/* Logo */}
-          <div className="flex justify-center mb-8">
-            <img src="/tacirler-logo-wide.png" alt="Tacirler Yatırım" className="w-full max-w-sm object-contain mx-auto" />
+          <div className="flex justify-center mb-6">
+            <img src="/tacirler-logo-wide.png" alt="Tacirler Yatırım" className="h-40 w-40 object-contain rounded-full" />
           </div>
 
           {/* Title */}
@@ -86,7 +86,7 @@ const Login = () => {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="lg:hidden flex justify-center mb-4">
-            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-14 w-auto" />
+            <img src="/tacirler-logo-wide.png" alt="Tacirler Yatırım" className="h-20 w-20 object-contain rounded-full" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">Giriş Yap</h2>
