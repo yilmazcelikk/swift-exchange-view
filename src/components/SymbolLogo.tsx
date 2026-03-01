@@ -134,6 +134,65 @@ const LOGO_URLS: Record<string, string> = {
   "PEPEUSD": "https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg",
 };
 
+// Branded fallbacks for BIST stocks (company brand colors + abbreviations)
+const BIST_FALLBACKS: Record<string, { text: string; bg: string; textColor?: string }> = {
+  // İş Bankası Grubu (blue branding)
+  "ISCTR": { text: "İŞ", bg: "from-blue-700 to-blue-900" },
+  "ISDMR": { text: "İD", bg: "from-red-700 to-red-900" },
+  "ISFIN": { text: "İF", bg: "from-blue-700 to-blue-900" },
+  "ISGSY": { text: "İG", bg: "from-blue-600 to-blue-800" },
+  "ISGYO": { text: "İG", bg: "from-blue-700 to-blue-900" },
+  "ISKPL": { text: "IŞ", bg: "from-red-600 to-red-800" },
+  "ISMEN": { text: "İŞ", bg: "from-blue-600 to-blue-800" },
+  "ISSEN": { text: "İS", bg: "from-blue-600 to-indigo-800" },
+  "ISBTR": { text: "İŞ", bg: "from-blue-700 to-blue-900" },
+  // Bankalar
+  "GARAN": { text: "G", bg: "from-green-600 to-green-800" },
+  "AKBNK": { text: "A", bg: "from-red-600 to-red-800" },
+  "YKBNK": { text: "YK", bg: "from-blue-600 to-indigo-700" },
+  "HALKB": { text: "HB", bg: "from-sky-600 to-sky-800" },
+  "VAKBN": { text: "VB", bg: "from-purple-700 to-purple-900" },
+  // Holding / Sanayi
+  "THYAO": { text: "TK", bg: "from-red-600 to-red-800" },
+  "KCHOL": { text: "KÇ", bg: "from-blue-800 to-blue-950" },
+  "SAHOL": { text: "SB", bg: "from-blue-700 to-blue-900" },
+  "SISE": { text: "ŞC", bg: "from-teal-600 to-teal-800" },
+  "TUPRS": { text: "TP", bg: "from-red-700 to-red-900" },
+  "EREGL": { text: "ER", bg: "from-slate-600 to-slate-800" },
+  "BIMAS": { text: "BM", bg: "from-red-500 to-red-700" },
+  "ASELS": { text: "AS", bg: "from-blue-800 to-blue-950" },
+  "TAVHL": { text: "TV", bg: "from-amber-600 to-amber-800" },
+  "PGSUS": { text: "PG", bg: "from-yellow-500 to-yellow-700" },
+  "TOASO": { text: "TO", bg: "from-blue-700 to-blue-900" },
+  "FROTO": { text: "FO", bg: "from-blue-800 to-blue-950" },
+  "HEKTS": { text: "HK", bg: "from-green-600 to-green-800" },
+  "MGROS": { text: "MG", bg: "from-orange-500 to-orange-700" },
+  "VESTL": { text: "VE", bg: "from-blue-600 to-blue-800" },
+  "ARCLK": { text: "AR", bg: "from-red-600 to-red-800" },
+  "PETKM": { text: "PK", bg: "from-blue-700 to-blue-900" },
+  "TCELL": { text: "TC", bg: "from-blue-600 to-yellow-500" },
+  "TTKOM": { text: "TT", bg: "from-blue-700 to-blue-900" },
+  "EKGYO": { text: "EK", bg: "from-orange-600 to-orange-800" },
+  "ENKAI": { text: "EN", bg: "from-blue-700 to-blue-900" },
+  "KOZAL": { text: "KZ", bg: "from-yellow-600 to-yellow-800" },
+  "KOZAA": { text: "KA", bg: "from-yellow-500 to-amber-700" },
+  "SASA": { text: "SA", bg: "from-blue-600 to-blue-800" },
+  "DOHOL": { text: "DH", bg: "from-red-700 to-red-900" },
+  "SMRTG": { text: "SM", bg: "from-gray-600 to-gray-800" },
+  "IPEKE": { text: "İP", bg: "from-amber-600 to-amber-800" },
+  "KLNMA": { text: "KL", bg: "from-blue-600 to-blue-800" },
+  "KARTN": { text: "KR", bg: "from-amber-700 to-amber-900" },
+  "KORDS": { text: "KD", bg: "from-blue-700 to-blue-900" },
+  "MPARK": { text: "MP", bg: "from-green-600 to-green-800" },
+  "OYAKC": { text: "OY", bg: "from-blue-800 to-blue-950" },
+  "OTKAR": { text: "OT", bg: "from-red-600 to-red-800" },
+  "PRKME": { text: "PR", bg: "from-gray-600 to-gray-800" },
+  "SOKM": { text: "ŞK", bg: "from-red-500 to-red-700" },
+  "TKFEN": { text: "TF", bg: "from-blue-600 to-blue-800" },
+  "TTRAK": { text: "TT", bg: "from-red-700 to-red-900" },
+  "ULKER": { text: "ÜL", bg: "from-blue-700 to-red-600" },
+};
+
 // Fallback styled text for symbols without image logos
 const FALLBACK_STYLES: Record<string, { text: string; bg: string }> = {
   // Commodities
