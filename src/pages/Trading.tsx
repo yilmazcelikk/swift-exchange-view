@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,23 @@ import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, G
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
 import { getMarketStatus } from "@/lib/marketHours";
-
 import { toast } from "sonner";
+
+interface CandleRow {
+  bucket_time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+const TIMEFRAMES = [
+  { key: "1m", label: "1D" },
+  { key: "1h", label: "1S" },
+] as const;
+
+type Timeframe = typeof TIMEFRAMES[number]["key"];
 
 interface DBSymbol {
   id: string;
@@ -46,6 +61,9 @@ const Trading = () => {
   const [leverage, setLeverage] = useState("1:200");
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
+  const [timeframe, setTimeframe] = useState<Timeframe>("1m");
+  const [realCandles, setRealCandles] = useState<CandleRow[]>([]);
+  const [candlesLoading, setCandlesLoading] = useState(false);
 
   // Load user leverage from profile
   useEffect(() => {
@@ -122,11 +140,71 @@ const Trading = () => {
       return a.name.localeCompare(b.name);
     });
 
-  // Memoize candle data so it doesn't regenerate on every render/poll
-  const candleData = useMemo(
+  // Fetch real candle data from DB
+  const loadCandles = useCallback(async (symbolId: string, tf: Timeframe) => {
+    setCandlesLoading(true);
+    const limit = tf === "1m" ? 100 : 168; // 100 min or 7 days hourly
+    const { data, error } = await supabase
+      .from("candles")
+      .select("bucket_time, open, high, low, close, volume")
+      .eq("symbol_id", symbolId)
+      .eq("timeframe", tf)
+      .order("bucket_time", { ascending: true })
+      .limit(limit);
+    if (!error && data && data.length > 0) {
+      setRealCandles(data as CandleRow[]);
+    } else {
+      setRealCandles([]);
+    }
+    setCandlesLoading(false);
+  }, []);
+
+  // Load candles when symbol or timeframe changes
+  useEffect(() => {
+    if (selectedSymbol) {
+      loadCandles(selectedSymbol.id, timeframe);
+    }
+  }, [selectedSymbol?.id, timeframe, loadCandles]);
+
+  // Realtime subscription for new candles
+  useEffect(() => {
+    if (!selectedSymbol) return;
+    const channel = supabase
+      .channel(`candles-${selectedSymbol.id}-${timeframe}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'candles',
+        filter: `symbol_id=eq.${selectedSymbol.id}`,
+      }, (payload) => {
+        if (payload.new) {
+          const newCandle = payload.new as any;
+          if (newCandle.timeframe !== timeframe) return;
+          setRealCandles(prev => {
+            const exists = prev.findIndex(c => c.bucket_time === newCandle.bucket_time);
+            if (exists >= 0) {
+              const updated = [...prev];
+              updated[exists] = newCandle;
+              return updated;
+            }
+            return [...prev, newCandle].slice(-200);
+          });
+        }
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedSymbol?.id, timeframe]);
+
+  // Fallback mock data when no real candles exist
+  const mockCandleData = useMemo(
     () => generateCandleData(selectedSymbol?.current_price || 100, 80),
     [selectedSymbol?.id]
   );
+
+  // Use real candles if available, otherwise mock
+  const candleData = realCandles.length > 0
+    ? realCandles.map(c => ({ time: c.bucket_time, open: Number(c.open), high: Number(c.high), low: Number(c.low), close: Number(c.close), volume: Number(c.volume) }))
+    : mockCandleData;
 
   const quickLots = [0.01, 0.05, 0.1, 0.5, 1.0, 5.0];
 
@@ -330,6 +408,28 @@ const Trading = () => {
           </div>
         </div>
         <AnimatedPrice value={price} className="text-lg font-bold font-mono" />
+      </div>
+
+      {/* Timeframe Selector */}
+      <div className="flex items-center gap-1 px-3 py-1.5 border-b border-border/50 bg-background">
+        {TIMEFRAMES.map((tf) => (
+          <button
+            key={tf.key}
+            onClick={() => setTimeframe(tf.key)}
+            className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-colors ${
+              timeframe === tf.key
+                ? "bg-primary text-primary-foreground"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
+            }`}
+          >
+            {tf.label}
+          </button>
+        ))}
+        {realCandles.length > 0 && (
+          <span className="ml-auto text-[9px] text-muted-foreground font-mono">
+            {realCandles.length} mum
+          </span>
+        )}
       </div>
 
       {/* Professional Chart */}
