@@ -1,66 +1,136 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 
-const SYMBOL_LOGOS: Record<string, { emoji: string; bg: string }> = {
-  // Forex
-  "EURUSD": { emoji: "🇪🇺", bg: "from-blue-500/20 to-blue-600/10" },
-  "GBPUSD": { emoji: "🇬🇧", bg: "from-red-500/20 to-blue-600/10" },
-  "USDJPY": { emoji: "🇯🇵", bg: "from-red-500/20 to-white/10" },
-  "USDCHF": { emoji: "🇨🇭", bg: "from-red-500/20 to-white/10" },
-  "AUDUSD": { emoji: "🇦🇺", bg: "from-blue-500/20 to-yellow-500/10" },
-  "USDCAD": { emoji: "🇨🇦", bg: "from-red-500/20 to-white/10" },
-  "NZDUSD": { emoji: "🇳🇿", bg: "from-blue-600/20 to-red-500/10" },
-  "EURGBP": { emoji: "🇪🇺", bg: "from-blue-500/20 to-red-500/10" },
-  "EURJPY": { emoji: "🇪🇺", bg: "from-blue-500/20 to-red-400/10" },
-  "GBPJPY": { emoji: "🇬🇧", bg: "from-red-500/20 to-red-400/10" },
-  "USDTRY": { emoji: "🇹🇷", bg: "from-red-600/20 to-white/10" },
-  "EURTRY": { emoji: "🇹🇷", bg: "from-red-600/20 to-blue-500/10" },
+// Real logo URLs from public CDNs
+const LOGO_URLS: Record<string, string> = {
+  // Stocks
+  "AAPL": "https://logo.clearbit.com/apple.com",
+  "MSFT": "https://logo.clearbit.com/microsoft.com",
+  "GOOGL": "https://logo.clearbit.com/google.com",
+  "GOOG": "https://logo.clearbit.com/google.com",
+  "AMZN": "https://logo.clearbit.com/amazon.com",
+  "TSLA": "https://logo.clearbit.com/tesla.com",
+  "META": "https://logo.clearbit.com/meta.com",
+  "NVDA": "https://logo.clearbit.com/nvidia.com",
+  "NFLX": "https://logo.clearbit.com/netflix.com",
+  "AMD": "https://logo.clearbit.com/amd.com",
+  "INTC": "https://logo.clearbit.com/intel.com",
+  "DIS": "https://logo.clearbit.com/disney.com",
+  "BA": "https://logo.clearbit.com/boeing.com",
+  "V": "https://logo.clearbit.com/visa.com",
+  "JPM": "https://logo.clearbit.com/jpmorganchase.com",
+  "WMT": "https://logo.clearbit.com/walmart.com",
+  "KO": "https://logo.clearbit.com/coca-cola.com",
+  "PEP": "https://logo.clearbit.com/pepsico.com",
+  "NKE": "https://logo.clearbit.com/nike.com",
+  "PYPL": "https://logo.clearbit.com/paypal.com",
+  "UBER": "https://logo.clearbit.com/uber.com",
+  "ABNB": "https://logo.clearbit.com/airbnb.com",
+  "CRM": "https://logo.clearbit.com/salesforce.com",
+  "ORCL": "https://logo.clearbit.com/oracle.com",
+  "IBM": "https://logo.clearbit.com/ibm.com",
+  "CSCO": "https://logo.clearbit.com/cisco.com",
+  "ADBE": "https://logo.clearbit.com/adobe.com",
+  "QCOM": "https://logo.clearbit.com/qualcomm.com",
+  "SPOT": "https://logo.clearbit.com/spotify.com",
+  "SNAP": "https://logo.clearbit.com/snap.com",
+  "SQ": "https://logo.clearbit.com/squareup.com",
+  "SHOP": "https://logo.clearbit.com/shopify.com",
+  "COIN": "https://logo.clearbit.com/coinbase.com",
+  "PLTR": "https://logo.clearbit.com/palantir.com",
+  "RIVN": "https://logo.clearbit.com/rivian.com",
+  "LCID": "https://logo.clearbit.com/lucidmotors.com",
 
-  // Commodities
-  "XAUUSD": { emoji: "🥇", bg: "from-yellow-500/20 to-amber-600/10" },
-  "XAGUSD": { emoji: "🥈", bg: "from-gray-400/20 to-gray-500/10" },
-  "XPTUSD": { emoji: "💎", bg: "from-gray-300/20 to-blue-200/10" },
-  "XPDUSD": { emoji: "✨", bg: "from-gray-300/20 to-teal-200/10" },
-  "USOIL":  { emoji: "🛢️", bg: "from-amber-700/20 to-gray-800/10" },
-  "UKOIL":  { emoji: "🛢️", bg: "from-amber-600/20 to-gray-700/10" },
-  "NGAS":   { emoji: "🔥", bg: "from-orange-500/20 to-red-500/10" },
-  "COPPER": { emoji: "🔶", bg: "from-orange-600/20 to-amber-500/10" },
+  // BIST Stocks
+  "THYAO": "https://logo.clearbit.com/turkishairlines.com",
+  "GARAN": "https://logo.clearbit.com/garantibbva.com.tr",
+  "AKBNK": "https://logo.clearbit.com/akbank.com",
+  "ISCTR": "https://logo.clearbit.com/isbank.com.tr",
+  "YKBNK": "https://logo.clearbit.com/yapikredi.com.tr",
+  "SISE": "https://logo.clearbit.com/sisecam.com.tr",
+  "TUPRS": "https://logo.clearbit.com/tupras.com.tr",
+  "EREGL": "https://logo.clearbit.com/erdemir.com.tr",
+  "BIMAS": "https://logo.clearbit.com/bim.com.tr",
+  "ASELS": "https://logo.clearbit.com/aselsan.com.tr",
+  "KCHOL": "https://logo.clearbit.com/koc.com.tr",
+  "SAHOL": "https://logo.clearbit.com/sabanci.com",
+  "TAVHL": "https://logo.clearbit.com/tavhavalimanlari.com.tr",
+  "PGSUS": "https://logo.clearbit.com/flypgs.com",
+  "TOASO": "https://logo.clearbit.com/tofas.com.tr",
+  "FROTO": "https://logo.clearbit.com/fordotosan.com.tr",
+  "HEKTS": "https://logo.clearbit.com/hektas.com.tr",
+  "MGROS": "https://logo.clearbit.com/migros.com.tr",
+  "VESTL": "https://logo.clearbit.com/vestel.com.tr",
+  "ARCLK": "https://logo.clearbit.com/arcelik.com",
+  "PETKM": "https://logo.clearbit.com/petkim.com.tr",
+  "TCELL": "https://logo.clearbit.com/turkcell.com.tr",
+  "TTKOM": "https://logo.clearbit.com/turktelekom.com.tr",
+  "EKGYO": "https://logo.clearbit.com/emlakkonut.com.tr",
+  "ENKAI": "https://logo.clearbit.com/enka.com",
+  "KOZAL": "https://logo.clearbit.com/kozamadencilik.com.tr",
+  "KOZAA": "https://logo.clearbit.com/kozamadencilik.com.tr",
+  "SASA": "https://logo.clearbit.com/sasapolyester.com",
 
   // Crypto
-  "BTCUSD": { emoji: "₿", bg: "from-orange-500/20 to-yellow-500/10" },
-  "ETHUSD": { emoji: "⟠", bg: "from-indigo-500/20 to-purple-500/10" },
-  "BNBUSD": { emoji: "◆", bg: "from-yellow-500/20 to-yellow-600/10" },
-  "XRPUSD": { emoji: "✕", bg: "from-blue-400/20 to-gray-500/10" },
-  "SOLUSD": { emoji: "◎", bg: "from-purple-500/20 to-teal-500/10" },
-  "ADAUSD": { emoji: "◇", bg: "from-blue-600/20 to-blue-400/10" },
-  "DOTUSD": { emoji: "●", bg: "from-pink-500/20 to-pink-600/10" },
-  "DOGEUSD": { emoji: "🐕", bg: "from-yellow-400/20 to-amber-400/10" },
-  "AVAXUSD": { emoji: "🔺", bg: "from-red-500/20 to-red-600/10" },
-  "LINKUSD": { emoji: "⬡", bg: "from-blue-500/20 to-blue-600/10" },
-
-  // Indices
-  "US30":   { emoji: "🇺🇸", bg: "from-blue-600/20 to-red-500/10" },
-  "US500":  { emoji: "🇺🇸", bg: "from-blue-500/20 to-red-400/10" },
-  "US100":  { emoji: "🇺🇸", bg: "from-blue-400/20 to-indigo-500/10" },
-  "GER40":  { emoji: "🇩🇪", bg: "from-yellow-500/20 to-red-500/10" },
-  "UK100":  { emoji: "🇬🇧", bg: "from-red-500/20 to-blue-500/10" },
-  "JP225":  { emoji: "🇯🇵", bg: "from-red-400/20 to-white/10" },
-  "FRA40":  { emoji: "🇫🇷", bg: "from-blue-500/20 to-red-400/10" },
-  "AUS200": { emoji: "🇦🇺", bg: "from-blue-500/20 to-yellow-500/10" },
-  "XU100":  { emoji: "🇹🇷", bg: "from-red-600/20 to-white/10" },
-  "BIST100": { emoji: "🇹🇷", bg: "from-red-600/20 to-white/10" },
-
-  // Stocks
-  "AAPL":   { emoji: "🍎", bg: "from-gray-500/20 to-gray-600/10" },
-  "MSFT":   { emoji: "🪟", bg: "from-blue-500/20 to-cyan-500/10" },
-  "GOOGL":  { emoji: "🔍", bg: "from-blue-500/20 to-green-500/10" },
-  "AMZN":   { emoji: "📦", bg: "from-orange-500/20 to-yellow-500/10" },
-  "TSLA":   { emoji: "⚡", bg: "from-red-500/20 to-gray-500/10" },
-  "META":   { emoji: "Ⓜ", bg: "from-blue-600/20 to-blue-400/10" },
-  "NVDA":   { emoji: "🟢", bg: "from-green-500/20 to-green-600/10" },
-  "NFLX":   { emoji: "🎬", bg: "from-red-600/20 to-red-700/10" },
+  "BTCUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png",
+  "ETHUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
+  "BNBUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png",
+  "XRPUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xrp.png",
+  "SOLUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/sol.png",
+  "ADAUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/ada.png",
+  "DOTUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/dot.png",
+  "DOGEUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/doge.png",
+  "AVAXUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/avax.png",
+  "LINKUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/link.png",
+  "MATICUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
+  "LTCUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/ltc.png",
+  "UNIUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/uni.png",
+  "ATOMUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/atom.png",
+  "XLMUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xlm.png",
+  "ALGOUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/algo.png",
+  "NEARUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/near.png",
+  "FTMUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/ftm.png",
+  "TRXUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/trx.png",
+  "SHIBUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/shib.png",
 };
 
-const DEFAULT_LOGO = { emoji: "📊", bg: "from-muted to-muted" };
+// Fallback styling for symbols without logos
+const FALLBACK_STYLES: Record<string, { text: string; bg: string }> = {
+  // Commodities
+  "XAUUSD": { text: "Au", bg: "from-yellow-500 to-amber-600" },
+  "XAGUSD": { text: "Ag", bg: "from-gray-400 to-gray-500" },
+  "XPTUSD": { text: "Pt", bg: "from-gray-300 to-blue-200" },
+  "XPDUSD": { text: "Pd", bg: "from-gray-300 to-teal-300" },
+  "USOIL":  { text: "Oil", bg: "from-amber-700 to-amber-900" },
+  "UKOIL":  { text: "Oil", bg: "from-amber-600 to-amber-800" },
+  "NGAS":   { text: "Gas", bg: "from-orange-500 to-red-600" },
+  "COPPER": { text: "Cu", bg: "from-orange-600 to-amber-700" },
+
+  // Forex
+  "EURUSD": { text: "€/$", bg: "from-blue-500 to-blue-700" },
+  "GBPUSD": { text: "£/$", bg: "from-blue-600 to-red-600" },
+  "USDJPY": { text: "$/¥", bg: "from-red-500 to-gray-600" },
+  "USDCHF": { text: "$/₣", bg: "from-red-600 to-gray-500" },
+  "AUDUSD": { text: "A$", bg: "from-blue-500 to-yellow-500" },
+  "USDCAD": { text: "C$", bg: "from-red-600 to-red-400" },
+  "NZDUSD": { text: "N$", bg: "from-blue-600 to-red-500" },
+  "EURGBP": { text: "€/£", bg: "from-blue-500 to-red-500" },
+  "EURJPY": { text: "€/¥", bg: "from-blue-500 to-red-400" },
+  "GBPJPY": { text: "£/¥", bg: "from-blue-600 to-red-400" },
+  "USDTRY": { text: "$/₺", bg: "from-red-600 to-red-500" },
+  "EURTRY": { text: "€/₺", bg: "from-blue-500 to-red-600" },
+
+  // Indices
+  "US30":   { text: "DJ", bg: "from-blue-700 to-blue-900" },
+  "US500":  { text: "SP", bg: "from-blue-600 to-indigo-800" },
+  "US100":  { text: "NQ", bg: "from-indigo-500 to-purple-700" },
+  "GER40":  { text: "DAX", bg: "from-yellow-500 to-red-600" },
+  "UK100":  { text: "FTS", bg: "from-red-600 to-blue-700" },
+  "JP225":  { text: "NI", bg: "from-red-500 to-gray-600" },
+  "FRA40":  { text: "CAC", bg: "from-blue-600 to-red-500" },
+  "AUS200": { text: "ASX", bg: "from-blue-500 to-yellow-500" },
+  "XU100":  { text: "XU", bg: "from-red-600 to-red-500" },
+  "BIST100": { text: "BIST", bg: "from-red-600 to-red-500" },
+};
 
 interface SymbolLogoProps {
   symbol: string;
@@ -69,19 +139,50 @@ interface SymbolLogoProps {
 
 export const SymbolLogo = memo(function SymbolLogo({ symbol, size = "md" }: SymbolLogoProps) {
   const normalized = symbol.replace(/[^A-Z0-9]/gi, "").toUpperCase();
-  const logo = SYMBOL_LOGOS[normalized] || DEFAULT_LOGO;
+  const logoUrl = LOGO_URLS[normalized];
+  const fallback = FALLBACK_STYLES[normalized];
+  const [imgError, setImgError] = useState(false);
 
   const sizeClasses = {
-    sm: "h-7 w-7 text-xs",
-    md: "h-9 w-9 text-sm",
-    lg: "h-11 w-11 text-base",
+    sm: "h-7 w-7 text-[9px]",
+    md: "h-9 w-9 text-[10px]",
+    lg: "h-11 w-11 text-xs",
   };
 
+  const imgSizeClasses = {
+    sm: "h-5 w-5",
+    md: "h-6 w-6",
+    lg: "h-7 w-7",
+  };
+
+  // Has a real logo URL and image loaded fine
+  if (logoUrl && !imgError) {
+    return (
+      <div className={`${sizeClasses[size]} rounded-xl bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
+        <img
+          src={logoUrl}
+          alt={symbol}
+          className={`${imgSizeClasses[size]} object-contain`}
+          onError={() => setImgError(true)}
+          loading="lazy"
+        />
+      </div>
+    );
+  }
+
+  // Styled text fallback
+  if (fallback) {
+    return (
+      <div className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br ${fallback.bg} flex items-center justify-center shrink-0 shadow-sm`}>
+        <span className="font-bold text-white leading-none drop-shadow-sm">{fallback.text}</span>
+      </div>
+    );
+  }
+
+  // Generic fallback
   return (
-    <div
-      className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br ${logo.bg} flex items-center justify-center shrink-0 border border-border/50`}
-    >
-      <span className="leading-none">{logo.emoji}</span>
+    <div className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center shrink-0 border border-border/50`}>
+      <span className="font-bold text-muted-foreground leading-none">{normalized.slice(0, 2)}</span>
     </div>
   );
 });
