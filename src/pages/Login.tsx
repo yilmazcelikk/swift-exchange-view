@@ -1,22 +1,31 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
+  const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
   const navigate = useNavigate();
+
+  // Oturum açıksa otomatik yönlendir
+  useEffect(() => {
+    if (!authLoading && roleResolved && user) {
+      navigate(isAdmin ? "/admin" : "/dashboard", { replace: true });
+    }
+  }, [user, isAdmin, authLoading, roleResolved, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitLoading(true);
 
     try {
       const { data, error } = await supabase.auth.signInWithPassword({ email, password });
@@ -32,7 +41,7 @@ const Login = () => {
         return;
       }
 
-      const { data: isAdmin, error: roleError } = await supabase.rpc("has_role", {
+      const { data: isAdminRole, error: roleError } = await supabase.rpc("has_role", {
         _user_id: userId,
         _role: "admin",
       });
@@ -41,12 +50,12 @@ const Login = () => {
         console.error("Role check error:", roleError);
       }
 
-      navigate(isAdmin ? "/admin" : "/dashboard", { replace: true });
+      navigate(isAdminRole ? "/admin" : "/dashboard", { replace: true });
     } catch (err) {
       console.error("Login unexpected error:", err);
       toast.error("Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.");
     } finally {
-      setLoading(false);
+      setSubmitLoading(false);
     }
   };
 
@@ -61,17 +70,12 @@ const Login = () => {
         </div>
 
         <div className="relative z-10 space-y-8 w-full max-w-lg text-center">
-          {/* Logo */}
           <div className="flex justify-center mb-6">
             <img src="/tacirler-logo-wide.png" alt="Tacirler Yatırım" className="h-40 w-40 object-contain rounded-full" />
           </div>
-
-          {/* Title */}
           <h2 className="text-2xl font-bold text-white/90" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
             1991 Yılından Beri...
           </h2>
-
-          {/* Description */}
           <div className="space-y-4 text-white/75 text-sm leading-relaxed" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
             <p>
               1991 yılında Tacirler Holding'in bir iştiraki olarak kurulan ve Geniş Yetkili Aracı Kurumu lisansını 03.02.2015 tarihinde alan ve Türk sermaye Piyasalarının önde gelen aracı kurumlarından olan Tacirler Yatırım; yerli-yabancı bireysel ve kurumsal yatırımcılara, geleneksel alım satım hizmetlerinin yanında, Kurumsal Finansman, Yatırım Danışmanlığı, Portföy Yönetimi, Piyasa Yapıcılığı, Varlık Yönetimi ve Likidite Sağlayıcılığı gibi hizmetleri sunmaktadır.
@@ -80,8 +84,6 @@ const Login = () => {
               2025 6. ay TSPB verilerine göre, 8,74 milyar TL Aktif Büyüklüğüne ve 3.61 milyar TL'yi aşan Öz Varlık Büyüklüğüne sahip olan Tacirler Yatırım, Türk sermaye piyasasına ve ekonomisine katkı sağlama hedefiyle çalışmalarına hız verirken, banka sermayesinden bağımsız yapısı ve lider kimliğiyle günümüzün değişen risk anlayışını, yatırımcıları için fırsatlara dönüştürmek üzere hizmetlerini çeşitlendirmekte, teknolojik gelişmeleri yakından takip ederek müşterilerine en son teknolojilerle hizmet vermeye odaklanmaktadır.
             </p>
           </div>
-
-          {/* Stats */}
           <div className="grid grid-cols-3 gap-3 pt-4">
             {[
               { label: "Aktif Büyüklük", value: "₺8.74 Milyar" },
@@ -127,8 +129,8 @@ const Login = () => {
                 Beni hatırla
               </label>
             </div>
-            <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
-              {loading ? "Giriş yapılıyor..." : "Giriş Yap"}
+            <Button type="submit" className="w-full h-11 font-semibold" disabled={submitLoading}>
+              {submitLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
             </Button>
           </form>
           <p className="text-center text-sm text-muted-foreground">
