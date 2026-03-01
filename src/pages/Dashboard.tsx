@@ -90,12 +90,12 @@ const Dashboard = () => {
     }
   }, [authUser?.id]);
 
-  // Poll data every 500ms for smoother real-time updates
+  // Poll every 3s as fallback (Realtime handles instant updates)
   useEffect(() => {
     if (!authUser?.id) return;
     const interval = setInterval(() => {
       loadOrders();
-    }, 500);
+    }, 3000);
     return () => clearInterval(interval);
   }, [authUser?.id]);
 

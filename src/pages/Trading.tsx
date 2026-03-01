@@ -26,6 +26,7 @@ interface DBSymbol {
 
 const categories = [
   { key: "all", label: "Tümü", icon: Globe },
+  { key: "forex", label: "Forex", icon: TrendingUp },
   { key: "commodity", label: "Emtia", icon: Gem },
   { key: "index", label: "Endeks", icon: BarChart3 },
   { key: "crypto", label: "Kripto", icon: Bitcoin },
@@ -74,10 +75,10 @@ const Trading = () => {
       })
       .subscribe();
 
-    // 500ms polling for smoother real-time price updates
+    // Poll every 3s as fallback (Realtime handles instant updates)
     const interval = setInterval(() => {
       loadSymbols();
-    }, 500);
+    }, 3000);
 
     return () => {
       supabase.removeChannel(channel);

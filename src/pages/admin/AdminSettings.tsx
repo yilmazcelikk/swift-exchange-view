@@ -22,10 +22,25 @@ const AdminSettings = () => {
   const [updating, setUpdating] = useState(false);
   const [symbolCount, setSymbolCount] = useState(0);
   const [lastUpdate, setLastUpdate] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     loadSymbolStats();
+    loadSessionId();
   }, []);
+
+  const loadSessionId = async () => {
+    try {
+      const { data } = await (supabase as any)
+        .from("app_settings")
+        .select("value")
+        .eq("key", "tv_session_id")
+        .single();
+      if (data?.value) setSessionId(data.value);
+    } catch {
+      // No saved session ID yet
+    }
+  };
 
   const loadSymbolStats = async () => {
     const { count } = await supabase
@@ -44,13 +59,27 @@ const AdminSettings = () => {
     }
   };
 
-  const handleSaveSession = () => {
+  const handleSaveSession = async () => {
     if (!sessionId.trim()) {
       toast.error("Session ID boş olamaz");
       return;
     }
-    localStorage.setItem("tv_session_id", sessionId);
-    toast.success("TradingView Session ID kaydedildi");
+    setSaving(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("app_settings")
+        .upsert(
+          { key: "tv_session_id", value: sessionId.trim(), updated_at: new Date().toISOString() },
+          { onConflict: "key" }
+        );
+      if (error) throw error;
+      toast.success("TradingView Session ID veritabanına kaydedildi");
+    } catch (err: any) {
+      console.error("Session save error:", err);
+      toast.error("Kaydetme başarısız: " + (err.message || "Bilinmeyen hata"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleUpdateMarkets = async () => {
@@ -115,10 +144,13 @@ const AdminSettings = () => {
                   {showSessionId ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
               </div>
-              <Button onClick={handleSaveSession} className="gap-2 shrink-0">
-                <Save className="h-4 w-4" /> Kaydet
+              <Button onClick={handleSaveSession} disabled={saving} className="gap-2 shrink-0">
+                <Save className="h-4 w-4" /> {saving ? "Kaydediliyor..." : "Kaydet"}
               </Button>
             </div>
+            <p className="text-xs text-muted-foreground mt-1.5">
+              ✅ Session ID veritabanında kalıcı olarak saklanır, kaybolmaz.
+            </p>
           </div>
 
           <div className="bg-muted/50 rounded-lg p-4 space-y-1.5">
@@ -164,8 +196,8 @@ const AdminSettings = () => {
             <div>
               <p className="text-sm font-semibold">Çalışma Mantığı:</p>
               <p className="text-xs text-muted-foreground">
-                Butona tıkladığınızda Forex, emtia, endeks, kripto ve hisse enstrümanları TradingView'dan çekilir
-                ve veritabanına kaydedilir. Piyasa saatleri dışında son kapanış verileri gösterilir.
+                Butona tıkladığınızda eksik enstrümanlar otomatik oluşturulur ve tüm fiyatlar 
+                TradingView'dan çekilip güncellenir. Yeni ürünler otomatik olarak doğru kategoriye eklenir.
               </p>
             </div>
           </div>
@@ -190,7 +222,7 @@ const AdminSettings = () => {
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Güncelleme Yöntemi</p>
-              <p className="text-sm font-semibold">Manuel Tetikleme</p>
+              <p className="text-sm font-semibold">Manuel Tetikleme + Otomatik Oluşturma</p>
             </div>
             <div>
               <p className="text-xs text-muted-foreground">Veri Formatı</p>
@@ -214,7 +246,7 @@ const AdminSettings = () => {
               <p className="text-sm font-semibold">Sistem Versiyonu</p>
               <p className="text-xs text-muted-foreground">Mevcut versiyon</p>
             </div>
-            <span className="text-sm font-mono">v1.25</span>
+            <span className="text-sm font-mono">v1.26</span>
           </div>
           <div className="flex items-center justify-between py-3">
             <div>
