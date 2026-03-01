@@ -5,67 +5,15 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
-import { AppLayout } from "@/components/layout/AppLayout";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
-import Trading from "./pages/Trading";
-import History from "./pages/History";
-import Profile from "./pages/Profile";
-import AdminLayout from "./pages/admin/AdminLayout";
-import { AdminCrashGuard } from "@/components/admin/AdminCrashGuard";
-
 
 const queryClient = new QueryClient();
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, loading, roleResolved } = useAuth();
-  if (loading || (user && !roleResolved)) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-    </div>
-  );
-  if (!user) return <Navigate to="/login" replace />;
-  if (isAdmin) return <Navigate to="/admin" replace />;
-  return <>{children}</>;
-}
-
-function AdminRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, loading, roleResolved } = useAuth();
-  if (loading || (user && !roleResolved)) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-    </div>
-  );
-  if (!user) return <Navigate to="/login" replace />;
-  if (!isAdmin) return <Navigate to="/dashboard" replace />;
-  return <>{children}</>;
-}
-
-function PublicRoute({ children }: { children: React.ReactNode }) {
-  const { user, isAdmin, loading, roleResolved } = useAuth();
-  if (loading || (user && !roleResolved)) return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-    </div>
-  );
-  if (user && isAdmin) return <Navigate to="/admin" replace />;
-  if (user) return <Navigate to="/dashboard" replace />;
-  return <>{children}</>;
-}
-
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<Login />} />
+    <Route path="/" element={<Navigate to="/login" replace />} />
     <Route path="/login" element={<Login />} />
-    <Route path="/register" element={<Register />} />
-    <Route path="/dashboard" element={<ProtectedRoute><AppLayout><Dashboard /></AppLayout></ProtectedRoute>} />
-    <Route path="/trading" element={<ProtectedRoute><AppLayout><Trading /></AppLayout></ProtectedRoute>} />
-    <Route path="/history" element={<ProtectedRoute><AppLayout><History /></AppLayout></ProtectedRoute>} />
-    <Route path="/profile" element={<ProtectedRoute><AppLayout><Profile /></AppLayout></ProtectedRoute>} />
-    <Route path="/admin" element={<AdminRoute><AdminCrashGuard><AdminLayout /></AdminCrashGuard></AdminRoute>} />
     <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );
@@ -97,9 +45,7 @@ const App = () => {
             <Toaster />
             <Sonner />
             <BrowserRouter>
-              <AuthProvider>
-                <AppRoutes />
-              </AuthProvider>
+              <AppRoutes />
             </BrowserRouter>
           </TooltipProvider>
         </QueryClientProvider>
@@ -109,4 +55,3 @@ const App = () => {
 };
 
 export default App;
-
