@@ -289,9 +289,6 @@ const Trading = () => {
   const ask = price + spread / 2;
   const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
 
-  // Memoize candle data so it doesn't regenerate on every render/poll
-  const candleData = useMemo(() => generateCandleData(price, 80), [selectedSymbol.id]);
-
   // Chart calculations
   const displayCandles = candleData.slice(-70);
   const chartHigh = Math.max(...displayCandles.map(c => c.high));
@@ -335,26 +332,98 @@ const Trading = () => {
         <AnimatedPrice value={price} className="text-lg font-bold font-mono" />
       </div>
 
-      {/* Chart */}
-      <div className="flex-1 p-2 min-h-0">
-        <div className="h-full bg-muted/30 rounded-lg border border-border flex items-end justify-center gap-0.5 p-3 overflow-hidden">
-          {candleData.slice(-60).map((candle, i) => {
-            const isGreen = candle.close >= candle.open;
-            const allCandles = candleData.slice(-60);
-            const range = Math.max(...allCandles.map((c) => c.high)) - Math.min(...allCandles.map((c) => c.low));
-            const minPrice = Math.min(...allCandles.map((c) => c.low));
-            const bodyTop = ((Math.max(candle.open, candle.close) - minPrice) / range) * 100;
-            const bodyBottom = ((Math.min(candle.open, candle.close) - minPrice) / range) * 100;
-            const wickTop = ((candle.high - minPrice) / range) * 100;
-            const wickBottom = ((candle.low - minPrice) / range) * 100;
+      {/* Professional Chart */}
+      <div className="flex-1 min-h-0 relative">
+        <div className="h-full flex">
+          {/* Candle area */}
+          <div className="flex-1 relative overflow-hidden bg-background">
+            {/* Horizontal grid lines */}
+            {priceLevels.map((_, i) => (
+              <div
+                key={i}
+                className="absolute left-0 right-0 border-t border-border/20"
+                style={{ bottom: `${(i / priceSteps) * 100}%` }}
+              />
+            ))}
 
-            return (
-              <div key={i} className="flex flex-col items-center relative" style={{ height: "100%", width: "1.5%", minWidth: "3px" }}>
-                <div className={`absolute w-px ${isGreen ? "bg-buy" : "bg-sell"}`} style={{ bottom: `${wickBottom}%`, height: `${wickTop - wickBottom}%` }} />
-                <div className={`absolute w-full rounded-sm ${isGreen ? "bg-buy" : "bg-sell"}`} style={{ bottom: `${bodyBottom}%`, height: `${Math.max(bodyTop - bodyBottom, 0.5)}%` }} />
+            {/* Current price line */}
+            <div
+              className="absolute left-0 right-0 z-10 border-t border-dashed"
+              style={{
+                bottom: `${Math.min(Math.max(((price - chartLow) / chartRange) * 100, 1), 99)}%`,
+                borderColor: (selectedSymbol.change_percent ?? 0) >= 0 ? 'hsl(var(--buy))' : 'hsl(var(--sell))',
+              }}
+            >
+              <span
+                className={`absolute right-0 text-[10px] font-mono px-1.5 py-0.5 rounded-l translate-y-[-50%] ${
+                  (selectedSymbol.change_percent ?? 0) >= 0
+                    ? "bg-buy text-buy-foreground"
+                    : "bg-sell text-sell-foreground"
+                }`}
+              >
+                {formatPrice(price)}
+              </span>
+            </div>
+
+            {/* Candles */}
+            <div className="absolute inset-0 flex items-end px-1 gap-px">
+              {displayCandles.map((candle, i) => {
+                const isGreen = candle.close >= candle.open;
+                const bodyTop = ((Math.max(candle.open, candle.close) - chartLow) / chartRange) * 100;
+                const bodyBottom = ((Math.min(candle.open, candle.close) - chartLow) / chartRange) * 100;
+                const wickTop = ((candle.high - chartLow) / chartRange) * 100;
+                const wickBottom = ((candle.low - chartLow) / chartRange) * 100;
+                const bodyHeight = Math.max(bodyTop - bodyBottom, 0.3);
+
+                return (
+                  <div key={i} className="relative flex-1" style={{ height: "100%", minWidth: "2px" }}>
+                    <div
+                      className={`absolute left-1/2 -translate-x-1/2 ${isGreen ? "bg-buy" : "bg-sell"}`}
+                      style={{ bottom: `${wickBottom}%`, height: `${wickTop - wickBottom}%`, width: "1px" }}
+                    />
+                    <div
+                      className={`absolute left-[15%] right-[15%] rounded-[0.5px] ${isGreen ? "bg-buy" : "bg-sell"}`}
+                      style={{ bottom: `${bodyBottom}%`, height: `${bodyHeight}%` }}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Volume bars at bottom */}
+            <div className="absolute bottom-0 left-0 right-0 h-[15%] flex items-end px-1 gap-px opacity-20">
+              {displayCandles.map((candle, i) => {
+                const maxVol = Math.max(...displayCandles.map(c => c.volume));
+                const volHeight = (candle.volume / maxVol) * 100;
+                const isGreen = candle.close >= candle.open;
+                return (
+                  <div
+                    key={i}
+                    className={`flex-1 rounded-t-sm ${isGreen ? "bg-buy" : "bg-sell"}`}
+                    style={{ height: `${volHeight}%`, minWidth: "2px" }}
+                  />
+                );
+              })}
+            </div>
+
+            {/* Market closed overlay */}
+            {!currentMarketStatus.isOpen && (
+              <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-20">
+                <span className="text-sm font-medium text-muted-foreground bg-muted/80 px-4 py-2 rounded-lg border border-border/50">
+                  Piyasa Kapalı
+                </span>
               </div>
-            );
-          })}
+            )}
+          </div>
+
+          {/* Y-axis price labels */}
+          <div className="w-14 sm:w-16 shrink-0 border-l border-border/30 flex flex-col justify-between py-1 bg-background">
+            {[...priceLevels].reverse().map((p, i) => (
+              <span key={i} className="text-[9px] font-mono text-muted-foreground text-right pr-1.5 leading-none">
+                {formatPrice(p)}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -363,7 +432,7 @@ const Trading = () => {
         {/* Market closed warning */}
         {!currentMarketStatus.isOpen && (
           <div className="text-center py-1.5 px-3 rounded-lg bg-muted text-muted-foreground text-xs font-medium">
-            Piyasa kapalı — {currentMarketStatus.scheduleLabel}
+            Piyasa kapalı
           </div>
         )}
 
