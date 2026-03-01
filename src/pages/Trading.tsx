@@ -259,7 +259,8 @@ const Trading = () => {
         <button onClick={() => setSelectedSymbol(null)} className="p-1 hover:bg-muted rounded">
           <ChevronLeft className="h-5 w-5" />
         </button>
-        <div className="flex-1">
+        <div className="flex-1 flex items-center gap-2">
+          <SymbolLogo symbol={selectedSymbol.name} size="sm" />
           <div className="flex items-center gap-2">
             <h2 className="text-base font-bold">{selectedSymbol.name}</h2>
             <span
@@ -272,6 +273,7 @@ const Trading = () => {
             </span>
           </div>
           <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
+        </div>
         </div>
         <AnimatedPrice value={price} className="text-lg font-bold font-mono" />
       </div>
