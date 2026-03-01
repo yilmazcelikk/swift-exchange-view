@@ -240,6 +240,7 @@ interface SymbolLogoProps {
 export const SymbolLogo = memo(function SymbolLogo({ symbol, size = "md" }: SymbolLogoProps) {
   const normalized = symbol.replace(/[^A-Z0-9]/gi, "").toUpperCase();
   const logoUrl = LOGO_URLS[normalized];
+  const bistFallback = BIST_FALLBACKS[normalized];
   const fallback = FALLBACK_STYLES[normalized];
   const [imgError, setImgError] = useState(false);
 
@@ -267,6 +268,15 @@ export const SymbolLogo = memo(function SymbolLogo({ symbol, size = "md" }: Symb
           loading="lazy"
           crossOrigin="anonymous"
         />
+      </div>
+    );
+  }
+
+  // BIST branded fallback
+  if (bistFallback) {
+    return (
+      <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${bistFallback.bg} flex items-center justify-center shrink-0 shadow-sm`}>
+        <span className="font-bold text-white leading-none drop-shadow-sm">{bistFallback.text}</span>
       </div>
     );
   }
