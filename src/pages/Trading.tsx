@@ -59,6 +59,8 @@ const Trading = () => {
   const [loading, setLoading] = useState(true);
   const [lots, setLots] = useState(0.1);
   const [leverage, setLeverage] = useState("1:200");
+  const [stopLoss, setStopLoss] = useState("");
+  const [takeProfit, setTakeProfit] = useState("");
   const [timeframe, setTimeframe] = useState<Timeframe>("1m");
   const [realCandles, setRealCandles] = useState<CandleRow[]>([]);
   const [candlesLoading, setCandlesLoading] = useState(false);
