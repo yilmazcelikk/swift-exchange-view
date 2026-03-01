@@ -26,7 +26,7 @@ const Login = () => {
         return;
       }
 
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       console.error("Login unexpected error:", err);
       toast.error("Beklenmeyen bir hata oluştu, lütfen tekrar deneyin.");
