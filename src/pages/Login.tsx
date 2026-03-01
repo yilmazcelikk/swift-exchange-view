@@ -8,12 +8,20 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
-  const { user, isAdmin, loading, roleResolved } = useAuth();
+  const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitLoading, setSubmitLoading] = useState(false);
+  const navigate = useNavigate();
+
+  // Oturum açıksa otomatik yönlendir
+  useEffect(() => {
+    if (!authLoading && roleResolved && user) {
+      navigate(isAdmin ? "/admin" : "/dashboard", { replace: true });
+    }
+  }, [user, isAdmin, authLoading, roleResolved, navigate]);
   const navigate = useNavigate();
 
   const handleLogin = async (e: React.FormEvent) => {
