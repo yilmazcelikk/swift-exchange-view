@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
+import { SymbolLogo } from "@/components/SymbolLogo";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -255,18 +256,28 @@ const Dashboard = () => {
           <div className="divide-y divide-border">
             {openOrders.map((order) => (
               <div key={order.id} className="py-3">
-                <div className="flex items-start justify-between">
-                  <div>
-                    <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
-                    {' '}
-                    <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                      {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {order.lots}
-                    </span>
+                <div className="flex items-center gap-3">
+                  <SymbolLogo symbol={order.symbolName} size="sm" />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${order.type === 'buy' ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'}`}>
+                        {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {order.lots}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-0.5">
+                      <span className="text-[11px] text-muted-foreground font-mono">{formatUsd(order.entryPrice)}</span>
+                      <span className="text-[11px] text-muted-foreground">→</span>
+                      <AnimatedPrice value={order.currentPrice} className="text-[11px] font-mono text-foreground" />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                      {order.pnl >= 0 ? '+' : ''}{formatUsd(order.pnl)}
-                    </span>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <div className="text-right">
+                      <AnimatedPrice value={Math.abs(order.pnl)} className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`} />
+                      <p className={`text-[10px] font-mono ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+                        {order.pnl >= 0 ? '+' : '-'}
+                      </p>
+                    </div>
                     <button
                       onClick={() => setClosingOrder(order)}
                       className="p-1 rounded hover:bg-sell/10 text-muted-foreground hover:text-sell transition-colors"
@@ -276,9 +287,6 @@ const Dashboard = () => {
                     </button>
                   </div>
                 </div>
-                <p className="text-xs text-muted-foreground font-mono mt-0.5">
-                  {formatUsd(order.entryPrice)} → {formatUsd(order.currentPrice)}
-                </p>
               </div>
             ))}
           </div>
