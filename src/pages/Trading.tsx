@@ -281,8 +281,22 @@ const Trading = () => {
   const spread = getSpread(price);
   const bid = price - spread / 2;
   const ask = price + spread / 2;
-  const candleData = generateCandleData(price, 50);
   const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
+
+  // Memoize candle data so it doesn't regenerate on every render/poll
+  const candleData = useMemo(() => generateCandleData(price, 80), [selectedSymbol.id]);
+
+  // Chart calculations
+  const displayCandles = candleData.slice(-70);
+  const chartHigh = Math.max(...displayCandles.map(c => c.high));
+  const chartLow = Math.min(...displayCandles.map(c => c.low));
+  const chartRange = chartHigh - chartLow || 1;
+
+  // Price levels for Y-axis
+  const priceSteps = 5;
+  const priceLevels = Array.from({ length: priceSteps + 1 }, (_, i) =>
+    chartLow + (chartRange * i) / priceSteps
+  );
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] animate-slide-up">
