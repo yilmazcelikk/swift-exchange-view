@@ -51,47 +51,78 @@ const AdminPositions = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadAll();
-    const interval = setInterval(loadOrders, 2000);
+    void loadAll();
+    const interval = setInterval(() => {
+      void loadOrders();
+    }, 2000);
     return () => clearInterval(interval);
   }, []);
 
   const loadAll = async () => {
     setLoading(true);
-    await Promise.all([loadOrders(), loadProfiles()]);
-    setLoading(false);
+    try {
+      await Promise.all([loadOrders(), loadProfiles()]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadOrders = async () => {
-    const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("status", "open")
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("status", "open")
+        .order("created_at", { ascending: false });
 
-    if (data) {
-      // Fetch latest prices
-      const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
-      const { data: symbolsData } = await supabase
+      if (error) {
+        console.error("loadOrders error:", error);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        setOrders([]);
+        return;
+      }
+
+      const symbolIds = [...new Set(data.map((o) => o.symbol_id).filter(Boolean))];
+      const { data: symbolsData, error: symbolsError } = await supabase
         .from("symbols")
         .select("id, current_price")
         .in("id", symbolIds);
-      const priceMap = new Map(symbolsData?.map(s => [s.id, Number(s.current_price)]) || []);
 
-      setOrders(data.map((o: any) => {
-        const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
-        const pnl = calculatePnl(o.symbol_name, o.type, Number(o.lots), Number(o.entry_price), currentPrice);
-        return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl };
-      }));
+      if (symbolsError) {
+        console.error("loadOrders symbols error:", symbolsError);
+      }
+
+      const priceMap = new Map((symbolsData ?? []).map((s) => [s.id, Number(s.current_price)]));
+
+      setOrders(
+        data.map((o) => {
+          const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), currentPrice);
+          return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl };
+        })
+      );
+    } catch (err) {
+      console.error("loadOrders unexpected error:", err);
     }
   };
 
   const loadProfiles = async () => {
-    const { data } = await supabase.from("profiles").select("user_id, full_name, balance, meta_id");
-    if (data) {
-      const map = new Map<string, UserProfile>();
-      data.forEach((p: any) => map.set(p.user_id, p));
-      setProfiles(map);
+    try {
+      const { data, error } = await supabase.from("profiles").select("user_id, full_name, balance, meta_id");
+      if (error) {
+        console.error("loadProfiles error:", error);
+        return;
+      }
+      if (data) {
+        const map = new Map<string, UserProfile>();
+        data.forEach((p) => map.set(p.user_id, p));
+        setProfiles(map);
+      }
+    } catch (err) {
+      console.error("loadProfiles unexpected error:", err);
     }
   };
 
