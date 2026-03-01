@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -19,23 +19,9 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-function RootRedirect() {
-  const { user, isAdmin, loading, roleResolved } = useAuth();
-
-  if (loading || !roleResolved) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  return <Navigate to={user ? (isAdmin ? "/admin" : "/dashboard") : "/login"} replace />;
-}
-
 const AppRoutes = () => (
   <Routes>
-    <Route path="/" element={<RootRedirect />} />
+    <Route path="/" element={<Navigate to="/login" replace />} />
     <Route path="/login" element={<Login />} />
     <Route path="/register" element={<Register />} />
     <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
@@ -43,7 +29,7 @@ const AppRoutes = () => (
     <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
     <Route path="/profile" element={<PrivateRoute><Profile /></PrivateRoute>} />
     <Route path="/admin" element={<PrivateRoute adminOnly><AdminLayout /></PrivateRoute>} />
-    <Route path="*" element={<NotFound />} />
+    <Route path="*" element={<Navigate to="/login" replace />} />
   </Routes>
 );
 
