@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, forwardRef } from "react";
 import { useAnimatedPrice } from "@/hooks/useAnimatedPrice";
 
 interface AnimatedPriceProps {
@@ -15,16 +15,17 @@ function formatAnimatedPrice(price: number): string {
   return price.toLocaleString("tr-TR", { minimumFractionDigits: 2 });
 }
 
-export const AnimatedPrice = memo(function AnimatedPrice({
-  value,
-  className = "",
-  duration = 400,
-}: AnimatedPriceProps) {
+const AnimatedPriceBase = forwardRef<HTMLSpanElement, AnimatedPriceProps>(function AnimatedPrice(
+  { value, className = "", duration = 400 },
+  ref,
+) {
   const displayValue = useAnimatedPrice(value, duration);
 
   return (
-    <span className={`tabular-nums transition-colors duration-150 ${className}`}>
+    <span ref={ref} className={`tabular-nums transition-colors duration-150 ${className}`}>
       {formatAnimatedPrice(displayValue)}
     </span>
   );
 });
+
+export const AnimatedPrice = memo(AnimatedPriceBase);
