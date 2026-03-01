@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,6 +6,7 @@ import { generateCandleData } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Minus, Plus, ChevronLeft, TrendingUp, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
+import { AnimatedPrice } from "@/components/AnimatedPrice";
 
 import { toast } from "sonner";
 
@@ -24,7 +25,6 @@ interface DBSymbol {
 
 const categories = [
   { key: "all", label: "Tümü", icon: Globe },
-  { key: "forex", label: "Forex", icon: TrendingUp },
   { key: "commodity", label: "Emtia", icon: Gem },
   { key: "index", label: "Endeks", icon: BarChart3 },
   { key: "crypto", label: "Kripto", icon: Bitcoin },
@@ -73,10 +73,10 @@ const Trading = () => {
       })
       .subscribe();
 
-    // 1-second polling for real-time price updates
+    // 500ms polling for smoother real-time price updates
     const interval = setInterval(() => {
       loadSymbols();
-    }, 1000);
+    }, 500);
 
     return () => {
       supabase.removeChannel(channel);
@@ -223,7 +223,7 @@ const Trading = () => {
                   <p className="text-xs text-muted-foreground">{symbol.display_name}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-sm font-mono font-semibold">{formatPrice(symbol.current_price)}</p>
+                  <AnimatedPrice value={symbol.current_price} className="text-sm font-mono font-semibold" />
                   <p
                     className={`text-xs font-mono ${
                       (symbol.change_percent ?? 0) >= 0 ? "text-buy" : "text-sell"
@@ -269,7 +269,7 @@ const Trading = () => {
           </div>
           <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
         </div>
-        <p className="text-lg font-bold font-mono">{formatPrice(price)}</p>
+        <AnimatedPrice value={price} className="text-lg font-bold font-mono" />
       </div>
 
       {/* Chart */}

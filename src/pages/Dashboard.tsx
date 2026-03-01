@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
+import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -89,12 +90,12 @@ const Dashboard = () => {
     }
   }, [authUser?.id]);
 
-  // Poll data every second for real-time updates
+  // Poll data every 500ms for smoother real-time updates
   useEffect(() => {
     if (!authUser?.id) return;
     const interval = setInterval(() => {
       loadOrders();
-    }, 1000);
+    }, 500);
     return () => clearInterval(interval);
   }, [authUser?.id]);
 
