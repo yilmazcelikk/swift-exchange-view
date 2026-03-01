@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
+import { getMarketStatus } from "@/lib/marketHours";
 
 import { toast } from "sonner";
 
@@ -134,6 +135,15 @@ const Trading = () => {
   const handleOrder = async (type: "buy" | "sell") => {
     if (!selectedSymbol || !authUser) return;
 
+    // Check market hours
+    const status = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
+    if (!status.isOpen) {
+      toast.error("Piyasa kapalı. Bu enstrümanda şu an işlem açılamaz.", {
+        description: status.scheduleLabel,
+      });
+      return;
+    }
+
     // Check balance
     const { data: profileData } = await supabase
       .from("profiles")
@@ -226,32 +236,40 @@ const Trading = () => {
           ) : filteredSymbols.length === 0 ? (
             <div className="text-center py-16 text-sm text-muted-foreground">Enstrüman bulunamadı.</div>
           ) : (
-            filteredSymbols.map((symbol) => (
-              <button
-                key={symbol.id}
-                onClick={() => setSelectedSymbol(symbol)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-all border-b border-border/30"
-              >
-                <SymbolLogo symbol={symbol.name} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{symbol.name}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{symbol.display_name}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <AnimatedPrice value={symbol.current_price} className="text-sm font-mono font-semibold" />
-                  <div className="flex items-center justify-end gap-1 mt-0.5">
-                    <span
-                      className={`inline-flex items-center text-[11px] font-mono font-medium px-1.5 py-0.5 rounded ${
-                        (symbol.change_percent ?? 0) >= 0 ? "bg-buy/10 text-buy" : "bg-sell/10 text-sell"
-                      }`}
-                    >
-                      {(symbol.change_percent ?? 0) >= 0 ? "+" : ""}
-                      {(symbol.change_percent ?? 0).toFixed(2)}%
-                    </span>
+            filteredSymbols.map((symbol) => {
+              const marketStatus = getMarketStatus(symbol.name, symbol.category);
+              return (
+                <button
+                  key={symbol.id}
+                  onClick={() => setSelectedSymbol(symbol)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-all border-b border-border/30"
+                >
+                  <SymbolLogo symbol={symbol.name} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{symbol.name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{symbol.display_name}</p>
                   </div>
-                </div>
-              </button>
-            ))
+                  <div className="text-right shrink-0">
+                    <AnimatedPrice value={symbol.current_price} className="text-sm font-mono font-semibold" />
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      {!marketStatus.isOpen && (
+                        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          KAPALI
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center text-[11px] font-mono font-medium px-1.5 py-0.5 rounded ${
+                          (symbol.change_percent ?? 0) >= 0 ? "bg-buy/10 text-buy" : "bg-sell/10 text-sell"
+                        }`}
+                      >
+                        {(symbol.change_percent ?? 0) >= 0 ? "+" : ""}
+                        {(symbol.change_percent ?? 0).toFixed(2)}%
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })
           )}
         </div>
       </div>
@@ -264,6 +282,7 @@ const Trading = () => {
   const bid = price - spread / 2;
   const ask = price + spread / 2;
   const candleData = generateCandleData(price, 50);
+  const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] animate-slide-up">
@@ -284,8 +303,13 @@ const Trading = () => {
                 {(selectedSymbol.change_percent ?? 0) >= 0 ? "+" : ""}
                 {(selectedSymbol.change_percent ?? 0).toFixed(2)}%
               </span>
+              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${
+                currentMarketStatus.isOpen ? "bg-buy/10 text-buy" : "bg-muted text-muted-foreground"
+              }`}>
+                {currentMarketStatus.label}
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
+            <p className="text-xs text-muted-foreground">{selectedSymbol.display_name} • {currentMarketStatus.scheduleLabel}</p>
           </div>
         </div>
         <AnimatedPrice value={price} className="text-lg font-bold font-mono" />
@@ -316,6 +340,13 @@ const Trading = () => {
 
       {/* Order Panel */}
       <div className="border-t border-border bg-card p-3 space-y-3">
+        {/* Market closed warning */}
+        {!currentMarketStatus.isOpen && (
+          <div className="text-center py-1.5 px-3 rounded-lg bg-muted text-muted-foreground text-xs font-medium">
+            Piyasa kapalı — {currentMarketStatus.scheduleLabel}
+          </div>
+        )}
+
         {/* Lots row */}
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(Math.max(0.01, parseFloat((lots - 0.01).toFixed(2))))}>
@@ -356,8 +387,8 @@ const Trading = () => {
 
         {/* Buy / Sell */}
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => handleOrder("sell")} disabled={orderLoading} className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold">SAT</Button>
-          <Button onClick={() => handleOrder("buy")} disabled={orderLoading} className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold">AL</Button>
+          <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50">SAT</Button>
+          <Button onClick={() => handleOrder("buy")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold disabled:opacity-50">AL</Button>
         </div>
       </div>
     </div>
