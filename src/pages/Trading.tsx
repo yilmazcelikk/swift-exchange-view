@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
+import { resolveLogoUrl } from "@/data/symbolLogos";
 import { getMarketStatus } from "@/lib/marketHours";
 import { toast } from "sonner";
 
@@ -135,7 +136,10 @@ const Trading = () => {
     })
     .sort((a, b) => {
       if (selectedCategory === "all") {
-        // BIST stocks first
+        const aHasLogo = resolveLogoUrl(a.name, a.category) ? 0 : 1;
+        const bHasLogo = resolveLogoUrl(b.name, b.category) ? 0 : 1;
+        if (aHasLogo !== bHasLogo) return aHasLogo - bHasLogo;
+        // Among those with logos, BIST stocks first
         const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
         const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
         if (aIsBist !== bIsBist) return aIsBist - bIsBist;
