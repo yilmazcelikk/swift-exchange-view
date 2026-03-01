@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Eye, EyeOff, TrendingUp } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -27,7 +26,6 @@ const Login = () => {
         return;
       }
 
-      // Yönlendirmeyi AuthContext + route guard yönetir
       navigate("/", { replace: true });
     } catch (err) {
       console.error("Login unexpected error:", err);
@@ -37,52 +35,58 @@ const Login = () => {
     }
   };
 
-  const topGainers = [
-    { name: "BTCUSD", gain: "+4.25%", price: "$43,250" },
-    { name: "XAUUSD", gain: "+1.82%", price: "$2,024" },
-    { name: "THYAO", gain: "+3.15%", price: "₺282.50" },
-    { name: "AAPL", gain: "+2.08%", price: "$182.50" },
-    { name: "ETHUSD", gain: "+1.45%", price: "$2,280" },
-  ];
-
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Side — Branding & Data */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/20 via-background to-buy/10 flex-col justify-center items-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-buy rounded-full blur-3xl" />
+      {/* Left Side — Company Info */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-center items-center p-12 relative overflow-hidden" style={{ background: "linear-gradient(135deg, #0a1628 0%, #122044 50%, #1a3068 100%)" }}>
+        {/* Decorative background elements */}
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 right-10 w-80 h-80 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }} />
+          <div className="absolute bottom-20 left-10 w-64 h-64 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, #1d4ed8 0%, transparent 70%)" }} />
         </div>
-        <div className="relative z-10 space-y-8 w-full max-w-md">
-          <div className="flex items-center gap-3 mb-8">
-            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-12 w-auto" />
+
+        <div className="relative z-10 space-y-8 w-full max-w-lg">
+          {/* Logo */}
+          <div className="flex justify-center mb-6">
+            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-20 w-auto object-contain" />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold mb-2">Piyasalara Hükmedin</h2>
-            <p className="text-muted-foreground">Gerçek zamanlı verilerle güvenli ve hızlı işlem yapın.</p>
+
+          {/* Title */}
+          <h2 className="text-2xl font-bold text-white/90" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
+            1991 Yılından Beri...
+          </h2>
+
+          {/* Description */}
+          <div className="space-y-4 text-white/75 text-sm leading-relaxed" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
+            <p>
+              1991 yılında Tacirler Holding'in bir iştiraki olarak kurulan ve Geniş Yetkili Aracı Kurumu lisansını 03.02.2015 tarihinde alan ve Türk sermaye Piyasalarının önde gelen aracı kurumlarından olan Tacirler Yatırım; yerli-yabancı bireysel ve kurumsal yatırımcılara, geleneksel alım satım hizmetlerinin yanında, Kurumsal Finansman, Yatırım Danışmanlığı, Portföy Yönetimi, Piyasa Yapıcılığı, Varlık Yönetimi ve Likidite Sağlayıcılığı gibi hizmetleri sunmaktadır.
+            </p>
+            <p>
+              2025 6. ay TSPB verilerine göre, 8,74 milyar TL Aktif Büyüklüğüne ve 3.61 milyar TL'yi aşan Öz Varlık Büyüklüğüne sahip olan Tacirler Yatırım, Türk sermaye piyasasına ve ekonomisine katkı sağlama hedefiyle çalışmalarına hız verirken, banka sermayesinden bağımsız yapısı ve lider kimliğiyle günümüzün değişen risk anlayışını, yatırımcıları için fırsatlara dönüştürmek üzere hizmetlerini çeşitlendirmekte, teknolojik gelişmeleri yakından takip ederek müşterilerine en son teknolojilerle hizmet vermeye odaklanmaktadır.
+            </p>
           </div>
-          <Card className="bg-card/80 backdrop-blur border-border p-4">
-            <h3 className="text-sm font-semibold mb-3 text-muted-foreground">🔥 Günün Kazananları</h3>
-            <div className="space-y-2">
-              {topGainers.map((item) => (
-                <div key={item.name} className="flex justify-between items-center py-1.5">
-                  <span className="text-sm font-medium">{item.name}</span>
-                  <div className="flex items-center gap-3">
-                    <span className="text-xs text-muted-foreground font-mono">{item.price}</span>
-                    <span className="text-xs font-semibold text-buy font-mono">{item.gain}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </Card>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3 pt-4">
+            {[
+              { label: "Aktif Büyüklük", value: "₺8.74 Milyar" },
+              { label: "Öz Varlık", value: "₺3.61 Milyar" },
+              { label: "Kuruluş", value: "1991" },
+            ].map((s) => (
+              <div key={s.label} className="text-center p-3 rounded-xl bg-white/5 backdrop-blur border border-white/10">
+                <p className="text-base font-bold text-white">{s.value}</p>
+                <p className="text-[11px] text-white/50 mt-1">{s.label}</p>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
 
       {/* Right Side — Login Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
-          <div className="lg:hidden flex items-center gap-3 mb-4">
-            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-10 w-auto" />
+          <div className="lg:hidden flex justify-center mb-4">
+            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-14 w-auto" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">Giriş Yap</h2>
