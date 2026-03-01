@@ -47,8 +47,8 @@ const Login = () => {
 
         <div className="relative z-10 space-y-8 w-full max-w-lg">
           {/* Logo */}
-          <div className="flex justify-center mb-6">
-            <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-20 w-auto object-contain" />
+          <div className="flex justify-center mb-8">
+            <img src="/tacirler-logo-wide.png" alt="Tacirler Yatırım" className="w-full max-w-md object-contain" />
           </div>
 
           {/* Title */}
