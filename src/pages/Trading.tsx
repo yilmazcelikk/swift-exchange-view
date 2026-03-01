@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Search, Minus, Plus, ChevronLeft, TrendingUp, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
+import { SymbolLogo } from "@/components/SymbolLogo";
 
 import { toast } from "sonner";
 
@@ -216,22 +217,25 @@ const Trading = () => {
               <button
                 key={symbol.id}
                 onClick={() => setSelectedSymbol(symbol)}
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-muted/50 active:bg-muted transition-colors border-b border-border/50"
+                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-all border-b border-border/30"
               >
-                <div>
-                  <p className="text-sm font-semibold">{symbol.name}</p>
-                  <p className="text-xs text-muted-foreground">{symbol.display_name}</p>
+                <SymbolLogo symbol={symbol.name} />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold truncate">{symbol.name}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{symbol.display_name}</p>
                 </div>
-                <div className="text-right">
+                <div className="text-right shrink-0">
                   <AnimatedPrice value={symbol.current_price} className="text-sm font-mono font-semibold" />
-                  <p
-                    className={`text-xs font-mono ${
-                      (symbol.change_percent ?? 0) >= 0 ? "text-buy" : "text-sell"
-                    }`}
-                  >
-                    {(symbol.change_percent ?? 0) >= 0 ? "+" : ""}
-                    {(symbol.change_percent ?? 0).toFixed(2)}%
-                  </p>
+                  <div className="flex items-center justify-end gap-1 mt-0.5">
+                    <span
+                      className={`inline-flex items-center text-[11px] font-mono font-medium px-1.5 py-0.5 rounded ${
+                        (symbol.change_percent ?? 0) >= 0 ? "bg-buy/10 text-buy" : "bg-sell/10 text-sell"
+                      }`}
+                    >
+                      {(symbol.change_percent ?? 0) >= 0 ? "+" : ""}
+                      {(symbol.change_percent ?? 0).toFixed(2)}%
+                    </span>
+                  </div>
                 </div>
               </button>
             ))
