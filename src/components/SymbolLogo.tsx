@@ -1,8 +1,8 @@
 import { memo, useState } from "react";
 
-// Real logo URLs from public CDNs
+// Real logo URLs using public CDNs
 const LOGO_URLS: Record<string, string> = {
-  // Stocks
+  // US Stocks - Clearbit logos
   "AAPL": "https://logo.clearbit.com/apple.com",
   "MSFT": "https://logo.clearbit.com/microsoft.com",
   "GOOGL": "https://logo.clearbit.com/google.com",
@@ -39,8 +39,23 @@ const LOGO_URLS: Record<string, string> = {
   "PLTR": "https://logo.clearbit.com/palantir.com",
   "RIVN": "https://logo.clearbit.com/rivian.com",
   "LCID": "https://logo.clearbit.com/lucidmotors.com",
+  "SNOW": "https://logo.clearbit.com/snowflake.com",
+  "ROKU": "https://logo.clearbit.com/roku.com",
+  "ZM": "https://logo.clearbit.com/zoom.us",
+  "BABA": "https://logo.clearbit.com/alibaba.com",
+  "JNJ": "https://logo.clearbit.com/jnj.com",
+  "PG": "https://logo.clearbit.com/pg.com",
+  "XOM": "https://logo.clearbit.com/exxonmobil.com",
+  "CVX": "https://logo.clearbit.com/chevron.com",
+  "GS": "https://logo.clearbit.com/goldmansachs.com",
+  "MS": "https://logo.clearbit.com/morganstanley.com",
+  "BAC": "https://logo.clearbit.com/bankofamerica.com",
+  "T": "https://logo.clearbit.com/att.com",
+  "VZ": "https://logo.clearbit.com/verizon.com",
+  "MCD": "https://logo.clearbit.com/mcdonalds.com",
+  "SBUX": "https://logo.clearbit.com/starbucks.com",
 
-  // BIST Stocks
+  // BIST Turkish Stocks
   "THYAO": "https://logo.clearbit.com/turkishairlines.com",
   "GARAN": "https://logo.clearbit.com/garantibbva.com.tr",
   "AKBNK": "https://logo.clearbit.com/akbank.com",
@@ -67,42 +82,49 @@ const LOGO_URLS: Record<string, string> = {
   "EKGYO": "https://logo.clearbit.com/emlakkonut.com.tr",
   "ENKAI": "https://logo.clearbit.com/enka.com",
   "KOZAL": "https://logo.clearbit.com/kozamadencilik.com.tr",
-  "KOZAA": "https://logo.clearbit.com/kozamadencilik.com.tr",
   "SASA": "https://logo.clearbit.com/sasapolyester.com",
+  "DOHOL": "https://logo.clearbit.com/dogusgrubu.com.tr",
+  "HALKB": "https://logo.clearbit.com/halkbank.com.tr",
+  "VAKBN": "https://logo.clearbit.com/vakifbank.com.tr",
+  "SMRTG": "https://logo.clearbit.com/smart-group.com",
 
-  // Crypto
-  "BTCUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/btc.png",
-  "ETHUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/eth.png",
-  "BNBUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/bnb.png",
-  "XRPUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xrp.png",
-  "SOLUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/sol.png",
-  "ADAUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/ada.png",
-  "DOTUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/dot.png",
-  "DOGEUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/doge.png",
-  "AVAXUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/avax.png",
-  "LINKUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/link.png",
-  "MATICUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/matic.png",
-  "LTCUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/ltc.png",
-  "UNIUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/uni.png",
-  "ATOMUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/atom.png",
-  "XLMUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/xlm.png",
-  "ALGOUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/algo.png",
-  "NEARUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/near.png",
-  "FTMUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/ftm.png",
-  "TRXUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/trx.png",
-  "SHIBUSD": "https://raw.githubusercontent.com/spothq/cryptocurrency-icons/master/128/color/shib.png",
+  // Crypto - CoinGecko & cryptocurrency-icons
+  "BTCUSD": "https://assets.coingecko.com/coins/images/1/small/bitcoin.png",
+  "ETHUSD": "https://assets.coingecko.com/coins/images/279/small/ethereum.png",
+  "BNBUSD": "https://assets.coingecko.com/coins/images/825/small/bnb-icon2_2x.png",
+  "XRPUSD": "https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png",
+  "SOLUSD": "https://assets.coingecko.com/coins/images/4128/small/solana.png",
+  "ADAUSD": "https://assets.coingecko.com/coins/images/975/small/cardano.png",
+  "DOTUSD": "https://assets.coingecko.com/coins/images/12171/small/polkadot.png",
+  "DOGEUSD": "https://assets.coingecko.com/coins/images/5/small/dogecoin.png",
+  "AVAXUSD": "https://assets.coingecko.com/coins/images/12559/small/Avalanche_Circle_RedWhite_Trans.png",
+  "LINKUSD": "https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png",
+  "MATICUSD": "https://assets.coingecko.com/coins/images/4713/small/polygon.png",
+  "LTCUSD": "https://assets.coingecko.com/coins/images/2/small/litecoin.png",
+  "UNIUSD": "https://assets.coingecko.com/coins/images/12504/small/uni.jpg",
+  "ATOMUSD": "https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png",
+  "XLMUSD": "https://assets.coingecko.com/coins/images/100/small/Stellar_symbol_black_RGB.png",
+  "NEARUSD": "https://assets.coingecko.com/coins/images/10365/small/near.jpg",
+  "TRXUSD": "https://assets.coingecko.com/coins/images/1094/small/tron-logo.png",
+  "SHIBUSD": "https://assets.coingecko.com/coins/images/11939/small/shiba.png",
+  "APTUSD": "https://assets.coingecko.com/coins/images/26455/small/aptos_round.png",
+  "ARBUSD": "https://assets.coingecko.com/coins/images/16547/small/photo_2023-03-29_21.47.00.jpeg",
+  "OPUSD": "https://assets.coingecko.com/coins/images/25244/small/Optimism.png",
+  "SUIUSD": "https://assets.coingecko.com/coins/images/26375/small/sui_asset.jpeg",
+  "INJUSD": "https://assets.coingecko.com/coins/images/12882/small/Secondary_Symbol.png",
+  "PEPEUSD": "https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg",
 };
 
-// Fallback styling for symbols without logos
+// Fallback styled text for symbols without image logos
 const FALLBACK_STYLES: Record<string, { text: string; bg: string }> = {
   // Commodities
   "XAUUSD": { text: "Au", bg: "from-yellow-500 to-amber-600" },
   "XAGUSD": { text: "Ag", bg: "from-gray-400 to-gray-500" },
   "XPTUSD": { text: "Pt", bg: "from-gray-300 to-blue-200" },
   "XPDUSD": { text: "Pd", bg: "from-gray-300 to-teal-300" },
-  "USOIL":  { text: "Oil", bg: "from-amber-700 to-amber-900" },
-  "UKOIL":  { text: "Oil", bg: "from-amber-600 to-amber-800" },
-  "NGAS":   { text: "Gas", bg: "from-orange-500 to-red-600" },
+  "USOIL":  { text: "🛢", bg: "from-amber-700 to-amber-900" },
+  "UKOIL":  { text: "🛢", bg: "from-amber-600 to-amber-800" },
+  "NGAS":   { text: "⛽", bg: "from-orange-500 to-red-600" },
   "COPPER": { text: "Cu", bg: "from-orange-600 to-amber-700" },
 
   // Forex
@@ -110,9 +132,9 @@ const FALLBACK_STYLES: Record<string, { text: string; bg: string }> = {
   "GBPUSD": { text: "£/$", bg: "from-blue-600 to-red-600" },
   "USDJPY": { text: "$/¥", bg: "from-red-500 to-gray-600" },
   "USDCHF": { text: "$/₣", bg: "from-red-600 to-gray-500" },
-  "AUDUSD": { text: "A$", bg: "from-blue-500 to-yellow-500" },
-  "USDCAD": { text: "C$", bg: "from-red-600 to-red-400" },
-  "NZDUSD": { text: "N$", bg: "from-blue-600 to-red-500" },
+  "AUDUSD": { text: "A$/$", bg: "from-blue-500 to-yellow-500" },
+  "USDCAD": { text: "$/C$", bg: "from-red-600 to-red-400" },
+  "NZDUSD": { text: "N$/$", bg: "from-blue-600 to-red-500" },
   "EURGBP": { text: "€/£", bg: "from-blue-500 to-red-500" },
   "EURJPY": { text: "€/¥", bg: "from-blue-500 to-red-400" },
   "GBPJPY": { text: "£/¥", bg: "from-blue-600 to-red-400" },
@@ -155,22 +177,23 @@ export const SymbolLogo = memo(function SymbolLogo({ symbol, size = "md" }: Symb
     lg: "h-7 w-7",
   };
 
-  // Has a real logo URL and image loaded fine
+  // Real image logo
   if (logoUrl && !imgError) {
     return (
       <div className={`${sizeClasses[size]} rounded-xl bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
         <img
           src={logoUrl}
           alt={symbol}
-          className={`${imgSizeClasses[size]} object-contain`}
+          className={`${imgSizeClasses[size]} object-contain rounded-sm`}
           onError={() => setImgError(true)}
           loading="lazy"
+          crossOrigin="anonymous"
         />
       </div>
     );
   }
 
-  // Styled text fallback
+  // Styled gradient text fallback
   if (fallback) {
     return (
       <div className={`${sizeClasses[size]} rounded-xl bg-gradient-to-br ${fallback.bg} flex items-center justify-center shrink-0 shadow-sm`}>

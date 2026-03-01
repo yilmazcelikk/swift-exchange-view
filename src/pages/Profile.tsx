@@ -595,18 +595,18 @@ const Profile = () => {
 
         {/* ─── Kimlik Doğrulama ─── */}
         <TabsContent value="verify" className="space-y-4 mt-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-1 sm:gap-2 w-full overflow-x-auto px-1">
             {verificationSteps.map((step, i) => (
-              <div key={step.id} className="flex items-center gap-2 flex-1">
-                <div className={`flex items-center justify-center w-8 h-8 rounded-full text-xs font-bold shrink-0 ${
+              <div key={step.id} className="flex items-center gap-1 sm:gap-2 shrink-0">
+                <div className={`flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 rounded-full text-[10px] sm:text-xs font-bold shrink-0 ${
                   currentStep > step.id ? "bg-buy text-buy-foreground" :
                   currentStep === step.id ? "bg-primary text-primary-foreground" :
                   "bg-muted text-muted-foreground"
                 }`}>
-                  {currentStep > step.id ? <CheckCircle className="h-4 w-4" /> : step.id}
+                  {currentStep > step.id ? <CheckCircle className="h-3.5 w-3.5 sm:h-4 sm:w-4" /> : step.id}
                 </div>
-                <span className="text-xs font-medium hidden sm:block">{step.label}</span>
-                {i < verificationSteps.length - 1 && <div className="flex-1 h-px bg-border" />}
+                <span className="text-[10px] sm:text-xs font-medium whitespace-nowrap">{step.label}</span>
+                {i < verificationSteps.length - 1 && <div className="w-4 sm:w-8 h-px bg-border shrink-0" />}
               </div>
             ))}
           </div>
