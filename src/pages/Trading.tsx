@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,8 +9,23 @@ import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, G
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
 import { getMarketStatus } from "@/lib/marketHours";
-
 import { toast } from "sonner";
+
+interface CandleRow {
+  bucket_time: string;
+  open: number;
+  high: number;
+  low: number;
+  close: number;
+  volume: number;
+}
+
+const TIMEFRAMES = [
+  { key: "1m", label: "1D" },
+  { key: "1h", label: "1S" },
+] as const;
+
+type Timeframe = typeof TIMEFRAMES[number]["key"];
 
 interface DBSymbol {
   id: string;
