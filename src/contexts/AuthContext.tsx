@@ -53,13 +53,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     let lastSessionId: string | null = null;
+    let initialResolved = false;
 
     const resolveSession = async (nextSession: Session | null) => {
       if (cancelled) return;
 
-      // Avoid reprocessing the same session
       const nextId = nextSession?.access_token ?? null;
-      if (nextId && nextId === lastSessionId) return;
+      if (initialResolved && nextId === lastSessionId) return;
       lastSessionId = nextId;
 
       setSession(nextSession);
@@ -76,6 +76,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setIsAdmin(false);
       } finally {
         if (!cancelled) {
+          initialResolved = true;
           setRoleResolved(true);
           setLoading(false);
         }
@@ -89,24 +90,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     }, 7000);
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, nextSession) => {
-        void resolveSession(nextSession);
-      }
-    );
-
-    void supabase.auth.getSession()
+    void supabase.auth
+      .getSession()
       .then(({ data: { session } }) => {
         void resolveSession(session);
       })
       .catch((err) => {
         console.error("getSession error:", err);
         if (!cancelled) {
+          initialResolved = true;
           setIsAdmin(false);
           setRoleResolved(true);
           setLoading(false);
         }
       });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      void resolveSession(nextSession);
+    });
 
     return () => {
       cancelled = true;
