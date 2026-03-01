@@ -135,6 +135,15 @@ const Trading = () => {
   const handleOrder = async (type: "buy" | "sell") => {
     if (!selectedSymbol || !authUser) return;
 
+    // Check market hours
+    const status = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
+    if (!status.isOpen) {
+      toast.error("Piyasa kapalı. Bu enstrümanda şu an işlem açılamaz.", {
+        description: status.scheduleLabel,
+      });
+      return;
+    }
+
     // Check balance
     const { data: profileData } = await supabase
       .from("profiles")
