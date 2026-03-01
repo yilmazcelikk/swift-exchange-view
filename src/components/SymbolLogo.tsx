@@ -33,7 +33,7 @@ export const SymbolLogo = memo(function SymbolLogo({ symbol, category, size = "m
           className={`${imgSizeClasses[size]} object-contain`}
           onError={() => setImgError(true)}
           loading="lazy"
-          crossOrigin="anonymous"
+          referrerPolicy="no-referrer"
         />
       </div>
     );
