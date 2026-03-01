@@ -257,7 +257,6 @@ const Dashboard = () => {
               <div key={order.id} className="py-3">
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
-                  <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
                       <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${order.type === 'buy' ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'}`}>
