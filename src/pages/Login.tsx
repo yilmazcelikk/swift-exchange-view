@@ -45,10 +45,10 @@ const Login = () => {
           <div className="absolute bottom-20 left-10 w-64 h-64 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, #1d4ed8 0%, transparent 70%)" }} />
         </div>
 
-        <div className="relative z-10 space-y-8 w-full max-w-lg">
+        <div className="relative z-10 space-y-8 w-full max-w-lg text-center">
           {/* Logo */}
           <div className="flex justify-center mb-8">
-            <img src="/tacirler-logo-wide.png" alt="Tacirler Yatırım" className="w-full max-w-md object-contain" />
+            <img src="/tacirler-logo-wide.png" alt="Tacirler Yatırım" className="w-72 object-contain" />
           </div>
 
           {/* Title */}
