@@ -272,9 +272,6 @@ const Dashboard = () => {
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="text-right">
                       <AnimatedPrice value={Math.abs(order.pnl)} className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`} />
-                      <p className={`text-[10px] font-mono ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                        {order.pnl >= 0 ? '+' : '-'}
-                      </p>
                     </div>
                     <button
                       onClick={() => setClosingOrder(order)}

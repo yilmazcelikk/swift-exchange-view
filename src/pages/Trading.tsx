@@ -22,7 +22,10 @@ interface CandleRow {
 
 const TIMEFRAMES = [
   { key: "1m", label: "1D" },
+  { key: "15m", label: "15D" },
   { key: "1h", label: "1S" },
+  { key: "4h", label: "4S" },
+  { key: "1d", label: "1G" },
 ] as const;
 
 type Timeframe = typeof TIMEFRAMES[number]["key"];
@@ -143,7 +146,8 @@ const Trading = () => {
   // Fetch real candle data from DB
   const loadCandles = useCallback(async (symbolId: string, tf: Timeframe) => {
     setCandlesLoading(true);
-    const limit = tf === "1m" ? 100 : 168; // 100 min or 7 days hourly
+    const limits: Record<string, number> = { "1m": 120, "15m": 96, "1h": 168, "4h": 120, "1d": 90 };
+    const limit = limits[tf] || 100;
     const { data, error } = await supabase
       .from("candles")
       .select("bucket_time, open, high, low, close, volume")
