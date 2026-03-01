@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
+import { getMarketStatus } from "@/lib/marketHours";
 
 import { toast } from "sonner";
 
@@ -226,32 +227,40 @@ const Trading = () => {
           ) : filteredSymbols.length === 0 ? (
             <div className="text-center py-16 text-sm text-muted-foreground">Enstrüman bulunamadı.</div>
           ) : (
-            filteredSymbols.map((symbol) => (
-              <button
-                key={symbol.id}
-                onClick={() => setSelectedSymbol(symbol)}
-                className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-all border-b border-border/30"
-              >
-                <SymbolLogo symbol={symbol.name} />
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold truncate">{symbol.name}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{symbol.display_name}</p>
-                </div>
-                <div className="text-right shrink-0">
-                  <AnimatedPrice value={symbol.current_price} className="text-sm font-mono font-semibold" />
-                  <div className="flex items-center justify-end gap-1 mt-0.5">
-                    <span
-                      className={`inline-flex items-center text-[11px] font-mono font-medium px-1.5 py-0.5 rounded ${
-                        (symbol.change_percent ?? 0) >= 0 ? "bg-buy/10 text-buy" : "bg-sell/10 text-sell"
-                      }`}
-                    >
-                      {(symbol.change_percent ?? 0) >= 0 ? "+" : ""}
-                      {(symbol.change_percent ?? 0).toFixed(2)}%
-                    </span>
+            filteredSymbols.map((symbol) => {
+              const marketStatus = getMarketStatus(symbol.name, symbol.category);
+              return (
+                <button
+                  key={symbol.id}
+                  onClick={() => setSelectedSymbol(symbol)}
+                  className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-all border-b border-border/30"
+                >
+                  <SymbolLogo symbol={symbol.name} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold truncate">{symbol.name}</p>
+                    <p className="text-[11px] text-muted-foreground truncate">{symbol.display_name}</p>
                   </div>
-                </div>
-              </button>
-            ))
+                  <div className="text-right shrink-0">
+                    <AnimatedPrice value={symbol.current_price} className="text-sm font-mono font-semibold" />
+                    <div className="flex items-center justify-end gap-1 mt-0.5">
+                      {!marketStatus.isOpen && (
+                        <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          KAPALI
+                        </span>
+                      )}
+                      <span
+                        className={`inline-flex items-center text-[11px] font-mono font-medium px-1.5 py-0.5 rounded ${
+                          (symbol.change_percent ?? 0) >= 0 ? "bg-buy/10 text-buy" : "bg-sell/10 text-sell"
+                        }`}
+                      >
+                        {(symbol.change_percent ?? 0) >= 0 ? "+" : ""}
+                        {(symbol.change_percent ?? 0).toFixed(2)}%
+                      </span>
+                    </div>
+                  </div>
+                </button>
+              );
+            })
           )}
         </div>
       </div>
