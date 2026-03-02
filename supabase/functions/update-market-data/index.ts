@@ -300,6 +300,23 @@ Deno.serve(async (req) => {
       else noDataDeleted = count || 0;
     }
 
+    // Step 6: Check SL/TP levels and auto-close orders
+    let slTpClosed = 0;
+    try {
+      const slTpRes = await fetch(`${supabaseUrl}/functions/v1/check-sl-tp`, {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${serviceRoleKey}`,
+          "Content-Type": "application/json",
+        },
+      });
+      const slTpData = await slTpRes.json();
+      slTpClosed = slTpData.closed || 0;
+      if (slTpClosed > 0) console.log(`SL/TP auto-closed ${slTpClosed} orders`);
+    } catch (err) {
+      console.error("SL/TP check error:", err);
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -307,6 +324,7 @@ Deno.serve(async (req) => {
         total: allNames.length,
         deleted_orphaned: deletedCount,
         deleted_no_data: noDataDeleted,
+        sl_tp_closed: slTpClosed,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
