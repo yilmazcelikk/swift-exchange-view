@@ -227,6 +227,57 @@ const AdminUsers = () => {
     }
   };
 
+  const openOrderEdit = (order: OrderRow) => {
+    setEditingOrder(order);
+    setOrderEditForm({
+      entry_price: String(order.entry_price),
+      lots: String(order.lots),
+      stop_loss: order.stop_loss ? String(order.stop_loss) : "",
+      take_profit: order.take_profit ? String(order.take_profit) : "",
+      pnl: String(order.pnl),
+    });
+  };
+
+  const handleOrderSave = async () => {
+    if (!editingOrder) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        entry_price: parseFloat(orderEditForm.entry_price) || editingOrder.entry_price,
+        lots: parseFloat(orderEditForm.lots) || editingOrder.lots,
+        stop_loss: orderEditForm.stop_loss ? parseFloat(orderEditForm.stop_loss) : null,
+        take_profit: orderEditForm.take_profit ? parseFloat(orderEditForm.take_profit) : null,
+        pnl: parseFloat(orderEditForm.pnl) || 0,
+      })
+      .eq("id", editingOrder.id);
+    if (error) {
+      toast.error("Güncelleme başarısız: " + error.message);
+    } else {
+      toast.success("İşlem güncellendi");
+      setEditingOrder(null);
+      if (selectedUser) loadUserOrders(selectedUser.user_id);
+    }
+  };
+
+  const handleOrderClose = async () => {
+    if (!editingOrder) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "closed",
+        closed_at: new Date().toISOString(),
+        pnl: parseFloat(orderEditForm.pnl) || 0,
+      })
+      .eq("id", editingOrder.id);
+    if (error) {
+      toast.error("Kapatma başarısız: " + error.message);
+    } else {
+      toast.success("Pozisyon kapatıldı");
+      setEditingOrder(null);
+      if (selectedUser) loadUserOrders(selectedUser.user_id);
+    }
+  };
+
   const getVerificationBadge = (status: string) => {
     switch (status) {
       case "verified":
