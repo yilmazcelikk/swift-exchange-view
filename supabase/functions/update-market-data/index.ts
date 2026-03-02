@@ -34,6 +34,7 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   XPDUSD: "TVC:PALLADIUM", USOIL: "NYMEX:CL1!", UKOIL: "ICEEUR:BRN1!",
   NATGAS: "NYMEX:NG1!", COPPER: "COMEX:HG1!",
   WHEAT: "CBOT:ZW1!", CORN: "CBOT:ZC1!", SOYBEAN: "CBOT:ZS1!",
+  COFFEE: "ICEUS:KC1!", COCOA: "ICEUS:CC1!", SUGAR: "ICEUS:SB1!", COTTON: "ICEUS:CT1!",
 
   // ═══ INDICES ═══
   US500: "SP:SPX", US30: "DJ:DJI", US100: "NASDAQ:NDX",
@@ -67,6 +68,8 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   WIFUSD: "BINANCE:WIFUSDT",
   PENDLEUSD: "BINANCE:PENDLEUSDT", ONDOUSD: "COINBASE:ONDOUSD",
   STXUSD: "COINBASE:STXUSD", IMXUSD: "COINBASE:IMXUSD",
+  PEPEUSD: "BINANCE:PEPEUSDT", JUPUSD: "BINANCE:JUPUSDT",
+  POLUSD: "COINBASE:POLUSD", FETCUSD: "BINANCE:FETUSDT",
 
   // ═══ STOCKS - BIST ═══
   THYAO: "BIST:THYAO", GARAN: "BIST:GARAN", AKBNK: "BIST:AKBNK",
@@ -86,6 +89,7 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   GESAN: "BIST:GESAN", KONTR: "BIST:KONTR", ODAS: "BIST:ODAS",
   BRYAT: "BIST:BRYAT", TTRAK: "BIST:TTRAK", EUPWR: "BIST:EUPWR",
   AGHOL: "BIST:AGHOL", MAVI: "BIST:MAVI", LOGO: "BIST:LOGO",
+  
 
   // ═══ STOCKS - US/GLOBAL ═══
   AAPL: "NASDAQ:AAPL", TSLA: "NASDAQ:TSLA", MSFT: "NASDAQ:MSFT",
@@ -97,7 +101,7 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   XOM: "NYSE:XOM", JNJ: "NYSE:JNJ", PG: "NYSE:PG",
   UNH: "NYSE:UNH", HD: "NYSE:HD", CRM: "NYSE:CRM",
   PYPL: "NASDAQ:PYPL", UBER: "NYSE:UBER", COIN: "NASDAQ:COIN",
-  SNAP: "NYSE:SNAP", SPOT: "NYSE:SPOT",
+  PLTR: "NASDAQ:PLTR", SNAP: "NYSE:SNAP", SPOT: "NYSE:SPOT",
   BABA: "NYSE:BABA",
   NIO: "NYSE:NIO", RIVN: "NASDAQ:RIVN",
   COST: "NASDAQ:COST", AVGO: "NASDAQ:AVGO", LLY: "NYSE:LLY",
@@ -115,7 +119,8 @@ const DISPLAY_NAMES: Record<string, string> = {
   XAUUSD: "Altın / Dolar", XAGUSD: "Gümüş / Dolar", XPTUSD: "Platin / Dolar",
   XPDUSD: "Paladyum / Dolar", USOIL: "Ham Petrol (WTI)", UKOIL: "Brent Petrol",
   NATGAS: "Doğalgaz", COPPER: "Bakır", WHEAT: "Buğday", CORN: "Mısır",
-  SOYBEAN: "Soya Fasulyesi",
+  SOYBEAN: "Soya Fasulyesi", COFFEE: "Kahve", COCOA: "Kakao",
+  SUGAR: "Şeker", COTTON: "Pamuk",
   US500: "S&P 500", US30: "Dow Jones 30", US100: "Nasdaq 100",
   DE40: "DAX 40", UK100: "FTSE 100", XU100: "BIST 100",
   JP225: "Nikkei 225", FR40: "CAC 40", AU200: "ASX 200",
@@ -144,6 +149,8 @@ const DISPLAY_NAMES: Record<string, string> = {
   AMD: "AMD", NFLX: "Netflix", JPM: "JPMorgan Chase",
   COST: "Costco", AVGO: "Broadcom", LLY: "Eli Lilly",
   ORCL: "Oracle", CSCO: "Cisco", ADBE: "Adobe", QCOM: "Qualcomm",
+  PLTR: "Palantir",
+  PEPEUSD: "Pepe", JUPUSD: "Jupiter", POLUSD: "Polygon", FETCUSD: "Fetch.ai",
 };
 
 // Infer category from TradingView ticker
@@ -153,7 +160,7 @@ function inferCategory(tvTicker: string): string {
   if (tvTicker.startsWith("BIST:") && !tvTicker.includes("XU100")) return "stock";
   if (tvTicker.startsWith("NASDAQ:") && tvTicker !== "NASDAQ:NDX") return "stock";
   if (tvTicker.startsWith("NYSE:")) return "stock";
-  const commodityPrefixes = ["NYMEX:", "COMEX:", "CBOT:", "ICEEUR:", "TVC:GOLD", "TVC:SILVER", "TVC:PLATINUM", "TVC:PALLADIUM"];
+  const commodityPrefixes = ["NYMEX:", "COMEX:", "CBOT:", "ICEEUR:", "ICEUS:", "TVC:GOLD", "TVC:SILVER", "TVC:PLATINUM", "TVC:PALLADIUM"];
   if (commodityPrefixes.some(p => tvTicker.startsWith(p))) return "commodity";
   return "index";
 }
