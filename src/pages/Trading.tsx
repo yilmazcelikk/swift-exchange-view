@@ -153,6 +153,14 @@ const Trading = () => {
         const bIsBist = b.category === "stock" && BIST_NAMES.has(b.name) ? 0 : 1;
         if (aIsBist !== bIsBist) return aIsBist - bIsBist;
       }
+      if (selectedCategory === "all" || selectedCategory === "commodity") {
+        const COMMODITY_ORDER = ["XAUUSD", "XAGUSD"];
+        const aIdx = COMMODITY_ORDER.indexOf(a.name);
+        const bIdx = COMMODITY_ORDER.indexOf(b.name);
+        const aPri = aIdx >= 0 ? aIdx : 999;
+        const bPri = bIdx >= 0 ? bIdx : 999;
+        if (aPri !== bPri) return aPri - bPri;
+      }
       return a.name.localeCompare(b.name);
     });
 
