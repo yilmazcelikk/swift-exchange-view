@@ -355,8 +355,18 @@ const Dashboard = () => {
                       <span className="text-[11px] text-muted-foreground">→</span>
                       <AnimatedPrice value={order.currentPrice} live={false} className="text-[11px] font-mono text-foreground" />
                     </div>
+                    {(order.stopLoss || order.takeProfit) && (
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {order.stopLoss && (
+                          <span className="text-[10px] text-sell font-mono">SL: {formatUsd(order.stopLoss)}</span>
+                        )}
+                        {order.takeProfit && (
+                          <span className="text-[10px] text-buy font-mono">TP: {formatUsd(order.takeProfit)}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <div className="text-right">
                       <AnimatedPrice
                         value={Math.abs(order.pnl)}
@@ -364,6 +374,13 @@ const Dashboard = () => {
                         className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
                       />
                     </div>
+                    <button
+                      onClick={() => openEditSlTp(order)}
+                      className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                      title="SL/TP Düzenle"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
                     <button
                       onClick={() => setClosingOrder(order)}
                       className="p-1 rounded hover:bg-sell/10 text-muted-foreground hover:text-sell transition-colors"
