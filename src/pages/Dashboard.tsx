@@ -1,7 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
-import { X, Pencil } from "lucide-react";
+import { X, ChevronRight, ShieldAlert, Target } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -16,15 +17,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
-import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
+import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
 
@@ -32,8 +31,9 @@ const Dashboard = () => {
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
-  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [editMode, setEditMode] = useState(false);
   const [editSL, setEditSL] = useState("");
   const [editTP, setEditTP] = useState("");
   const [editSaving, setEditSaving] = useState(false);
@@ -103,7 +103,6 @@ const Dashboard = () => {
     }
   }, [authUser?.id]);
 
-  // Lightweight poll every 5s as fallback (Realtime is primary)
   useEffect(() => {
     if (!authUser?.id) return;
     const interval = setInterval(() => {
@@ -154,7 +153,7 @@ const Dashboard = () => {
           currentPrice,
           stopLoss: o.stop_loss ? Number(o.stop_loss) : undefined,
           takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
-          pnl: 0, // Will be recalculated with live prices
+          pnl: 0,
           status: o.status as "open" | "closed",
           createdAt: o.created_at,
         };
@@ -164,24 +163,20 @@ const Dashboard = () => {
 
   const openOrders = orders.filter(o => o.status === 'open');
 
-  // Build symbol price map for live ticking
   const symbolPriceMap = useMemo(() => {
     const map: Record<string, { price: number; changePercent?: number }> = {};
     for (const o of openOrders) {
       if (!map[o.symbolId]) {
         map[o.symbolId] = { price: o.currentPrice, changePercent: 0 };
       } else {
-        // Update to latest price if higher
         map[o.symbolId].price = o.currentPrice;
       }
     }
     return map;
   }, [openOrders]);
 
-  // Live ticking prices for all symbols in open orders
   const livePrices = useLiveSymbolPrices(symbolPriceMap, openOrders.length > 0);
 
-  // Recalculate everything with live prices
   const liveOrders = useMemo(() => {
     return openOrders.map(o => {
       const livePrice = livePrices[o.symbolId] ?? o.currentPrice;
@@ -191,11 +186,7 @@ const Dashboard = () => {
   }, [openOrders, livePrices]);
 
   const totalOpenPnl = liveOrders.reduce((sum, o) => sum + o.pnl, 0);
-
-  // Dynamic equity = balance + unrealized PnL
   const dynamicEquity = profile.balance + totalOpenPnl;
-
-  // Calculate used margin from open orders using correct contract sizes
   const usedMargin = liveOrders.reduce((sum, o) => {
     return sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, 200);
   }, 0);
@@ -213,10 +204,9 @@ const Dashboard = () => {
 
   const handleClosePosition = async (order: Order) => {
     setClosingOrder(null);
+    setSelectedOrder(null);
     
     const liveOrder = liveOrders.find(o => o.id === order.id) || order;
-    
-    // Calculate commission (0.2% of notional value)
     const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice);
     const netPnl = liveOrder.pnl - commission;
 
@@ -235,7 +225,6 @@ const Dashboard = () => {
       return;
     }
 
-    // Update balance with realized PnL (after commission)
     const newBalance = profile.balance + netPnl;
     await supabase
       .from("profiles")
@@ -254,14 +243,15 @@ const Dashboard = () => {
     loadData();
   };
 
-  const openEditSlTp = (order: Order) => {
-    setEditingOrder(order);
+  const openOrderSheet = (order: Order) => {
+    setSelectedOrder(order);
+    setEditMode(false);
     setEditSL(order.stopLoss ? String(order.stopLoss) : "");
     setEditTP(order.takeProfit ? String(order.takeProfit) : "");
   };
 
   const handleSaveSlTp = async () => {
-    if (!editingOrder) return;
+    if (!selectedOrder) return;
     setEditSaving(true);
     const updates: any = {
       stop_loss: editSL ? parseFloat(editSL) : null,
@@ -270,22 +260,23 @@ const Dashboard = () => {
     const { error } = await supabase
       .from("orders")
       .update(updates)
-      .eq("id", editingOrder.id);
+      .eq("id", selectedOrder.id);
     if (error) {
       toast.error("Güncelleme başarısız: " + error.message);
     } else {
       setOrders(prev => prev.map(o =>
-        o.id === editingOrder.id
+        o.id === selectedOrder.id
           ? { ...o, stopLoss: updates.stop_loss ?? undefined, takeProfit: updates.take_profit ?? undefined }
           : o
       ));
       toast.success("Kar Al / Zarar Durdur güncellendi");
-      setEditingOrder(null);
+      setEditMode(false);
     }
     setEditSaving(false);
   };
 
-  // Get live version of closing order for dialog
+  // Get live version of selected/closing order
+  const liveSelectedOrder = selectedOrder ? liveOrders.find(o => o.id === selectedOrder.id) || selectedOrder : null;
   const liveClosingOrder = closingOrder ? liveOrders.find(o => o.id === closingOrder.id) || closingOrder : null;
   const closingCommission = liveClosingOrder
     ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice)
@@ -296,7 +287,7 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
-      {/* Top PnL Display - only show when there are open orders */}
+      {/* Top PnL Display */}
       {liveOrders.length > 0 && (
         <div className="flex items-center justify-center px-4 pt-4 pb-2">
           <AnimatedPrice
@@ -341,7 +332,11 @@ const Dashboard = () => {
         ) : (
           <div className="divide-y divide-border">
             {liveOrders.map((order) => (
-              <div key={order.id} className="py-3">
+              <button
+                key={order.id}
+                onClick={() => openOrderSheet(order)}
+                className="w-full py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-colors rounded-lg px-2 -mx-2"
+              >
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -358,45 +353,156 @@ const Dashboard = () => {
                     {(order.stopLoss || order.takeProfit) && (
                       <div className="flex items-center gap-2 mt-0.5">
                         {order.stopLoss && (
-                          <span className="text-[10px] text-sell font-mono">SL: {formatUsd(order.stopLoss)}</span>
+                          <span className="text-[10px] text-sell font-mono flex items-center gap-0.5">
+                            <ShieldAlert className="h-2.5 w-2.5" /> {formatUsd(order.stopLoss)}
+                          </span>
                         )}
                         {order.takeProfit && (
-                          <span className="text-[10px] text-buy font-mono">TP: {formatUsd(order.takeProfit)}</span>
+                          <span className="text-[10px] text-buy font-mono flex items-center gap-0.5">
+                            <Target className="h-2.5 w-2.5" /> {formatUsd(order.takeProfit)}
+                          </span>
                         )}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
-                    <div className="text-right">
-                      <AnimatedPrice
-                        value={Math.abs(order.pnl)}
-                        live={false}
-                        className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
-                      />
-                    </div>
-                    <button
-                      onClick={() => openEditSlTp(order)}
-                      className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
-                      title="SL/TP Düzenle"
-                    >
-                      <Pencil className="h-3.5 w-3.5" />
-                    </button>
-                    <button
-                      onClick={() => setClosingOrder(order)}
-                      className="p-1 rounded hover:bg-sell/10 text-muted-foreground hover:text-sell transition-colors"
-                      title="Pozisyonu Kapat"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
+                    <AnimatedPrice
+                      value={Math.abs(order.pnl)}
+                      live={false}
+                      className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
+                    />
+                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         )}
       </div>
 
-      {/* Close Position Dialog */}
+      {/* Position Detail Sheet */}
+      <Sheet open={!!selectedOrder} onOpenChange={(open) => { if (!open) { setSelectedOrder(null); setEditMode(false); } }}>
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+          <SheetHeader className="pb-2">
+            <SheetTitle className="flex items-center gap-2">
+              <span>{liveSelectedOrder?.symbolName}</span>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${
+                liveSelectedOrder?.type === 'buy' ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'
+              }`}>
+                {liveSelectedOrder?.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
+              </span>
+            </SheetTitle>
+          </SheetHeader>
+
+          {liveSelectedOrder && (
+            <div className="space-y-4 pt-2">
+              {/* Position Info */}
+              <div className="bg-muted/40 rounded-xl p-3 space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Lot</span>
+                  <span className="font-mono font-medium">{liveSelectedOrder.lots}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Giriş Fiyatı</span>
+                  <span className="font-mono font-medium">{formatUsd(liveSelectedOrder.entryPrice)}</span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span className="text-muted-foreground">Güncel Fiyat</span>
+                  <AnimatedPrice value={liveSelectedOrder.currentPrice} live={false} className="font-mono font-medium text-sm" />
+                </div>
+                <div className="flex justify-between text-sm border-t border-border pt-2">
+                  <span className="text-muted-foreground font-medium">K/Z</span>
+                  <AnimatedPrice
+                    value={Math.abs(liveSelectedOrder.pnl)}
+                    live={false}
+                    className={`font-mono font-bold text-sm ${liveSelectedOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
+                  />
+                </div>
+              </div>
+
+              {/* SL/TP Section */}
+              <div className="bg-muted/40 rounded-xl p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm font-semibold">Zarar Durdur / Kâr Al</span>
+                  {!editMode && (
+                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setEditMode(true)}>
+                      Düzenle
+                    </Button>
+                  )}
+                </div>
+
+                {editMode ? (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">
+                        <ShieldAlert className="h-3 w-3 text-sell" /> Zarar Durdur (SL)
+                      </label>
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Boş bırakılabilir"
+                        value={editSL}
+                        onChange={(e) => setEditSL(e.target.value)}
+                        className="font-mono bg-background h-9"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">
+                        <Target className="h-3 w-3 text-buy" /> Kâr Al (TP)
+                      </label>
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Boş bırakılabilir"
+                        value={editTP}
+                        onChange={(e) => setEditTP(e.target.value)}
+                        className="font-mono bg-background h-9"
+                      />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => setEditMode(false)}>İptal</Button>
+                      <Button size="sm" className="flex-1" onClick={handleSaveSlTp} disabled={editSaving}>
+                        {editSaving ? "Kaydediliyor..." : "Kaydet"}
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <ShieldAlert className="h-3 w-3 text-sell" /> Zarar Durdur
+                      </span>
+                      <span className="font-mono text-sell">
+                        {liveSelectedOrder.stopLoss ? formatUsd(liveSelectedOrder.stopLoss) : "—"}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground flex items-center gap-1">
+                        <Target className="h-3 w-3 text-buy" /> Kâr Al
+                      </span>
+                      <span className="font-mono text-buy">
+                        {liveSelectedOrder.takeProfit ? formatUsd(liveSelectedOrder.takeProfit) : "—"}
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* Close Button */}
+              <Button
+                variant="destructive"
+                className="w-full"
+                onClick={() => setClosingOrder(liveSelectedOrder)}
+              >
+                <X className="h-4 w-4 mr-1" />
+                Pozisyonu Kapat
+              </Button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Close Position Confirm Dialog */}
       <AlertDialog open={!!closingOrder} onOpenChange={(open) => !open && setClosingOrder(null)}>
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
@@ -420,16 +526,8 @@ const Dashboard = () => {
                       <span className="text-muted-foreground">Lot</span>
                       <span className="font-mono">{liveClosingOrder.lots}</span>
                     </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Giriş Fiyatı</span>
-                      <span className="font-mono">{formatUsd(liveClosingOrder.entryPrice)}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Güncel Fiyat</span>
-                      <AnimatedPrice value={liveClosingOrder.currentPrice} live={false} className="font-mono text-sm" />
-                    </div>
                     <div className="flex justify-between text-sm border-t border-border pt-1 mt-1">
-                      <span className="text-muted-foreground font-medium">K/Z</span>
+                      <span className="text-muted-foreground font-medium">Net K/Z</span>
                       <AnimatedPrice
                         value={Math.abs(closingNetPnl)}
                         live={false}
@@ -452,47 +550,6 @@ const Dashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {/* Edit SL/TP Dialog */}
-      <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>
-              {editingOrder?.symbolName} — SL / TP Düzenle
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 py-2">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Zarar Durdur (SL)</label>
-              <Input
-                type="number"
-                step="any"
-                placeholder="Boş bırakılabilir"
-                value={editSL}
-                onChange={(e) => setEditSL(e.target.value)}
-                className="font-mono bg-muted/50"
-              />
-            </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">Kâr Al (TP)</label>
-              <Input
-                type="number"
-                step="any"
-                placeholder="Boş bırakılabilir"
-                value={editTP}
-                onChange={(e) => setEditTP(e.target.value)}
-                className="font-mono bg-muted/50"
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditingOrder(null)}>İptal</Button>
-            <Button onClick={handleSaveSlTp} disabled={editSaving}>
-              {editSaving ? "Kaydediliyor..." : "Kaydet"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 };
