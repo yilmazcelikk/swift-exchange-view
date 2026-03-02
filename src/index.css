@@ -123,9 +123,10 @@
 
   html, body, #root {
     height: 100%;
-    min-height: 100dvh;
+    height: 100dvh;
+    min-height: -webkit-fill-available;
     overflow: hidden;
-    background-color: hsl(var(--background));
+    background-color: hsl(var(--card));
   }
 
   body {
