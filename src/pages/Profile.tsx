@@ -239,9 +239,10 @@ const Profile = () => {
       <h1 className="text-xl md:text-2xl font-bold">Hesabım</h1>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="w-full grid grid-cols-2 h-auto">
+        <TabsList className="w-full grid grid-cols-3 h-auto">
           <TabsTrigger value="info" className="text-xs px-1 py-2">Bilgilerim</TabsTrigger>
           <TabsTrigger value="verify" className="text-xs px-1 py-2">Doğrulama</TabsTrigger>
+          <TabsTrigger value="settings" className="text-xs px-1 py-2">Ayarlar</TabsTrigger>
         </TabsList>
 
         {/* ─── Kişisel Bilgiler ─── */}
