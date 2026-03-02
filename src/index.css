@@ -6,10 +6,10 @@
 
 @layer base {
   :root {
+    --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+
     --background: 220 20% 97%;
     --foreground: 222 47% 11%;
-
-    --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
     --popover: 0 0% 100%;
@@ -135,6 +135,12 @@
   }
 }
 
+@media (display-mode: standalone) {
+  :root {
+    --app-safe-bottom: 0px;
+  }
+}
+
 @layer utilities {
   .font-mono {
     font-family: 'IBM Plex Mono', monospace;
@@ -149,6 +155,6 @@
   }
 
   .safe-area-bottom {
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    padding-bottom: var(--app-safe-bottom);
   }
 }
