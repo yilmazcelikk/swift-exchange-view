@@ -10,8 +10,8 @@ export function Header() {
   useEffect(() => {
     if (user) {
       // Initial load
-      supabase.from("profiles").select("balance, equity, free_margin").eq("user_id", user.id).single().then(({ data }) => {
-        if (data) setProfile({ balance: Number(data.balance), equity: Number(data.equity), free_margin: Number(data.free_margin) });
+      supabase.from("profiles").select("balance, equity, free_margin, credit").eq("user_id", user.id).single().then(({ data }) => {
+        if (data) setProfile({ balance: Number(data.balance), equity: Number(data.equity), free_margin: Number(data.free_margin), credit: Number(data.credit) });
       });
 
       // Realtime subscription
