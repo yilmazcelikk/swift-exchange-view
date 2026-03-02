@@ -97,10 +97,10 @@ const Trading = () => {
       })
       .subscribe();
 
-    // Poll every 3s as fallback (Realtime handles instant updates)
+    // Poll every 1s for fluid price updates
     const interval = setInterval(() => {
       loadSymbols();
-    }, 3000);
+    }, 1000);
 
     return () => {
       supabase.removeChannel(channel);
