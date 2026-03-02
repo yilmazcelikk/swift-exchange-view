@@ -5,13 +5,13 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function Header() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<{ balance: number; equity: number; free_margin: number } | null>(null);
+  const [profile, setProfile] = useState<{ balance: number; equity: number; free_margin: number; credit: number } | null>(null);
 
   useEffect(() => {
     if (user) {
       // Initial load
-      supabase.from("profiles").select("balance, equity, free_margin").eq("user_id", user.id).single().then(({ data }) => {
-        if (data) setProfile({ balance: Number(data.balance), equity: Number(data.equity), free_margin: Number(data.free_margin) });
+      supabase.from("profiles").select("balance, equity, free_margin, credit").eq("user_id", user.id).single().then(({ data }) => {
+        if (data) setProfile({ balance: Number(data.balance), equity: Number(data.equity), free_margin: Number(data.free_margin), credit: Number(data.credit) });
       });
 
       // Realtime subscription
@@ -25,7 +25,7 @@ export function Header() {
         }, (payload) => {
           if (payload.new) {
             const d = payload.new as any;
-            setProfile({ balance: Number(d.balance), equity: Number(d.equity), free_margin: Number(d.free_margin) });
+            setProfile({ balance: Number(d.balance), equity: Number(d.equity), free_margin: Number(d.free_margin), credit: Number(d.credit) });
           }
         })
         .subscribe();
@@ -38,6 +38,7 @@ export function Header() {
 
   const stats = [
     { label: "Bakiye", value: `$${(profile?.balance ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
+    { label: "Kredi", value: `$${(profile?.credit ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
     { label: "Varlık", value: `$${(profile?.equity ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
     { label: "Serbest", value: `$${(profile?.free_margin ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
   ];
