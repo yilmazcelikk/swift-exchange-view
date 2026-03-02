@@ -16,7 +16,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 overflow-auto pb-14 md:pb-0 pt-[env(safe-area-inset-top)]" style={{ paddingBottom: 'calc(3.5rem + var(--app-safe-bottom))' }}>
+          <main className="flex-1 overflow-y-auto overscroll-contain pb-14 md:pb-0 pt-[env(safe-area-inset-top)]" style={{ paddingBottom: 'calc(3.5rem + var(--app-safe-bottom))', WebkitOverflowScrolling: 'touch' }}>
             {children}
           </main>
         </div>

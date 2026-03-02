@@ -452,7 +452,7 @@ const AdminUsers = () => {
 
       {/* Edit Dialog */}
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle>Kullanıcı Düzenle</DialogTitle>
           </DialogHeader>
