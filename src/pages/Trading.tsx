@@ -140,9 +140,17 @@ const Trading = () => {
       const bHasLogo = resolveLogoUrl(b.name, b.category) ? 0 : 1;
       if (aHasLogo !== bHasLogo) return aHasLogo - bHasLogo;
       if (selectedCategory === "all" || selectedCategory === "stock") {
-        // Among those with logos, BIST stocks first
-        const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
-        const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
+        // Among those with logos, BIST stocks first (identified by known BIST tickers)
+        const BIST_NAMES = new Set([
+          "THYAO","GARAN","AKBNK","SISE","EREGL","KCHOL","SAHOL","TUPRS","YKBNK",
+          "ISCTR","ASELS","BIMAS","PGSUS","EKGYO","PETKM","TOASO","TAVHL","FROTO",
+          "TCELL","HALKB","VAKBN","DOHOL","ENKAI","ARCLK","VESTL","MGROS","SOKM",
+          "GUBRF","SASA","OYAKC","TTKOM","TSKB","AKSA","CIMSA","AEFES","ULKER",
+          "DOAS","OTKAR","ISGYO","KRDMD","GESAN","KONTR","ODAS","BRYAT","TTRAK",
+          "EUPWR","AGHOL","MAVI","LOGO",
+        ]);
+        const aIsBist = a.category === "stock" && BIST_NAMES.has(a.name) ? 0 : 1;
+        const bIsBist = b.category === "stock" && BIST_NAMES.has(b.name) ? 0 : 1;
         if (aIsBist !== bIsBist) return aIsBist - bIsBist;
       }
       return a.name.localeCompare(b.name);
