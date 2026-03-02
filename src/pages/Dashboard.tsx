@@ -452,6 +452,47 @@ const Dashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit SL/TP Dialog */}
+      <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {editingOrder?.symbolName} — SL / TP Düzenle
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Zarar Durdur (SL)</label>
+              <Input
+                type="number"
+                step="any"
+                placeholder="Boş bırakılabilir"
+                value={editSL}
+                onChange={(e) => setEditSL(e.target.value)}
+                className="font-mono bg-muted/50"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Kâr Al (TP)</label>
+              <Input
+                type="number"
+                step="any"
+                placeholder="Boş bırakılabilir"
+                value={editTP}
+                onChange={(e) => setEditTP(e.target.value)}
+                className="font-mono bg-muted/50"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingOrder(null)}>İptal</Button>
+            <Button onClick={handleSaveSlTp} disabled={editSaving}>
+              {editSaving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
