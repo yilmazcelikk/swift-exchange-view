@@ -161,6 +161,10 @@ const Trading = () => {
         const bPri = bIdx >= 0 ? bIdx : 999;
         if (aPri !== bPri) return aPri - bPri;
       }
+      // Crypto: sort by price descending
+      if ((selectedCategory === "crypto") || (selectedCategory === "all" && a.category === "crypto" && b.category === "crypto")) {
+        return (b.current_price || 0) - (a.current_price || 0);
+      }
       return a.name.localeCompare(b.name);
     });
 
