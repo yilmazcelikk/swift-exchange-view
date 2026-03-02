@@ -120,7 +120,8 @@ const DISPLAY_NAMES: Record<string, string> = {
   XAUUSD: "Altın / Dolar", XAGUSD: "Gümüş / Dolar", XPTUSD: "Platin / Dolar",
   XPDUSD: "Paladyum / Dolar", USOIL: "Ham Petrol (WTI)", UKOIL: "Brent Petrol",
   NATGAS: "Doğalgaz", COPPER: "Bakır", WHEAT: "Buğday", CORN: "Mısır",
-  SOYBEAN: "Soya Fasulyesi",
+  SOYBEAN: "Soya Fasulyesi", COFFEE: "Kahve", COCOA: "Kakao",
+  SUGAR: "Şeker", COTTON: "Pamuk",
   US500: "S&P 500", US30: "Dow Jones 30", US100: "Nasdaq 100",
   DE40: "DAX 40", UK100: "FTSE 100", XU100: "BIST 100",
   JP225: "Nikkei 225", FR40: "CAC 40", AU200: "ASX 200",
@@ -144,11 +145,15 @@ const DISPLAY_NAMES: Record<string, string> = {
   TSKB: "TSKB", AKSA: "Aksa Enerji", CIMSA: "Çimsa",
   AEFES: "Anadolu Efes", ULKER: "Ülker", DOAS: "Doğuş Otomotiv",
   OTKAR: "Otokar", MAVI: "Mavi", LOGO: "Logo Yazılım",
+  KOZAL: "Koza Altın", KOZAA: "Koza Anadolu Metal",
   AAPL: "Apple", TSLA: "Tesla", MSFT: "Microsoft", GOOGL: "Alphabet",
   AMZN: "Amazon", NVDA: "NVIDIA", META: "Meta Platforms",
   AMD: "AMD", NFLX: "Netflix", JPM: "JPMorgan Chase",
   COST: "Costco", AVGO: "Broadcom", LLY: "Eli Lilly",
   ORCL: "Oracle", CSCO: "Cisco", ADBE: "Adobe", QCOM: "Qualcomm",
+  PLTR: "Palantir", WMT: "Walmart", SQ: "Block Inc", SHOP: "Shopify",
+  PEPEUSD: "Pepe", JUPUSD: "Jupiter", POLUSD: "Polygon",
+  FTMUSD: "Fantom", EOSUSD: "EOS", FETCUSD: "Fetch.ai",
 };
 
 // Infer category from TradingView ticker
