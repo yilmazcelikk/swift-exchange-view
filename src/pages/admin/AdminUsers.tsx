@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -42,10 +42,23 @@ interface Profile {
   created_at: string;
 }
 
+interface OrderRow {
+  id: string;
+  symbol_name: string;
+  type: string;
+  lots: number;
+  entry_price: number;
+  current_price: number;
+  pnl: number;
+  leverage: string;
+}
+
 const AdminUsers = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [selectedUserOrders, setSelectedUserOrders] = useState<OrderRow[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [editForm, setEditForm] = useState({
     balance: "",
@@ -60,6 +73,25 @@ const AdminUsers = () => {
   useEffect(() => {
     loadProfiles();
   }, []);
+
+  const loadUserOrders = useCallback(async (userId: string) => {
+    setLoadingOrders(true);
+    const { data } = await supabase
+      .from("orders")
+      .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage")
+      .eq("user_id", userId)
+      .eq("status", "open");
+    setSelectedUserOrders((data as OrderRow[]) || []);
+    setLoadingOrders(false);
+  }, []);
+
+  useEffect(() => {
+    if (selectedUser) {
+      loadUserOrders(selectedUser.user_id);
+    } else {
+      setSelectedUserOrders([]);
+    }
+  }, [selectedUser, loadUserOrders]);
 
   const loadProfiles = async () => {
     setLoading(true);
