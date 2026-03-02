@@ -17,6 +17,7 @@ export function AppLayout({ children }: AppLayoutProps) {
 
         <div className="flex-1 flex flex-col min-w-0">
           <main className="flex-1 overflow-auto pb-14 md:pb-0 pt-[env(safe-area-inset-top)]">
+            {children}
           </main>
         </div>
 
