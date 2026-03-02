@@ -60,7 +60,10 @@ const AdminUsers = () => {
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [selectedUserOrders, setSelectedUserOrders] = useState<OrderRow[]>([]);
+  const [allUserOrders, setAllUserOrders] = useState<any[]>([]);
+  const [showAllOrders, setShowAllOrders] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
+  const [loadingAllOrders, setLoadingAllOrders] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [editForm, setEditForm] = useState({
     balance: "",
@@ -552,16 +555,66 @@ const AdminUsers = () => {
                 <h4 className="text-sm font-semibold">Hızlı İşlemler</h4>
                 <Button
                   className="w-full bg-success hover:bg-success/90 text-success-foreground"
-                  onClick={() => openEdit(liveProfile)}
+                  onClick={() => loadAllOrders(liveProfile.user_id)}
                 >
                   <Eye className="h-4 w-4 mr-2" />
-                  Detaylı Görünüm
+                  Tüm İşlemleri Gör
                 </Button>
                 <Button variant="outline" className="w-full" onClick={() => openEdit(liveProfile)}>
                   <Settings className="h-4 w-4 mr-2" />
-                  Pozisyonlar & Ayarlar
+                  Ayarlar
                 </Button>
               </div>
+
+              {/* All Orders Dialog Content */}
+              {showAllOrders && (
+                <div className="mt-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h4 className="text-sm font-semibold">Tüm İşlemler</h4>
+                    <Button variant="ghost" size="sm" onClick={() => setShowAllOrders(false)} className="h-7 text-xs">Kapat</Button>
+                  </div>
+                  {loadingAllOrders ? (
+                    <div className="flex justify-center py-4">
+                      <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                    </div>
+                  ) : allUserOrders.length === 0 ? (
+                    <p className="text-xs text-muted-foreground text-center py-3">İşlem bulunamadı.</p>
+                  ) : (
+                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                      {allUserOrders.map((order: any) => (
+                        <div key={order.id} className="p-2.5 rounded-lg border border-border space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              {order.type === "buy" ? (
+                                <TrendingUp className="h-3 w-3 text-buy" />
+                              ) : (
+                                <TrendingDown className="h-3 w-3 text-sell" />
+                              )}
+                              <span className="text-xs font-semibold">{order.symbol_name}</span>
+                              <span className={`text-[9px] px-1.5 py-0.5 rounded-full ${
+                                order.status === "open" ? "bg-buy/15 text-buy" : "bg-muted text-muted-foreground"
+                              }`}>
+                                {order.status === "open" ? "Açık" : "Kapalı"}
+                              </span>
+                            </div>
+                            <span className={`text-xs font-mono font-bold ${Number(order.pnl) >= 0 ? "text-buy" : "text-sell"}`}>
+                              {Number(order.pnl) >= 0 ? "+" : ""}{Number(order.pnl).toFixed(2)}$
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                            <span>{order.type === "buy" ? "AL" : "SAT"} • {order.lots} lot</span>
+                            <span>{Number(order.entry_price).toFixed(2)} → {Number(order.current_price).toFixed(2)}</span>
+                          </div>
+                          <div className="text-[9px] text-muted-foreground">
+                            {new Date(order.created_at).toLocaleDateString("tr-TR")} {new Date(order.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                            {order.closed_at && ` → ${new Date(order.closed_at).toLocaleDateString("tr-TR")} ${new Date(order.closed_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             );
           })()}
