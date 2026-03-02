@@ -299,8 +299,22 @@ const Profile = () => {
               <Button variant="outline" className="w-full" onClick={handleChangePassword}>Şifre Değiştir</Button>
             </CardContent>
           </Card>
+        </TabsContent>
 
+        {/* ─── Ayarlar ─── */}
+        <TabsContent value="settings" className="space-y-4 mt-4">
           <ThemeCard />
+
+          <Card className="bg-card border-border">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">Şifre Değiştir</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Input type="password" placeholder="Yeni Şifre" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="bg-muted/50" />
+              <Input type="password" placeholder="Yeni Şifre Tekrar" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="bg-muted/50" />
+              <Button variant="outline" className="w-full" onClick={handleChangePassword}>Şifre Değiştir</Button>
+            </CardContent>
+          </Card>
         </TabsContent>
 
 
