@@ -78,6 +78,7 @@ function App() {
                         <Finance />
                       </PrivateRoute>
                     }
+                  />
                   <Route
                     path="/profile"
                     element={
