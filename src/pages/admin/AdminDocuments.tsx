@@ -19,9 +19,9 @@ interface DocRow {
 }
 
 const docTypeLabel = (t: string) => {
-  if (t === "identity_front") return "Kimlik Ön Yüz";
-  if (t === "identity_back") return "Kimlik Arka Yüz";
-  if (t === "address_proof") return "Kimlik Arka Yüz"; // legacy compat
+  if (t === "identity_front") return "Kimlik - Ön Yüz";
+  if (t === "identity_back") return "Kimlik - Arka Yüz";
+  if (t === "address_proof") return "Kimlik - Arka Yüz"; // legacy compat
   return t;
 };
 
