@@ -287,7 +287,7 @@ const Trading = () => {
       });
       if (error) throw error;
       toast.success(`${selectedSymbol.name} ${type === "buy" ? "ALIŞ" : "SATIŞ"} emri verildi`, {
-        description: `${lots} lot • Kaldıraç: ${leverage}`,
+        description: `${lots} lot`,
       });
       setStopLoss("");
       setTakeProfit("");
