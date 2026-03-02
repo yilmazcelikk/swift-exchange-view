@@ -1,0 +1,1 @@
+DELETE FROM symbols WHERE current_price IS NULL OR current_price = 0;
