@@ -9,7 +9,7 @@ interface AppLayoutProps {
 export function AppLayout({ children }: AppLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="h-full flex w-full overflow-hidden">
         {/* Desktop sidebar */}
         <div className="hidden md:block">
           <AppSidebar />
