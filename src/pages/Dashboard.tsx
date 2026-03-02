@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
-import { X } from "lucide-react";
+import { X, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
 
@@ -25,6 +33,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [editSL, setEditSL] = useState("");
+  const [editTP, setEditTP] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
   const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0 });
 
   useEffect(() => {
