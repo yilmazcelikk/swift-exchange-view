@@ -14,8 +14,8 @@ import { useTheme } from "next-themes";
 
 // ─── Verification Steps ───
 const verificationSteps = [
-  { id: 1, label: "Ön Yüz", description: "Kimlik belgenizin ön yüzünü yükleyin" },
-  { id: 2, label: "Arka Yüz", description: "Kimlik belgenizin arka yüzünü yükleyin" },
+  { id: 1, label: "Kimlik Ön Yüz", description: "Kimlik belgenizin ön yüzünü yükleyin" },
+  { id: 2, label: "Kimlik Arka Yüz", description: "Kimlik belgenizin arka yüzünü yükleyin" },
   { id: 3, label: "Tamamlandı", description: "Doğrulama talebiniz alındı" },
 ];
 
