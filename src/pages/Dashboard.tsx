@@ -25,7 +25,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
-  const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0 });
+  const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0 });
 
   useEffect(() => {
     if (authUser?.id) {
@@ -45,6 +45,7 @@ const Dashboard = () => {
               balance: Number(d.balance),
               equity: Number(d.equity),
               freeMargin: Number(d.free_margin),
+              credit: Number(d.credit || 0),
             });
           }
         })
@@ -101,7 +102,7 @@ const Dashboard = () => {
 
   const loadData = async () => {
     const [profileRes] = await Promise.all([
-      supabase.from("profiles").select("balance, equity, free_margin").eq("user_id", authUser!.id).single(),
+      supabase.from("profiles").select("balance, equity, free_margin, credit").eq("user_id", authUser!.id).single(),
     ]);
 
     if (profileRes.data) {
@@ -109,6 +110,7 @@ const Dashboard = () => {
         balance: Number(profileRes.data.balance),
         equity: Number(profileRes.data.equity),
         freeMargin: Number(profileRes.data.free_margin),
+        credit: Number(profileRes.data.credit || 0),
       });
     }
 
@@ -190,6 +192,7 @@ const Dashboard = () => {
 
   const accountStats = [
     { label: "Bakiye", value: profile.balance },
+    ...(profile.credit > 0 ? [{ label: "Kredi", value: profile.credit }] : []),
     { label: "Varlık", value: dynamicEquity },
     { label: "Teminat", value: usedMargin },
     { label: "Serbest teminat", value: dynamicFreeMargin },
