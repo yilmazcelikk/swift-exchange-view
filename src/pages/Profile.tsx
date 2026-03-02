@@ -8,14 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  ArrowDownToLine, ArrowUpFromLine, Building2, XCircle, Pencil, Copy, Sun, Moon,
+  XCircle, Pencil, Sun, Moon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-
-// ─── Payment Methods (only bank transfer now) ───
-const paymentMethods = [
-  { id: "bank", label: "Banka Transferi", icon: Building2 },
-];
 
 // ─── Verification Steps ───
 const verificationSteps = [
@@ -67,20 +62,7 @@ const Profile = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
-
-  // Deposit state
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [depositAmount, setDepositAmount] = useState("");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [activeMoneyTab, setActiveMoneyTab] = useState<"deposit" | "withdraw">("deposit");
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-
-  // Withdraw state
-  const [withdrawAccountName, setWithdrawAccountName] = useState("");
-  const [withdrawIban, setWithdrawIban] = useState("");
 
   // Verification state
   const [currentStep, setCurrentStep] = useState(1);
@@ -91,8 +73,6 @@ const Profile = () => {
   useEffect(() => {
     if (authUser) {
       loadProfile();
-      loadTransactions();
-      loadBankAccounts();
       loadVerificationStatus();
     }
   }, [authUser]);
@@ -131,14 +111,6 @@ const Profile = () => {
     }
   };
 
-  const loadBankAccounts = async () => {
-    const { data } = await supabase
-      .from("bank_accounts")
-      .select("*")
-      .eq("is_active", true);
-    setBankAccounts(data || []);
-  };
-
   const loadProfile = async () => {
     setProfileLoading(true);
     const { data } = await supabase
@@ -157,16 +129,6 @@ const Profile = () => {
       });
     }
     setProfileLoading(false);
-  };
-
-  const loadTransactions = async () => {
-    const { data } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", authUser!.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-    setTransactions(data || []);
   };
 
   const handleUpdateProfile = async () => {
