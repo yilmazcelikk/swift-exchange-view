@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
-import { X } from "lucide-react";
+import { X, Pencil } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -17,6 +17,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
 
@@ -25,6 +33,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
+  const [editingOrder, setEditingOrder] = useState<Order | null>(null);
+  const [editSL, setEditSL] = useState("");
+  const [editTP, setEditTP] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
   const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0 });
 
   useEffect(() => {
@@ -242,6 +254,37 @@ const Dashboard = () => {
     loadData();
   };
 
+  const openEditSlTp = (order: Order) => {
+    setEditingOrder(order);
+    setEditSL(order.stopLoss ? String(order.stopLoss) : "");
+    setEditTP(order.takeProfit ? String(order.takeProfit) : "");
+  };
+
+  const handleSaveSlTp = async () => {
+    if (!editingOrder) return;
+    setEditSaving(true);
+    const updates: any = {
+      stop_loss: editSL ? parseFloat(editSL) : null,
+      take_profit: editTP ? parseFloat(editTP) : null,
+    };
+    const { error } = await supabase
+      .from("orders")
+      .update(updates)
+      .eq("id", editingOrder.id);
+    if (error) {
+      toast.error("Güncelleme başarısız: " + error.message);
+    } else {
+      setOrders(prev => prev.map(o =>
+        o.id === editingOrder.id
+          ? { ...o, stopLoss: updates.stop_loss ?? undefined, takeProfit: updates.take_profit ?? undefined }
+          : o
+      ));
+      toast.success("Kar Al / Zarar Durdur güncellendi");
+      setEditingOrder(null);
+    }
+    setEditSaving(false);
+  };
+
   // Get live version of closing order for dialog
   const liveClosingOrder = closingOrder ? liveOrders.find(o => o.id === closingOrder.id) || closingOrder : null;
   const closingCommission = liveClosingOrder
@@ -312,8 +355,18 @@ const Dashboard = () => {
                       <span className="text-[11px] text-muted-foreground">→</span>
                       <AnimatedPrice value={order.currentPrice} live={false} className="text-[11px] font-mono text-foreground" />
                     </div>
+                    {(order.stopLoss || order.takeProfit) && (
+                      <div className="flex items-center gap-2 mt-0.5">
+                        {order.stopLoss && (
+                          <span className="text-[10px] text-sell font-mono">SL: {formatUsd(order.stopLoss)}</span>
+                        )}
+                        {order.takeProfit && (
+                          <span className="text-[10px] text-buy font-mono">TP: {formatUsd(order.takeProfit)}</span>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <div className="text-right">
                       <AnimatedPrice
                         value={Math.abs(order.pnl)}
@@ -321,6 +374,13 @@ const Dashboard = () => {
                         className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
                       />
                     </div>
+                    <button
+                      onClick={() => openEditSlTp(order)}
+                      className="p-1 rounded hover:bg-primary/10 text-muted-foreground hover:text-primary transition-colors"
+                      title="SL/TP Düzenle"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
                     <button
                       onClick={() => setClosingOrder(order)}
                       className="p-1 rounded hover:bg-sell/10 text-muted-foreground hover:text-sell transition-colors"
@@ -392,6 +452,47 @@ const Dashboard = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit SL/TP Dialog */}
+      <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {editingOrder?.symbolName} — SL / TP Düzenle
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Zarar Durdur (SL)</label>
+              <Input
+                type="number"
+                step="any"
+                placeholder="Boş bırakılabilir"
+                value={editSL}
+                onChange={(e) => setEditSL(e.target.value)}
+                className="font-mono bg-muted/50"
+              />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">Kâr Al (TP)</label>
+              <Input
+                type="number"
+                step="any"
+                placeholder="Boş bırakılabilir"
+                value={editTP}
+                onChange={(e) => setEditTP(e.target.value)}
+                className="font-mono bg-muted/50"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingOrder(null)}>İptal</Button>
+            <Button onClick={handleSaveSlTp} disabled={editSaving}>
+              {editSaving ? "Kaydediliyor..." : "Kaydet"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
