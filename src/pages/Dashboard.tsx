@@ -193,10 +193,10 @@ const Dashboard = () => {
   const accountStats = [
     { label: "Bakiye", value: profile.balance },
     ...(profile.credit > 0 ? [{ label: "Kredi", value: profile.credit }] : []),
-    { label: "Varlık", value: dynamicEquity },
-    { label: "Teminat", value: usedMargin },
-    { label: "Serbest teminat", value: dynamicFreeMargin },
-    { label: "Teminat seviyesi (%)", value: marginLevel },
+    { label: "Varlık", value: Math.round(dynamicEquity * 100) / 100 },
+    { label: "Teminat", value: Math.round(usedMargin * 100) / 100 },
+    { label: "Serbest teminat", value: Math.round(dynamicFreeMargin * 100) / 100 },
+    { label: "Teminat seviyesi (%)", value: Math.round(marginLevel * 100) / 100 },
   ];
 
   const handleClosePosition = async (order: Order) => {
