@@ -122,7 +122,7 @@ const Finance = () => {
   if (!authUser) return null;
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4 animate-slide-up">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4 pb-8 animate-slide-up">
       <h1 className="text-xl md:text-2xl font-bold">Finans</h1>
 
       <div className="grid grid-cols-2 gap-2">
