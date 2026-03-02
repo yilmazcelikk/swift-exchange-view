@@ -163,7 +163,7 @@ function inferCategory(tvTicker: string): string {
   if (tvTicker.startsWith("BIST:") && !tvTicker.includes("XU100")) return "stock";
   if (tvTicker.startsWith("NASDAQ:") && tvTicker !== "NASDAQ:NDX") return "stock";
   if (tvTicker.startsWith("NYSE:")) return "stock";
-  const commodityPrefixes = ["NYMEX:", "COMEX:", "CBOT:", "ICEEUR:", "TVC:GOLD", "TVC:SILVER", "TVC:PLATINUM", "TVC:PALLADIUM"];
+  const commodityPrefixes = ["NYMEX:", "COMEX:", "CBOT:", "ICEEUR:", "ICEUS:", "TVC:GOLD", "TVC:SILVER", "TVC:PLATINUM", "TVC:PALLADIUM"];
   if (commodityPrefixes.some(p => tvTicker.startsWith(p))) return "commodity";
   return "index";
 }
