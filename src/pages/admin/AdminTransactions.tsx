@@ -113,13 +113,25 @@ const AdminTransactions = () => {
     loadAll();
   };
 
+  const getUsdTryRate = async (): Promise<number> => {
+    const { data } = await supabase
+      .from("symbols")
+      .select("current_price")
+      .eq("name", "USDTRY")
+      .single();
+    if (data?.current_price && Number(data.current_price) > 0) {
+      return Number(data.current_price);
+    }
+    // Fallback rate
+    return 32.0;
+  };
+
   const updateTxStatus = async (id: string, status: string) => {
-    // Get transaction details first
     const tx = transactions.find(t => t.id === id);
     const { error } = await supabase.from("transactions").update({ status }).eq("id", id);
     if (error) { toast.error("Güncelleme başarısız"); return; }
 
-    // If approving a deposit, add amount to user's balance
+    // If approving a deposit, convert TRY to USD and add to balance
     if (status === "approved" && tx && tx.type === "deposit") {
       const { data: profile } = await supabase
         .from("profiles")
@@ -128,9 +140,16 @@ const AdminTransactions = () => {
         .single();
 
       if (profile) {
-        const newBalance = Number(profile.balance) + Number(tx.amount);
-        const newEquity = Number(profile.equity) + Number(tx.amount);
-        const newFreeMargin = Number(profile.free_margin) + Number(tx.amount);
+        let amountToAdd = Number(tx.amount);
+        // Convert TRY to USD using current USDTRY rate
+        if (tx.currency === "TRY") {
+          const rate = await getUsdTryRate();
+          amountToAdd = Number((amountToAdd / rate).toFixed(2));
+          toast.info(`Kur: 1 USD = ${rate.toFixed(2)} TRY → ${amountToAdd.toFixed(2)} USD eklendi`);
+        }
+        const newBalance = Number(profile.balance) + amountToAdd;
+        const newEquity = Number(profile.equity) + amountToAdd;
+        const newFreeMargin = Number(profile.free_margin) + amountToAdd;
         await supabase.from("profiles").update({
           balance: newBalance,
           equity: newEquity,
@@ -139,7 +158,7 @@ const AdminTransactions = () => {
       }
     }
 
-    // If approving a withdrawal, subtract from balance
+    // If approving a withdrawal, convert TRY to USD and subtract from balance
     if (status === "approved" && tx && tx.type === "withdrawal") {
       const { data: profile } = await supabase
         .from("profiles")
@@ -148,9 +167,15 @@ const AdminTransactions = () => {
         .single();
 
       if (profile) {
-        const newBalance = Number(profile.balance) - Number(tx.amount);
-        const newEquity = Number(profile.equity) - Number(tx.amount);
-        const newFreeMargin = Number(profile.free_margin) - Number(tx.amount);
+        let amountToSubtract = Number(tx.amount);
+        if (tx.currency === "TRY") {
+          const rate = await getUsdTryRate();
+          amountToSubtract = Number((amountToSubtract / rate).toFixed(2));
+          toast.info(`Kur: 1 USD = ${rate.toFixed(2)} TRY → ${amountToSubtract.toFixed(2)} USD çıkarıldı`);
+        }
+        const newBalance = Number(profile.balance) - amountToSubtract;
+        const newEquity = Number(profile.equity) - amountToSubtract;
+        const newFreeMargin = Number(profile.free_margin) - amountToSubtract;
         await supabase.from("profiles").update({
           balance: newBalance,
           equity: newEquity,
