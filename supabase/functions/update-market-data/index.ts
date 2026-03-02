@@ -144,7 +144,7 @@ const DISPLAY_NAMES: Record<string, string> = {
   AMD: "AMD", NFLX: "Netflix", JPM: "JPMorgan Chase",
   COST: "Costco", AVGO: "Broadcom", LLY: "Eli Lilly",
   ORCL: "Oracle", CSCO: "Cisco", ADBE: "Adobe", QCOM: "Qualcomm",
-  PLTR: "Palantir", WMT: "Walmart", SQ: "Block Inc", SHOP: "Shopify",
+  };
 };
 
 // Infer category from TradingView ticker
