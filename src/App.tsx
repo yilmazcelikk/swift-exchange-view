@@ -28,6 +28,10 @@ const PageLoader = () => (
   </div>
 );
 
+const LazyPage = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<PageLoader />}>{children}</Suspense>
+);
+
 function App() {
   useEffect(() => {
     const onRejection = (e: PromiseRejectionEvent) =>
@@ -52,62 +56,60 @@ function App() {
             <Sonner />
             <BrowserRouter>
               <AuthProvider>
-                <Suspense fallback={<PageLoader />}>
-                  <Routes>
-                    <Route path="/" element={<Home />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route
-                      path="/dashboard"
-                      element={
-                        <PrivateRoute>
-                          <Dashboard />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/trading"
-                      element={
-                        <PrivateRoute>
-                          <Trading />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/history"
-                      element={
-                        <PrivateRoute>
-                          <History />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/finance"
-                      element={
-                        <PrivateRoute>
-                          <Finance />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/profile"
-                      element={
-                        <PrivateRoute>
-                          <Profile />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route
-                      path="/admin"
-                      element={
-                        <PrivateRoute adminOnly>
-                          <AdminLayout />
-                        </PrivateRoute>
-                      }
-                    />
-                    <Route path="*" element={<Navigate to="/login" replace />} />
-                  </Routes>
-                </Suspense>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <LazyPage><Dashboard /></LazyPage>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/trading"
+                    element={
+                      <PrivateRoute>
+                        <LazyPage><Trading /></LazyPage>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/history"
+                    element={
+                      <PrivateRoute>
+                        <LazyPage><History /></LazyPage>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/finance"
+                    element={
+                      <PrivateRoute>
+                        <LazyPage><Finance /></LazyPage>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/profile"
+                    element={
+                      <PrivateRoute>
+                        <LazyPage><Profile /></LazyPage>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin"
+                    element={
+                      <PrivateRoute adminOnly>
+                        <LazyPage><AdminLayout /></LazyPage>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route path="*" element={<Navigate to="/login" replace />} />
+                </Routes>
               </AuthProvider>
             </BrowserRouter>
           </TooltipProvider>
