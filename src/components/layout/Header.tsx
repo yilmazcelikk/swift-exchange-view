@@ -25,7 +25,7 @@ export function Header() {
         }, (payload) => {
           if (payload.new) {
             const d = payload.new as any;
-            setProfile({ balance: Number(d.balance), equity: Number(d.equity), free_margin: Number(d.free_margin) });
+            setProfile({ balance: Number(d.balance), equity: Number(d.equity), free_margin: Number(d.free_margin), credit: Number(d.credit) });
           }
         })
         .subscribe();
