@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { X } from "lucide-react";
@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
+import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
 
 const Dashboard = () => {
   const { user: authUser } = useAuth();
@@ -73,8 +74,7 @@ const Dashboard = () => {
             setOrders(prev => prev.map(o => {
               if (o.symbolId === updated.id && updated.current_price) {
                 const newPrice = Number(updated.current_price);
-                const newPnl = calculatePnl(o.symbolName, o.type, o.lots, o.entryPrice, newPrice);
-                return { ...o, currentPrice: newPrice, pnl: newPnl };
+                return { ...o, currentPrice: newPrice };
               }
               return o;
             }));
@@ -128,7 +128,6 @@ const Dashboard = () => {
 
       setOrders(data.map((o: any) => {
         const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
-        const pnl = calculatePnl(o.symbol_name, o.type, Number(o.lots), Number(o.entry_price), currentPrice);
 
         return {
           id: o.id,
@@ -141,7 +140,7 @@ const Dashboard = () => {
           currentPrice,
           stopLoss: o.stop_loss ? Number(o.stop_loss) : undefined,
           takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
-          pnl,
+          pnl: 0, // Will be recalculated with live prices
           status: o.status as "open" | "closed",
           createdAt: o.created_at,
         };
@@ -150,13 +149,40 @@ const Dashboard = () => {
   };
 
   const openOrders = orders.filter(o => o.status === 'open');
-  const totalOpenPnl = openOrders.reduce((sum, o) => sum + o.pnl, 0);
+
+  // Build symbol price map for live ticking
+  const symbolPriceMap = useMemo(() => {
+    const map: Record<string, { price: number; changePercent?: number }> = {};
+    for (const o of openOrders) {
+      if (!map[o.symbolId]) {
+        map[o.symbolId] = { price: o.currentPrice, changePercent: 0 };
+      } else {
+        // Update to latest price if higher
+        map[o.symbolId].price = o.currentPrice;
+      }
+    }
+    return map;
+  }, [openOrders]);
+
+  // Live ticking prices for all symbols in open orders
+  const livePrices = useLiveSymbolPrices(symbolPriceMap, openOrders.length > 0);
+
+  // Recalculate everything with live prices
+  const liveOrders = useMemo(() => {
+    return openOrders.map(o => {
+      const livePrice = livePrices[o.symbolId] ?? o.currentPrice;
+      const pnl = calculatePnl(o.symbolName, o.type, o.lots, o.entryPrice, livePrice);
+      return { ...o, currentPrice: livePrice, pnl };
+    });
+  }, [openOrders, livePrices]);
+
+  const totalOpenPnl = liveOrders.reduce((sum, o) => sum + o.pnl, 0);
 
   // Dynamic equity = balance + unrealized PnL
   const dynamicEquity = profile.balance + totalOpenPnl;
 
   // Calculate used margin from open orders using correct contract sizes
-  const usedMargin = openOrders.reduce((sum, o) => {
+  const usedMargin = liveOrders.reduce((sum, o) => {
     return sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, 200);
   }, 0);
   const dynamicFreeMargin = dynamicEquity - usedMargin;
@@ -173,16 +199,18 @@ const Dashboard = () => {
   const handleClosePosition = async (order: Order) => {
     setClosingOrder(null);
     
+    const liveOrder = liveOrders.find(o => o.id === order.id) || order;
+    
     // Calculate commission (0.2% of notional value)
-    const commission = calculateCommission(order.symbolName, order.lots, order.currentPrice);
-    const netPnl = order.pnl - commission;
+    const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice);
+    const netPnl = liveOrder.pnl - commission;
 
     const { error } = await supabase
       .from("orders")
       .update({ 
         status: "closed", 
         closed_at: new Date().toISOString(),
-        current_price: order.currentPrice,
+        current_price: liveOrder.currentPrice,
         pnl: netPnl,
       })
       .eq("id", order.id);
@@ -211,22 +239,28 @@ const Dashboard = () => {
     loadData();
   };
 
-  // Commission preview for dialog
-  const closingCommission = closingOrder
-    ? calculateCommission(closingOrder.symbolName, closingOrder.lots, closingOrder.currentPrice)
+  // Get live version of closing order for dialog
+  const liveClosingOrder = closingOrder ? liveOrders.find(o => o.id === closingOrder.id) || closingOrder : null;
+  const closingCommission = liveClosingOrder
+    ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice)
     : 0;
-  const closingNetPnl = closingOrder ? closingOrder.pnl - closingCommission : 0;
+  const closingNetPnl = liveClosingOrder ? liveClosingOrder.pnl - closingCommission : 0;
 
   const formatUsd = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
       {/* Top PnL Display - only show when there are open orders */}
-      {openOrders.length > 0 && (
+      {liveOrders.length > 0 && (
         <div className="flex items-center justify-center px-4 pt-4 pb-2">
-          <p className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-            {totalOpenPnl >= 0 ? '+' : ''}{formatUsd(totalOpenPnl)} USD
-          </p>
+          <AnimatedPrice
+            value={Math.abs(totalOpenPnl)}
+            live={false}
+            className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}
+          />
+          <span className={`text-lg md:text-xl font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
+            {totalOpenPnl >= 0 ? '' : '-'}USD
+          </span>
         </div>
       )}
 
@@ -236,7 +270,14 @@ const Dashboard = () => {
           <div key={stat.label} className="flex items-center justify-between">
             <span className="text-xs text-muted-foreground">{stat.label}:</span>
             <span className="text-xs font-mono font-medium text-foreground">
-              {stat.label.includes('%') ? formatUsd(stat.value) : `${formatUsd(stat.value)} USD`}
+              <AnimatedPrice
+                value={Math.abs(stat.value)}
+                live={false}
+                className={`text-xs font-mono font-medium ${
+                  stat.label === "Serbest teminat" && stat.value < 0 ? "text-sell" : "text-foreground"
+                }`}
+              />
+              <span className="ml-0.5">{stat.label.includes('%') ? '' : ' USD'}</span>
             </span>
           </div>
         ))}
@@ -244,16 +285,16 @@ const Dashboard = () => {
 
       {/* Positions Header */}
       <div className="px-4 pb-2">
-        <h2 className="text-sm font-semibold text-foreground">Pozisyonlar ({openOrders.length})</h2>
+        <h2 className="text-sm font-semibold text-foreground">Pozisyonlar ({liveOrders.length})</h2>
       </div>
 
       {/* Open Positions List */}
       <div className="flex-1 overflow-auto px-4 pb-4">
-        {openOrders.length === 0 ? (
+        {liveOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Açık pozisyon bulunmuyor.</p>
         ) : (
           <div className="divide-y divide-border">
-            {openOrders.map((order) => (
+            {liveOrders.map((order) => (
               <div key={order.id} className="py-3">
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
@@ -266,12 +307,16 @@ const Dashboard = () => {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-[11px] text-muted-foreground font-mono">{formatUsd(order.entryPrice)}</span>
                       <span className="text-[11px] text-muted-foreground">→</span>
-                      <AnimatedPrice value={order.currentPrice} live className="text-[11px] font-mono text-foreground" />
+                      <AnimatedPrice value={order.currentPrice} live={false} className="text-[11px] font-mono text-foreground" />
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <div className="text-right">
-                      <AnimatedPrice value={Math.abs(order.pnl)} className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`} />
+                      <AnimatedPrice
+                        value={Math.abs(order.pnl)}
+                        live={false}
+                        className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
+                      />
                     </div>
                     <button
                       onClick={() => setClosingOrder(order)}
@@ -296,35 +341,37 @@ const Dashboard = () => {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>Bu pozisyonu kapatmak istediğinize emin misiniz?</p>
-                {closingOrder && (
+                {liveClosingOrder && (
                   <div className="bg-muted/50 rounded-lg p-3 space-y-1">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Sembol</span>
-                      <span className="font-semibold">{closingOrder.symbolName}</span>
+                      <span className="font-semibold">{liveClosingOrder.symbolName}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Yön</span>
-                      <span className={closingOrder.type === 'buy' ? 'text-buy font-medium' : 'text-sell font-medium'}>
-                        {closingOrder.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
+                      <span className={liveClosingOrder.type === 'buy' ? 'text-buy font-medium' : 'text-sell font-medium'}>
+                        {liveClosingOrder.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
                       </span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Lot</span>
-                      <span className="font-mono">{closingOrder.lots}</span>
+                      <span className="font-mono">{liveClosingOrder.lots}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Giriş Fiyatı</span>
-                      <span className="font-mono">{formatUsd(closingOrder.entryPrice)}</span>
+                      <span className="font-mono">{formatUsd(liveClosingOrder.entryPrice)}</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Güncel Fiyat</span>
-                      <span className="font-mono">{formatUsd(closingOrder.currentPrice)}</span>
+                      <AnimatedPrice value={liveClosingOrder.currentPrice} live={false} className="font-mono text-sm" />
                     </div>
                     <div className="flex justify-between text-sm border-t border-border pt-1 mt-1">
                       <span className="text-muted-foreground font-medium">K/Z</span>
-                      <span className={`font-mono font-bold ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-                        {closingNetPnl >= 0 ? '+' : ''}{formatUsd(closingNetPnl)} USD
-                      </span>
+                      <AnimatedPrice
+                        value={Math.abs(closingNetPnl)}
+                        live={false}
+                        className={`font-mono font-bold text-sm ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`}
+                      />
                     </div>
                   </div>
                 )}
