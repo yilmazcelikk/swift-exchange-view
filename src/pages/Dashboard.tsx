@@ -254,6 +254,37 @@ const Dashboard = () => {
     loadData();
   };
 
+  const openEditSlTp = (order: Order) => {
+    setEditingOrder(order);
+    setEditSL(order.stopLoss ? String(order.stopLoss) : "");
+    setEditTP(order.takeProfit ? String(order.takeProfit) : "");
+  };
+
+  const handleSaveSlTp = async () => {
+    if (!editingOrder) return;
+    setEditSaving(true);
+    const updates: any = {
+      stop_loss: editSL ? parseFloat(editSL) : null,
+      take_profit: editTP ? parseFloat(editTP) : null,
+    };
+    const { error } = await supabase
+      .from("orders")
+      .update(updates)
+      .eq("id", editingOrder.id);
+    if (error) {
+      toast.error("Güncelleme başarısız: " + error.message);
+    } else {
+      setOrders(prev => prev.map(o =>
+        o.id === editingOrder.id
+          ? { ...o, stopLoss: updates.stop_loss ?? undefined, takeProfit: updates.take_profit ?? undefined }
+          : o
+      ));
+      toast.success("Kar Al / Zarar Durdur güncellendi");
+      setEditingOrder(null);
+    }
+    setEditSaving(false);
+  };
+
   // Get live version of closing order for dialog
   const liveClosingOrder = closingOrder ? liveOrders.find(o => o.id === closingOrder.id) || closingOrder : null;
   const closingCommission = liveClosingOrder
