@@ -1,5 +1,8 @@
 // Stock logos via TradingView S3 (reliable, high-quality SVGs)
 const TV = "https://s3-symbol-logo.tradingview.com";
+// Clearbit logo API for companies not on TradingView S3
+const CB = "https://logo.clearbit.com";
+
 export const STOCK_LOGOS: Record<string, string> = {
   // US Stocks
   AAPL: `${TV}/apple--big.svg`,
@@ -50,7 +53,7 @@ export const STOCK_LOGOS: Record<string, string> = {
   WMT: `${TV}/walmart--big.svg`,
   XOM: `${TV}/exxon-mobil--big.svg`,
 
-  // BIST Turkish Stocks (verified TradingView slugs, Clearbit fallback for missing)
+  // BIST Turkish Stocks (verified TradingView S3 slugs + Clearbit fallbacks)
   AEFES: `${TV}/anadolu-efes--big.svg`,
   AGHOL: `${TV}/anadolu-grubu-holding--big.svg`,
   AKBNK: `${TV}/akbank--big.svg`,
@@ -64,13 +67,13 @@ export const STOCK_LOGOS: Record<string, string> = {
   DOHOL: `${TV}/dogan-holding--big.svg`,
   EKGYO: `${TV}/emlak-konut-gmyo--big.svg`,
   ENKAI: `${TV}/enka-insaat--big.svg`,
-  EREGL: `${TV}/eregli-demir-celik--big.svg`,
+  EREGL: `${CB}/erdemir.com.tr`,           // Clearbit (no TV logo)
   EUPWR: `${TV}/europower-enerji--big.svg`,
   FROTO: `${TV}/ford-otosan--big.svg`,
-  GARAN: `${TV}/garanti--big.svg`,
+  GARAN: `${CB}/garantibbva.com.tr`,       // Clearbit (no TV logo)
   GESAN: `${TV}/girisim-elektrik--big.svg`,
   GUBRF: `${TV}/gubre-fabrik--big.svg`,
-  HALKB: `${TV}/halkbank--big.svg`,
+  HALKB: `${TV}/t-halk-bankasi--big.svg`,  // Fixed: was "halkbank"
   ISCTR: `${TV}/is-bankasi--big.svg`,
   ISGYO: `${TV}/is-gmyo--big.svg`,
   KCHOL: `${TV}/koc--big.svg`,
@@ -93,15 +96,15 @@ export const STOCK_LOGOS: Record<string, string> = {
   TAVHL: `${TV}/tav-havalimanlari--big.svg`,
   TCELL: `${TV}/turkcell--big.svg`,
   THYAO: `${TV}/turk-hava-yollari--big.svg`,
-  TOASO: `${TV}/tofas--big.svg`,
+  TOASO: `${CB}/tofas.com.tr`,             // Clearbit (no TV logo)
   TSKB: `${TV}/turkiye-sinai-kalkinma-bankasi--big.svg`,
   TTKOM: `${TV}/turk-telekom--big.svg`,
   TTRAK: `${TV}/turk-traktor--big.svg`,
   TUPRS: `${TV}/tupras--big.svg`,
   ULKER: `${TV}/ulker-biskuvi--big.svg`,
-  VAKBN: `${TV}/vakifbank--big.svg`,
+  VAKBN: `${TV}/vakiflar-bankasi--big.svg`, // Fixed: was "vakifbank"
   VESTL: `${TV}/vestel--big.svg`,
-  YKBNK: `${TV}/yapi-kredi--big.svg`,
+  YKBNK: `${TV}/yapi-ve-kredi--big.svg`,   // Fixed: was "yapi-kredi"
 };
 
 // Crypto logos via CoinGecko
