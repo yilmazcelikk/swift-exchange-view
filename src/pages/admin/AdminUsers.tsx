@@ -51,6 +51,8 @@ interface OrderRow {
   current_price: number;
   pnl: number;
   leverage: string;
+  stop_loss: number | null;
+  take_profit: number | null;
 }
 
 const AdminUsers = () => {
@@ -66,6 +68,14 @@ const AdminUsers = () => {
     leverage: "",
     verification_status: "",
   });
+  const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
+  const [orderEditForm, setOrderEditForm] = useState({
+    entry_price: "",
+    lots: "",
+    stop_loss: "",
+    take_profit: "",
+    pnl: "",
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 25;
@@ -80,7 +90,7 @@ const AdminUsers = () => {
       // Fetch open orders
       const { data: ordersData } = await supabase
         .from("orders")
-        .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage, symbol_id")
+        .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage, symbol_id, stop_loss, take_profit")
         .eq("user_id", userId)
         .eq("status", "open");
 
@@ -214,6 +224,57 @@ const AdminUsers = () => {
       if (selectedUser?.id === editingUser.id) {
         setSelectedUser(null);
       }
+    }
+  };
+
+  const openOrderEdit = (order: OrderRow) => {
+    setEditingOrder(order);
+    setOrderEditForm({
+      entry_price: String(order.entry_price),
+      lots: String(order.lots),
+      stop_loss: order.stop_loss ? String(order.stop_loss) : "",
+      take_profit: order.take_profit ? String(order.take_profit) : "",
+      pnl: String(order.pnl),
+    });
+  };
+
+  const handleOrderSave = async () => {
+    if (!editingOrder) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        entry_price: parseFloat(orderEditForm.entry_price) || editingOrder.entry_price,
+        lots: parseFloat(orderEditForm.lots) || editingOrder.lots,
+        stop_loss: orderEditForm.stop_loss ? parseFloat(orderEditForm.stop_loss) : null,
+        take_profit: orderEditForm.take_profit ? parseFloat(orderEditForm.take_profit) : null,
+        pnl: parseFloat(orderEditForm.pnl) || 0,
+      })
+      .eq("id", editingOrder.id);
+    if (error) {
+      toast.error("Güncelleme başarısız: " + error.message);
+    } else {
+      toast.success("İşlem güncellendi");
+      setEditingOrder(null);
+      if (selectedUser) loadUserOrders(selectedUser.user_id);
+    }
+  };
+
+  const handleOrderClose = async () => {
+    if (!editingOrder) return;
+    const { error } = await supabase
+      .from("orders")
+      .update({
+        status: "closed",
+        closed_at: new Date().toISOString(),
+        pnl: parseFloat(orderEditForm.pnl) || 0,
+      })
+      .eq("id", editingOrder.id);
+    if (error) {
+      toast.error("Kapatma başarısız: " + error.message);
+    } else {
+      toast.success("Pozisyon kapatıldı");
+      setEditingOrder(null);
+      if (selectedUser) loadUserOrders(selectedUser.user_id);
     }
   };
 
@@ -446,7 +507,11 @@ const AdminUsers = () => {
                 ) : (
                   <div className="space-y-2">
                     {selectedUserOrders.map((order) => (
-                      <div key={order.id} className="p-3 rounded-lg border border-border space-y-1">
+                      <div
+                        key={order.id}
+                        className="p-3 rounded-lg border border-border space-y-1 cursor-pointer hover:border-primary/50 transition-colors"
+                        onClick={() => openOrderEdit(order)}
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
                             {order.type === "buy" ? (
@@ -463,6 +528,11 @@ const AdminUsers = () => {
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
                           <span>{order.type === "buy" ? "AL" : "SAT"} • {order.lots} lot • {order.leverage}</span>
                           <span>{Number(order.entry_price).toFixed(2)} → {Number(order.current_price).toFixed(2)}</span>
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span>SL: {order.stop_loss ? Number(order.stop_loss).toFixed(2) : "—"}</span>
+                          <span>TP: {order.take_profit ? Number(order.take_profit).toFixed(2) : "—"}</span>
+                          <Settings className="h-3 w-3 text-muted-foreground/50" />
                         </div>
                       </div>
                     ))}
@@ -550,6 +620,75 @@ const AdminUsers = () => {
               </Select>
             </div>
             <Button onClick={handleSave} className="w-full">Kaydet</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Order Edit Dialog */}
+      <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
+        <DialogContent className="max-w-sm" aria-describedby={undefined}>
+          <DialogHeader>
+            <DialogTitle>
+              İşlem Düzenle — {editingOrder?.symbol_name} ({editingOrder?.type === "buy" ? "AL" : "SAT"})
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Giriş Fiyatı</label>
+              <Input
+                type="number"
+                value={orderEditForm.entry_price}
+                onChange={(e) => setOrderEditForm({ ...orderEditForm, entry_price: e.target.value })}
+                className="bg-muted/50 font-mono"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Lot</label>
+              <Input
+                type="number"
+                value={orderEditForm.lots}
+                onChange={(e) => setOrderEditForm({ ...orderEditForm, lots: e.target.value })}
+                className="bg-muted/50 font-mono"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Zarar Durdur (SL)</label>
+              <Input
+                type="number"
+                value={orderEditForm.stop_loss}
+                onChange={(e) => setOrderEditForm({ ...orderEditForm, stop_loss: e.target.value })}
+                className="bg-muted/50 font-mono"
+                placeholder="Opsiyonel"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Kâr Al (TP)</label>
+              <Input
+                type="number"
+                value={orderEditForm.take_profit}
+                onChange={(e) => setOrderEditForm({ ...orderEditForm, take_profit: e.target.value })}
+                className="bg-muted/50 font-mono"
+                placeholder="Opsiyonel"
+                step="0.01"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">K/Z (PnL)</label>
+              <Input
+                type="number"
+                value={orderEditForm.pnl}
+                onChange={(e) => setOrderEditForm({ ...orderEditForm, pnl: e.target.value })}
+                className="bg-muted/50 font-mono"
+                step="0.01"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button onClick={handleOrderSave} className="w-full">Kaydet</Button>
+              <Button variant="destructive" onClick={handleOrderClose} className="w-full">Pozisyonu Kapat</Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
