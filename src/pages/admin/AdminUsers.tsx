@@ -281,6 +281,18 @@ const AdminUsers = () => {
     }
   };
 
+  const loadAllOrders = async (userId: string) => {
+    setShowAllOrders(true);
+    setLoadingAllOrders(true);
+    const { data } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    setAllUserOrders(data || []);
+    setLoadingAllOrders(false);
+  };
+
   const getVerificationBadge = (status: string) => {
     switch (status) {
       case "verified":
