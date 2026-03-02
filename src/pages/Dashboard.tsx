@@ -90,12 +90,12 @@ const Dashboard = () => {
     }
   }, [authUser?.id]);
 
-  // Poll every 1s for fluid price updates
+  // Lightweight poll every 5s as fallback (Realtime is primary)
   useEffect(() => {
     if (!authUser?.id) return;
     const interval = setInterval(() => {
       loadOrders();
-    }, 1000);
+    }, 5000);
     return () => clearInterval(interval);
   }, [authUser?.id]);
 
