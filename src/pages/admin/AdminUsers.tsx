@@ -352,20 +352,20 @@ const AdminUsers = () => {
             <SheetTitle>Hızlı Önizleme</SheetTitle>
           </SheetHeader>
           {selectedUser && (() => {
-            // Use live profile data if available
             const liveProfile = profiles.find(p => p.id === selectedUser.id) || selectedUser;
             return (
+            <div className="mt-6 space-y-6">
               {/* User Avatar & Name */}
               <div className="flex flex-col items-center text-center">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
                   <span className="text-2xl font-bold text-primary">
-                    {(selectedUser.full_name || "?")[0]?.toUpperCase()}
+                    {(liveProfile.full_name || "?")[0]?.toUpperCase()}
                   </span>
                 </div>
-                <h3 className="text-lg font-bold">{selectedUser.full_name || "İsimsiz"}</h3>
-                <p className="text-xs text-muted-foreground font-mono">{selectedUser.user_id.slice(0, 16)}...</p>
+                <h3 className="text-lg font-bold">{liveProfile.full_name || "İsimsiz"}</h3>
+                <p className="text-xs text-muted-foreground font-mono">{liveProfile.user_id.slice(0, 16)}...</p>
                 <div className="mt-2">
-                  <span className="text-xs px-2 py-1 rounded-full border border-border font-medium">Aktif</span>
+                  {getVerificationBadge(liveProfile.verification_status)}
                 </div>
               </div>
 
@@ -374,13 +374,13 @@ const AdminUsers = () => {
                 <div className="p-3 rounded-lg border border-border">
                   <p className="text-xs text-muted-foreground">Bakiye</p>
                   <p className="text-lg font-bold font-mono text-success">
-                    ${Number(selectedUser.balance).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                    ${Number(liveProfile.balance).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
                 <div className="p-3 rounded-lg border border-border">
                   <p className="text-xs text-muted-foreground">Kredi</p>
                   <p className="text-lg font-bold font-mono">
-                    ${Number(selectedUser.credit).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                    ${Number(liveProfile.credit).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
                   </p>
                 </div>
               </div>
@@ -393,19 +393,19 @@ const AdminUsers = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between py-1.5">
                     <span className="text-sm text-muted-foreground">MTID:</span>
-                    <span className="text-sm font-mono font-medium">{selectedUser.meta_id}</span>
+                    <span className="text-sm font-mono font-medium">{liveProfile.meta_id}</span>
                   </div>
                   <div className="flex justify-between py-1.5">
                     <span className="text-sm text-muted-foreground">Telefon:</span>
-                    <span className="text-sm font-mono">{selectedUser.phone || "—"}</span>
+                    <span className="text-sm font-mono">{liveProfile.phone || "—"}</span>
                   </div>
                   <div className="flex justify-between py-1.5">
                     <span className="text-sm text-muted-foreground">Doğrulama:</span>
-                    {getVerificationBadge(selectedUser.verification_status)}
+                    {getVerificationBadge(liveProfile.verification_status)}
                   </div>
                   <div className="flex justify-between py-1.5">
                     <span className="text-sm text-muted-foreground">Kaldıraç:</span>
-                    <span className="text-sm font-medium">{selectedUser.leverage}</span>
+                    <span className="text-sm font-medium">{liveProfile.leverage}</span>
                   </div>
                 </div>
               </div>
@@ -417,9 +417,15 @@ const AdminUsers = () => {
                 </h4>
                 <div className="space-y-2">
                   <div className="flex justify-between py-1.5">
+                    <span className="text-sm text-muted-foreground">Varlık:</span>
+                    <span className="text-sm font-mono font-medium">
+                      ${Number(liveProfile.equity).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                    </span>
+                  </div>
+                  <div className="flex justify-between py-1.5">
                     <span className="text-sm text-muted-foreground">Serbest Margin:</span>
                     <span className="text-sm font-mono font-medium">
-                      ${Number(selectedUser.free_margin).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
+                      ${Number(liveProfile.free_margin).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}
                     </span>
                   </div>
                 </div>
@@ -429,8 +435,9 @@ const AdminUsers = () => {
               <div>
                 <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
                   <TrendingUp className="h-4 w-4" /> Açık Pozisyonlar
+                  <span className="text-[10px] text-muted-foreground ml-auto">• Canlı</span>
                 </h4>
-                {loadingOrders ? (
+                {loadingOrders && selectedUserOrders.length === 0 ? (
                   <div className="flex justify-center py-4">
                     <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
                   </div>
@@ -475,18 +482,19 @@ const AdminUsers = () => {
                 <h4 className="text-sm font-semibold">Hızlı İşlemler</h4>
                 <Button
                   className="w-full bg-success hover:bg-success/90 text-success-foreground"
-                  onClick={() => openEdit(selectedUser)}
+                  onClick={() => openEdit(liveProfile)}
                 >
                   <Eye className="h-4 w-4 mr-2" />
                   Detaylı Görünüm
                 </Button>
-                <Button variant="outline" className="w-full" onClick={() => openEdit(selectedUser)}>
+                <Button variant="outline" className="w-full" onClick={() => openEdit(liveProfile)}>
                   <Settings className="h-4 w-4 mr-2" />
                   Pozisyonlar & Ayarlar
                 </Button>
               </div>
             </div>
-          )}
+            );
+          })()}
         </SheetContent>
       </Sheet>
 
