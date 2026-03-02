@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 export function Header() {
   const { user } = useAuth();
-  const [profile, setProfile] = useState<{ balance: number; equity: number; free_margin: number } | null>(null);
+  const [profile, setProfile] = useState<{ balance: number; equity: number; free_margin: number; credit: number } | null>(null);
 
   useEffect(() => {
     if (user) {
