@@ -125,11 +125,43 @@ const AdminUsers = () => {
 
   const handleSave = async () => {
     if (!editingUser) return;
+    
+    const newBalance = parseFloat(editForm.balance) || 0;
+    const newCredit = parseFloat(editForm.credit) || 0;
+    
+    // Fetch current open PnL to calculate equity correctly
+    const { data: openOrders } = await supabase
+      .from("orders")
+      .select("pnl")
+      .eq("user_id", editingUser.user_id)
+      .eq("status", "open");
+    
+    const openPnl = (openOrders || []).reduce((sum, o) => sum + Number(o.pnl), 0);
+    const newEquity = newBalance + newCredit + openPnl;
+    
+    // Calculate used margin from open orders
+    const { data: marginOrders } = await supabase
+      .from("orders")
+      .select("lots, entry_price, leverage")
+      .eq("user_id", editingUser.user_id)
+      .eq("status", "open");
+    
+    let usedMargin = 0;
+    if (marginOrders) {
+      for (const o of marginOrders) {
+        const lev = parseFloat(o.leverage?.replace("1:", "") || "100");
+        usedMargin += (Number(o.lots) * Number(o.entry_price)) / lev;
+      }
+    }
+    const newFreeMargin = newEquity - usedMargin;
+
     const { error } = await supabase
       .from("profiles")
       .update({
-        balance: parseFloat(editForm.balance) || 0,
-        credit: parseFloat(editForm.credit) || 0,
+        balance: newBalance,
+        credit: newCredit,
+        equity: newEquity,
+        free_margin: newFreeMargin,
         leverage: editForm.leverage,
         verification_status: editForm.verification_status,
       })
@@ -141,7 +173,6 @@ const AdminUsers = () => {
       toast.success("Kullanıcı güncellendi");
       setEditingUser(null);
       loadProfiles();
-      // Refresh selected user if same
       if (selectedUser?.id === editingUser.id) {
         setSelectedUser(null);
       }
