@@ -268,19 +268,19 @@ const Dashboard = () => {
       )}
 
       {/* Account Stats */}
-      <div className="px-4 pb-3 space-y-1.5">
+      <div className="px-4 pb-3 space-y-1">
         {accountStats.map((stat) => (
           <div key={stat.label} className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground tracking-wide">{stat.label}:</span>
-            <span className="text-[13px] font-mono font-semibold tracking-tight text-foreground" style={{ fontFeatureSettings: '"tnum", "lnum"' }}>
+            <span className="text-xs text-muted-foreground">{stat.label}:</span>
+            <span className="text-xs font-mono font-medium text-foreground">
               <AnimatedPrice
                 value={Math.abs(stat.value)}
                 live={false}
-                className={`text-[13px] font-mono font-semibold tracking-tight ${
+                className={`text-xs font-mono font-medium ${
                   stat.label === "Serbest teminat" && stat.value < 0 ? "text-sell" : "text-foreground"
                 }`}
               />
-              <span className="ml-0.5 text-muted-foreground text-[11px]">{stat.label.includes('%') ? '' : 'USD'}</span>
+              <span className="ml-0.5">{stat.label.includes('%') ? '' : ' USD'}</span>
             </span>
           </div>
         ))}
