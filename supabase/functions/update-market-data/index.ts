@@ -22,27 +22,24 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   CADJPY: "FX:CADJPY", CADCHF: "FX:CADCHF", CHFJPY: "FX:CHFJPY",
   // Forex - Exotic
   USDZAR: "FX:USDZAR", USDMXN: "FX:USDMXN", USDSEK: "FX:USDSEK",
-  USDNOK: "FX:USDNOK", USDSGD: "FX:USDSGD", USDHKD: "FX:USDHKD",
-  USDPLN: "FX:USDPLN", USDCZK: "FX:USDCZK", USDHUF: "FX:USDHUF",
-  USDCNH: "FX:USDCNH", EURPLN: "FX:EURPLN", EURHUF: "FX:EURHUF",
-  EURCZK: "FX:EURCZK", EURSEK: "FX:EURSEK", EURNOK: "FX:EURNOK",
-  EURZAR: "FX:EURZAR", GBPZAR: "FX:GBPZAR", GBPTRY: "FX:GBPTRY",
-  AUDSGD: "FX:AUDSGD", SGDJPY: "FX:SGDJPY", TRYJPY: "FX:TRYJPY",
-  NOKJPY: "FX:NOKJPY", SEKJPY: "FX:SEKJPY", ZARJPY: "FX:ZARJPY",
+  USDNOK: "FX:USDNOK", USDHKD: "FX:USDHKD",
+  USDPLN: "FX:USDPLN", USDHUF: "FX:USDHUF",
+  USDCNH: "FX:USDCNH",
+  EURSEK: "FX:EURSEK", EURNOK: "FX:EURNOK",
+  EURHUF: "FX:EURHUF",
+  TRYJPY: "FX:TRYJPY",
 
   // ═══ COMMODITIES ═══
   XAUUSD: "TVC:GOLD", XAGUSD: "TVC:SILVER", XPTUSD: "TVC:PLATINUM",
   XPDUSD: "TVC:PALLADIUM", USOIL: "NYMEX:CL1!", UKOIL: "ICEEUR:BRN1!",
   NATGAS: "NYMEX:NG1!", COPPER: "COMEX:HG1!",
   WHEAT: "CBOT:ZW1!", CORN: "CBOT:ZC1!", SOYBEAN: "CBOT:ZS1!",
-  COTTON: "NYMEX:CT1!", SUGAR: "NYMEX:SB1!", COFFEE: "NYMEX:KC1!",
-  COCOA: "NYMEX:CC1!",
 
   // ═══ INDICES ═══
   US500: "SP:SPX", US30: "DJ:DJI", US100: "NASDAQ:NDX",
   DE40: "XETR:DAX", UK100: "FTSE:UKX", XU100: "BIST:XU100",
   JP225: "TVC:NI225", FR40: "EURONEXT:PX1", AU200: "ASX:XJO",
-  HK50: "TVC:HSI", ES40: "TVC:SX5E", IT40: "MIL:FTSEMIB",
+  HK50: "TVC:HSI", ES40: "TVC:SX5E",
   SP35: "BME:IBC", IN50: "NSE:NIFTY", CN50: "SGX:CN1!",
   RUSSEL: "TVC:RUT", VIX: "TVC:VIX", DXY: "TVC:DXY",
 
@@ -51,24 +48,23 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   XRPUSD: "BITSTAMP:XRPUSD", SOLUSD: "COINBASE:SOLUSD",
   DOGEUSD: "BINANCE:DOGEUSDT", ADAUSD: "COINBASE:ADAUSD",
   DOTUSD: "COINBASE:DOTUSD", AVAXUSD: "COINBASE:AVAXUSD",
-  LINKUSD: "COINBASE:LINKUSD", MATICUSD: "COINBASE:MATICUSD",
+  LINKUSD: "COINBASE:LINKUSD",
   BNBUSD: "BINANCE:BNBUSDT", LTCUSD: "COINBASE:LTCUSD",
   SHIBUSD: "BINANCE:SHIBUSDT", UNIUSD: "COINBASE:UNIUSD",
   AAVEUSD: "COINBASE:AAVEUSD", ATOMUSD: "COINBASE:ATOMUSD",
-  NEARUSD: "COINBASE:NEARUSD", FTMUSD: "COINBASE:FTMUSD",
+  NEARUSD: "COINBASE:NEARUSD",
   ALGOUSD: "COINBASE:ALGOUSD", XLMUSD: "COINBASE:XLMUSD",
   VETUSD: "BINANCE:VETUSDT", ICPUSD: "COINBASE:ICPUSD",
   FILUSD: "COINBASE:FILUSD", SANDUSD: "COINBASE:SANDUSD",
   MANAUSD: "COINBASE:MANAUSD", APEUSD: "COINBASE:APEUSD",
-  TRXUSD: "BINANCE:TRXUSDT", EOSUSD: "COINBASE:EOSUSD",
+  TRXUSD: "BINANCE:TRXUSDT",
   BCHUSD: "COINBASE:BCHUSD", ETCUSD: "COINBASE:ETCUSD",
-  PEPE1000USD: "BINANCE:1000PEPEUSDT", ARBUSD: "COINBASE:ARBUSD",
+  ARBUSD: "COINBASE:ARBUSD",
   OPUSD: "COINBASE:OPUSD", INJUSD: "COINBASE:INJUSD",
   SUIUSD: "COINBASE:SUIUSD", APTUSD: "COINBASE:APTUSD",
   SEIUSD: "COINBASE:SEIUSD", TIAUSD: "COINBASE:TIAUSD",
-  JUPUSD: "COINBASE:JUPUSD",
   TONUSD: "OKX:TONUSDT", RENDERUSD: "COINBASE:RENDERUSD",
-  WIFUSD: "BINANCE:WIFUSDT", FETCUSD: "COINBASE:FETCUSD",
+  WIFUSD: "BINANCE:WIFUSDT",
   PENDLEUSD: "BINANCE:PENDLEUSDT", ONDOUSD: "COINBASE:ONDOUSD",
   STXUSD: "COINBASE:STXUSD", IMXUSD: "COINBASE:IMXUSD",
 
@@ -78,8 +74,8 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   SAHOL: "BIST:SAHOL", TUPRS: "BIST:TUPRS", YKBNK: "BIST:YKBNK",
   ISCTR: "BIST:ISCTR", ASELS: "BIST:ASELS", BIMAS: "BIST:BIMAS",
   PGSUS: "BIST:PGSUS", EKGYO: "BIST:EKGYO", PETKM: "BIST:PETKM",
-  TOASO: "BIST:TOASO", TAVHL: "BIST:TAVHL", KOZAL: "BIST:KOZAL",
-  KOZAA: "BIST:KOZAA", FROTO: "BIST:FROTO", TCELL: "BIST:TCELL",
+  TOASO: "BIST:TOASO", TAVHL: "BIST:TAVHL",
+  FROTO: "BIST:FROTO", TCELL: "BIST:TCELL",
   HALKB: "BIST:HALKB", VAKBN: "BIST:VAKBN", DOHOL: "BIST:DOHOL",
   ENKAI: "BIST:ENKAI", ARCLK: "BIST:ARCLK", VESTL: "BIST:VESTL",
   MGROS: "BIST:MGROS", SOKM: "BIST:SOKM", GUBRF: "BIST:GUBRF",
@@ -97,12 +93,12 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   META: "NASDAQ:META", AMD: "NASDAQ:AMD", INTC: "NASDAQ:INTC",
   NFLX: "NASDAQ:NFLX", DIS: "NYSE:DIS", BA: "NYSE:BA",
   JPM: "NYSE:JPM", V: "NYSE:V", MA: "NYSE:MA",
-  KO: "NYSE:KO", PEP: "NASDAQ:PEP", WMT: "NYSE:WMT",
+  KO: "NYSE:KO", PEP: "NASDAQ:PEP",
   XOM: "NYSE:XOM", JNJ: "NYSE:JNJ", PG: "NYSE:PG",
   UNH: "NYSE:UNH", HD: "NYSE:HD", CRM: "NYSE:CRM",
   PYPL: "NASDAQ:PYPL", UBER: "NYSE:UBER", COIN: "NASDAQ:COIN",
-  PLTR: "NYSE:PLTR", SNAP: "NYSE:SNAP", SPOT: "NYSE:SPOT",
-  SQ: "NYSE:SQ", SHOP: "NYSE:SHOP", BABA: "NYSE:BABA",
+  SNAP: "NYSE:SNAP", SPOT: "NYSE:SPOT",
+  BABA: "NYSE:BABA",
   NIO: "NYSE:NIO", RIVN: "NASDAQ:RIVN",
   COST: "NASDAQ:COST", AVGO: "NASDAQ:AVGO", LLY: "NYSE:LLY",
   MRK: "NYSE:MRK", ABBV: "NYSE:ABBV", PFE: "NYSE:PFE",
@@ -116,12 +112,10 @@ const DISPLAY_NAMES: Record<string, string> = {
   USDCHF: "Dolar / Frank", AUDUSD: "Avustralya D. / Dolar", USDCAD: "Dolar / Kanada D.",
   NZDUSD: "Yeni Zelanda D. / Dolar", USDTRY: "Dolar / TL", EURTRY: "Euro / TL",
   EURGBP: "Euro / Sterlin", EURJPY: "Euro / Yen", GBPJPY: "Sterlin / Yen",
-  GBPTRY: "Sterlin / TL",
   XAUUSD: "Altın / Dolar", XAGUSD: "Gümüş / Dolar", XPTUSD: "Platin / Dolar",
   XPDUSD: "Paladyum / Dolar", USOIL: "Ham Petrol (WTI)", UKOIL: "Brent Petrol",
   NATGAS: "Doğalgaz", COPPER: "Bakır", WHEAT: "Buğday", CORN: "Mısır",
-  SOYBEAN: "Soya Fasulyesi", COTTON: "Pamuk", SUGAR: "Şeker",
-  COFFEE: "Kahve", COCOA: "Kakao",
+  SOYBEAN: "Soya Fasulyesi",
   US500: "S&P 500", US30: "Dow Jones 30", US100: "Nasdaq 100",
   DE40: "DAX 40", UK100: "FTSE 100", XU100: "BIST 100",
   JP225: "Nikkei 225", FR40: "CAC 40", AU200: "ASX 200",
@@ -130,7 +124,7 @@ const DISPLAY_NAMES: Record<string, string> = {
   SOLUSD: "Solana", DOGEUSD: "Dogecoin", ADAUSD: "Cardano",
   BNBUSD: "Binance Coin", LTCUSD: "Litecoin", SHIBUSD: "Shiba Inu",
   AVAXUSD: "Avalanche", LINKUSD: "Chainlink", DOTUSD: "Polkadot",
-  MATICUSD: "Polygon", UNIUSD: "Uniswap", ATOMUSD: "Cosmos",
+  UNIUSD: "Uniswap", ATOMUSD: "Cosmos",
   NEARUSD: "NEAR Protocol", TONUSD: "Toncoin", RENDERUSD: "Render",
   THYAO: "Türk Hava Yolları", GARAN: "Garanti BBVA", AKBNK: "Akbank",
   SISE: "Şişecam", EREGL: "Ereğli Demir Çelik", KCHOL: "Koç Holding",
@@ -138,7 +132,7 @@ const DISPLAY_NAMES: Record<string, string> = {
   ISCTR: "İş Bankası C", ASELS: "Aselsan", BIMAS: "BİM Mağazalar",
   PGSUS: "Pegasus", TCELL: "Turkcell", HALKB: "Halkbank",
   VAKBN: "Vakıfbank", FROTO: "Ford Otosan", TOASO: "Tofaş",
-  KOZAL: "Koza Altın", ARCLK: "Arçelik", VESTL: "Vestel",
+  ARCLK: "Arçelik", VESTL: "Vestel",
   MGROS: "Migros", TTKOM: "Türk Telekom", ENKAI: "Enka İnşaat",
   TAVHL: "TAV Havalimanları", EKGYO: "Emlak Konut GYO",
   PETKM: "Petkim", DOHOL: "Doğuş Holding", SOKM: "Şok Marketler",
@@ -168,7 +162,6 @@ async function fetchTradingViewData(symbols: string[]): Promise<Record<string, a
   const tvSymbols = symbols.map(s => TV_SYMBOL_MAP[s]).filter(Boolean);
   if (tvSymbols.length === 0) return {};
 
-  // Split into batches of 100 for API reliability
   const results: Record<string, any> = {};
   const reverseMap: Record<string, string> = {};
   for (const [dbName, tvName] of Object.entries(TV_SYMBOL_MAP)) {
@@ -234,7 +227,6 @@ Deno.serve(async (req) => {
       is_active: true,
     }));
 
-    // Upsert with ignoreDuplicates - only creates new symbols, doesn't overwrite existing
     const { error: upsertErr } = await supabase
       .from("symbols")
       .upsert(allSymbolRows, { onConflict: "name", ignoreDuplicates: true });
@@ -247,13 +239,13 @@ Deno.serve(async (req) => {
     const updatedNames: string[] = [];
     const now = new Date().toISOString();
 
-    // Step 3: Batch update prices (30 concurrent updates at a time)
+    // Step 3: Batch update prices
     const entries = Object.entries(tvData);
     const updateBatchSize = 30;
 
     for (let i = 0; i < entries.length; i += updateBatchSize) {
       const batch = entries.slice(i, i + updateBatchSize);
-      const results = await Promise.all(
+      await Promise.all(
         batch.map(([name, values]) =>
           supabase.from("symbols").update({
             current_price: values.current_price,
@@ -270,12 +262,44 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Step 4: Delete symbols that are NOT in TV_SYMBOL_MAP (orphaned in DB)
+    const validNames = Object.keys(TV_SYMBOL_MAP);
+    const { data: allDbSymbols } = await supabase.from("symbols").select("name");
+    const orphanedNames = (allDbSymbols || [])
+      .map(s => s.name)
+      .filter(n => !validNames.includes(n));
+
+    let deletedCount = 0;
+    if (orphanedNames.length > 0) {
+      const { error: delErr, count } = await supabase
+        .from("symbols")
+        .delete({ count: "exact" })
+        .in("name", orphanedNames);
+      if (delErr) console.error("Delete orphaned symbols error:", delErr.message);
+      else deletedCount = count || 0;
+    }
+
+    // Step 5: Delete symbols that got no data from TV after update (price still 0)
+    const noDataNames = allNames.filter(n => !tvData[n]);
+    let noDataDeleted = 0;
+    if (noDataNames.length > 0) {
+      // Only delete if they still have 0 price in DB
+      const { error: ndErr, count } = await supabase
+        .from("symbols")
+        .delete({ count: "exact" })
+        .in("name", noDataNames)
+        .or("current_price.eq.0,current_price.is.null");
+      if (ndErr) console.error("Delete no-data symbols error:", ndErr.message);
+      else noDataDeleted = count || 0;
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         updated: updatedNames.length,
         total: allNames.length,
-        created: allSymbolRows.length,
+        deleted_orphaned: deletedCount,
+        deleted_no_data: noDataDeleted,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
