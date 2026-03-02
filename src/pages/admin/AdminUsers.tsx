@@ -76,22 +76,60 @@ const AdminUsers = () => {
 
   const loadUserOrders = useCallback(async (userId: string) => {
     setLoadingOrders(true);
-    const { data } = await supabase
-      .from("orders")
-      .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage")
-      .eq("user_id", userId)
-      .eq("status", "open");
-    setSelectedUserOrders((data as OrderRow[]) || []);
+    try {
+      // Fetch open orders
+      const { data: ordersData } = await supabase
+        .from("orders")
+        .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage, symbol_id")
+        .eq("user_id", userId)
+        .eq("status", "open");
+
+      if (ordersData && ordersData.length > 0) {
+        // Fetch live prices for symbols
+        const symbolIds = [...new Set(ordersData.map(o => (o as any).symbol_id).filter(Boolean))];
+        const { data: symbolsData } = await supabase
+          .from("symbols")
+          .select("id, current_price")
+          .in("id", symbolIds);
+        const priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+
+        const enriched = ordersData.map(o => {
+          const livePrice = priceMap.get((o as any).symbol_id) || Number(o.current_price);
+          // Simple PnL calc
+          const diff = o.type === "buy" ? livePrice - Number(o.entry_price) : Number(o.entry_price) - livePrice;
+          const pnl = diff * Number(o.lots) * 100; // simplified contract size
+          return { ...o, current_price: livePrice, pnl } as OrderRow;
+        });
+        setSelectedUserOrders(enriched);
+      } else {
+        setSelectedUserOrders([]);
+      }
+    } catch (err) {
+      console.error("loadUserOrders error:", err);
+    }
     setLoadingOrders(false);
   }, []);
 
+  // Real-time polling for selected user's orders
   useEffect(() => {
     if (selectedUser) {
       loadUserOrders(selectedUser.user_id);
+      const interval = setInterval(() => {
+        loadUserOrders(selectedUser.user_id);
+      }, 2000);
+      return () => clearInterval(interval);
     } else {
       setSelectedUserOrders([]);
     }
   }, [selectedUser, loadUserOrders]);
+
+  // Real-time polling for profiles list
+  useEffect(() => {
+    const interval = setInterval(() => {
+      loadProfiles();
+    }, 5000);
+    return () => clearInterval(interval);
+  }, []);
 
   const loadProfiles = async () => {
     setLoading(true);

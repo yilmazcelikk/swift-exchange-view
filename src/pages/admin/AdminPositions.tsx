@@ -53,7 +53,7 @@ const AdminPositions = () => {
   useEffect(() => {
     void loadAll();
     const interval = setInterval(() => {
-      void loadOrders();
+      void Promise.all([loadOrders(), loadProfiles()]);
     }, 2000);
     return () => clearInterval(interval);
   }, []);
