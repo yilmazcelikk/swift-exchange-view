@@ -178,63 +178,6 @@ const Profile = () => {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const handleDeposit = async () => {
-    if (!authUser || !depositAmount || !receiptFile) return;
-    setSubmitting(true);
-    try {
-      // Upload receipt
-      const fileExt = receiptFile.name.split(".").pop();
-      const filePath = `${authUser.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, receiptFile);
-      if (uploadError) throw uploadError;
-
-      // Create transaction with receipt link
-      const { error } = await supabase.from("transactions").insert({
-        user_id: authUser.id,
-        type: "deposit",
-        amount: parseFloat(depositAmount),
-        method: "bank_transfer",
-        currency: "TRY",
-        receipt_url: filePath,
-      } as any);
-      if (error) throw error;
-
-      toast.success("Para yatırma talebi oluşturuldu");
-      setDepositAmount("");
-      setReceiptFile(null);
-      setSelectedMethod(null);
-      loadTransactions();
-    } catch (err: any) {
-      toast.error("İşlem başarısız: " + err.message);
-    }
-    setSubmitting(false);
-  };
-
-  const handleWithdraw = async () => {
-    if (!authUser || !withdrawAmount || !withdrawAccountName || !withdrawIban) return;
-    setSubmitting(true);
-    try {
-      const { error } = await supabase.from("transactions").insert({
-        user_id: authUser.id,
-        type: "withdrawal",
-        amount: parseFloat(withdrawAmount),
-        method: "bank_transfer",
-        currency: "TRY",
-      });
-      if (error) throw error;
-
-      toast.success("Para çekme talebi oluşturuldu");
-      setWithdrawAmount("");
-      setWithdrawAccountName("");
-      setWithdrawIban("");
-      setSelectedMethod(null);
-      loadTransactions();
-    } catch (err: any) {
-      toast.error("İşlem başarısız: " + err.message);
-    }
-    setSubmitting(false);
-  };
-
   const handleVerificationUpload = async () => {
     if (!authUser || !frontFile) return;
     setSubmitting(true);
@@ -299,9 +242,8 @@ const Profile = () => {
       <h1 className="text-xl md:text-2xl font-bold">Hesabım</h1>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 h-auto">
+        <TabsList className="w-full grid grid-cols-2 h-auto">
           <TabsTrigger value="info" className="text-xs px-1 py-2">Bilgilerim</TabsTrigger>
-          <TabsTrigger value="money" className="text-xs px-1 py-2">Para İşlemleri</TabsTrigger>
           <TabsTrigger value="verify" className="text-xs px-1 py-2">Doğrulama</TabsTrigger>
         </TabsList>
 
