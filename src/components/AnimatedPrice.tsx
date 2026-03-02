@@ -1,10 +1,13 @@
 import { memo, forwardRef, useRef, useEffect, useState } from "react";
 import { useAnimatedPrice } from "@/hooks/useAnimatedPrice";
+import { useLiveTickPrice } from "@/hooks/useLiveTickPrice";
 
 interface AnimatedPriceProps {
   value: number;
   className?: string;
   duration?: number;
+  live?: boolean;
+  changePercent?: number;
 }
 
 function formatAnimatedPrice(price: number): string {
@@ -16,35 +19,28 @@ function formatAnimatedPrice(price: number): string {
 }
 
 const AnimatedPriceBase = forwardRef<HTMLSpanElement, AnimatedPriceProps>(function AnimatedPrice(
-  { value, className = "", duration = 600 },
+  { value, className = "", duration = 600, live = false, changePercent = 0 },
   ref,
 ) {
-  const displayValue = useAnimatedPrice(value, duration);
-  const prevValueRef = useRef(value);
+  const liveValue = useLiveTickPrice(value, { enabled: live, changePercent });
+  const displayValue = useAnimatedPrice(liveValue, duration);
+  const prevValueRef = useRef(liveValue);
   const [flash, setFlash] = useState<"up" | "down" | null>(null);
 
   useEffect(() => {
-    if (prevValueRef.current !== value && prevValueRef.current !== 0) {
-      setFlash(value > prevValueRef.current ? "up" : "down");
-      const timer = setTimeout(() => setFlash(null), 400);
-      prevValueRef.current = value;
+    if (prevValueRef.current !== liveValue && prevValueRef.current !== 0) {
+      setFlash(liveValue > prevValueRef.current ? "up" : "down");
+      const timer = setTimeout(() => setFlash(null), 350);
+      prevValueRef.current = liveValue;
       return () => clearTimeout(timer);
     }
-    prevValueRef.current = value;
-  }, [value]);
+    prevValueRef.current = liveValue;
+  }, [liveValue]);
 
-  const flashClass = flash === "up" 
-    ? "text-buy" 
-    : flash === "down" 
-      ? "text-sell" 
-      : "";
+  const flashClass = flash === "up" ? "text-buy" : flash === "down" ? "text-sell" : "";
 
   return (
-    <span 
-      ref={ref} 
-      className={`tabular-nums transition-colors duration-300 ${flashClass || className}`}
-      style={!flash ? undefined : undefined}
-    >
+    <span ref={ref} className={`tabular-nums transition-colors duration-300 ${className} ${flashClass}`}>
       {formatAnimatedPrice(displayValue)}
     </span>
   );
