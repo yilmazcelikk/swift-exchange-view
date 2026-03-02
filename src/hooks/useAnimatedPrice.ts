@@ -12,17 +12,8 @@ export function useAnimatedPrice(targetPrice: number, duration = 600): number {
   const velocityRef = useRef(0);
   const targetRef = useRef(targetPrice);
   const lastTimeRef = useRef(0);
-  const initializedRef = useRef(false);
 
   useEffect(() => {
-    // Skip animation on first mount
-    if (!initializedRef.current) {
-      initializedRef.current = true;
-      currentRef.current = targetPrice;
-      targetRef.current = targetPrice;
-      return;
-    }
-
     targetRef.current = targetPrice;
 
     // If no animation is running, start one
