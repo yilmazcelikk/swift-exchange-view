@@ -38,6 +38,7 @@ export function Header() {
 
   const stats = [
     { label: "Bakiye", value: `$${(profile?.balance ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
+    { label: "Kredi", value: `$${(profile?.credit ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
     { label: "Varlık", value: `$${(profile?.equity ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
     { label: "Serbest", value: `$${(profile?.free_margin ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
   ];
