@@ -266,7 +266,7 @@ const Dashboard = () => {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-[11px] text-muted-foreground font-mono">{formatUsd(order.entryPrice)}</span>
                       <span className="text-[11px] text-muted-foreground">→</span>
-                      <AnimatedPrice value={order.currentPrice} className="text-[11px] font-mono text-foreground" />
+                      <AnimatedPrice value={order.currentPrice} live className="text-[11px] font-mono text-foreground" />
                     </div>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
