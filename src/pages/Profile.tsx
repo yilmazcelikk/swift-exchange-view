@@ -226,9 +226,6 @@ const Profile = () => {
     setSubmitting(false);
   };
 
-  const isDepositDisabled = !depositAmount || !receiptFile || submitting;
-  const isWithdrawDisabled = !withdrawAmount || !withdrawAccountName || !withdrawIban || submitting;
-
   if (!authUser || profileLoading) {
     return (
       <div className="flex items-center justify-center py-20">
