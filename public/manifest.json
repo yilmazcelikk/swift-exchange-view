@@ -2,7 +2,7 @@
   "name": "Tacirler Yatırım",
   "short_name": "Tacirler Yatırım",
   "description": "Tacirler Yatırım - Yatırım Bize Danışılır",
-  "start_url": "/",
+  "start_url": "/login",
   "display": "standalone",
   "background_color": "#0a0e27",
   "theme_color": "#0a0e27",

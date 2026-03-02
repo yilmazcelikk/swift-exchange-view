@@ -8,6 +8,7 @@ import { ThemeProvider } from "next-themes";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
+import Home from "@/pages/Home";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
@@ -44,7 +45,7 @@ function App() {
             <BrowserRouter>
               <AuthProvider>
                 <Routes>
-                  <Route path="/" element={<Navigate to="/login" replace />} />
+                  <Route path="/" element={<Home />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/register" element={<Register />} />
                   <Route
