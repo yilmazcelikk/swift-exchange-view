@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User } from "lucide-react";
+import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -42,10 +42,23 @@ interface Profile {
   created_at: string;
 }
 
+interface OrderRow {
+  id: string;
+  symbol_name: string;
+  type: string;
+  lots: number;
+  entry_price: number;
+  current_price: number;
+  pnl: number;
+  leverage: string;
+}
+
 const AdminUsers = () => {
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [search, setSearch] = useState("");
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
+  const [selectedUserOrders, setSelectedUserOrders] = useState<OrderRow[]>([]);
+  const [loadingOrders, setLoadingOrders] = useState(false);
   const [editingUser, setEditingUser] = useState<Profile | null>(null);
   const [editForm, setEditForm] = useState({
     balance: "",
@@ -60,6 +73,25 @@ const AdminUsers = () => {
   useEffect(() => {
     loadProfiles();
   }, []);
+
+  const loadUserOrders = useCallback(async (userId: string) => {
+    setLoadingOrders(true);
+    const { data } = await supabase
+      .from("orders")
+      .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage")
+      .eq("user_id", userId)
+      .eq("status", "open");
+    setSelectedUserOrders((data as OrderRow[]) || []);
+    setLoadingOrders(false);
+  }, []);
+
+  useEffect(() => {
+    if (selectedUser) {
+      loadUserOrders(selectedUser.user_id);
+    } else {
+      setSelectedUserOrders([]);
+    }
+  }, [selectedUser, loadUserOrders]);
 
   const loadProfiles = async () => {
     setLoading(true);
@@ -320,6 +352,51 @@ const AdminUsers = () => {
                     </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Open Positions */}
+              <div>
+                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                  <TrendingUp className="h-4 w-4" /> Açık Pozisyonlar
+                </h4>
+                {loadingOrders ? (
+                  <div className="flex justify-center py-4">
+                    <RefreshCw className="h-4 w-4 animate-spin text-muted-foreground" />
+                  </div>
+                ) : selectedUserOrders.length === 0 ? (
+                  <p className="text-xs text-muted-foreground text-center py-3">Açık pozisyon yok.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {selectedUserOrders.map((order) => (
+                      <div key={order.id} className="p-3 rounded-lg border border-border space-y-1">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            {order.type === "buy" ? (
+                              <TrendingUp className="h-3.5 w-3.5 text-buy" />
+                            ) : (
+                              <TrendingDown className="h-3.5 w-3.5 text-sell" />
+                            )}
+                            <span className="text-sm font-semibold">{order.symbol_name}</span>
+                          </div>
+                          <span className={`text-sm font-mono font-bold ${Number(order.pnl) >= 0 ? "text-buy" : "text-sell"}`}>
+                            {Number(order.pnl) >= 0 ? "+" : ""}{Number(order.pnl).toFixed(2)}$
+                          </span>
+                        </div>
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{order.type === "buy" ? "AL" : "SAT"} • {order.lots} lot • {order.leverage}</span>
+                          <span>{Number(order.entry_price).toFixed(2)} → {Number(order.current_price).toFixed(2)}</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex justify-between py-2 border-t border-border">
+                      <span className="text-xs font-medium text-muted-foreground">Toplam K/Z:</span>
+                      <span className={`text-sm font-mono font-bold ${selectedUserOrders.reduce((s, o) => s + Number(o.pnl), 0) >= 0 ? "text-buy" : "text-sell"}`}>
+                        {selectedUserOrders.reduce((s, o) => s + Number(o.pnl), 0) >= 0 ? "+" : ""}
+                        {selectedUserOrders.reduce((s, o) => s + Number(o.pnl), 0).toFixed(2)}$
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
 
               {/* Quick Actions */}

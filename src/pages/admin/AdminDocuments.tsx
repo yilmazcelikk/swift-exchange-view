@@ -58,11 +58,35 @@ const AdminDocuments = () => {
   };
 
   const updateStatus = async (id: string, status: string) => {
+    const doc = docs.find(d => d.id === id);
     const { error } = await supabase.from("documents").update({ status }).eq("id", id);
     if (error) {
       toast.error("Güncelleme başarısız");
     } else {
       toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
+      
+      // Check if all documents for this user are now approved → auto-verify
+      if (status === "approved" && doc) {
+        const { data: userDocs } = await supabase
+          .from("documents")
+          .select("id, status")
+          .eq("user_id", doc.user_id);
+        
+        if (userDocs) {
+          // Update the current doc's status locally for the check
+          const allApproved = userDocs.every(d => 
+            d.id === id ? true : d.status === "approved"
+          );
+          if (allApproved && userDocs.length >= 2) {
+            await supabase
+              .from("profiles")
+              .update({ verification_status: "verified" })
+              .eq("user_id", doc.user_id);
+            toast.success("Kullanıcı doğrulama durumu 'Doğrulanmış' olarak güncellendi");
+          }
+        }
+      }
+      
       loadDocs();
     }
   };
