@@ -351,8 +351,10 @@ const AdminUsers = () => {
           <SheetHeader>
             <SheetTitle>Hızlı Önizleme</SheetTitle>
           </SheetHeader>
-          {selectedUser && (
-            <div className="mt-6 space-y-6">
+          {selectedUser && (() => {
+            // Use live profile data if available
+            const liveProfile = profiles.find(p => p.id === selectedUser.id) || selectedUser;
+            return (
               {/* User Avatar & Name */}
               <div className="flex flex-col items-center text-center">
                 <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
