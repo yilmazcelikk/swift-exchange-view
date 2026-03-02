@@ -13,6 +13,7 @@ import Register from "@/pages/Register";
 import Dashboard from "@/pages/Dashboard";
 import Trading from "@/pages/Trading";
 import History from "@/pages/History";
+import Finance from "@/pages/Finance";
 import Profile from "@/pages/Profile";
 import AdminLayout from "@/pages/admin/AdminLayout";
 
@@ -70,6 +71,13 @@ function App() {
                       </PrivateRoute>
                     }
                   />
+                  <Route
+                    path="/finance"
+                    element={
+                      <PrivateRoute>
+                        <Finance />
+                      </PrivateRoute>
+                    }
                   <Route
                     path="/profile"
                     element={

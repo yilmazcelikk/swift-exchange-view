@@ -1,10 +1,11 @@
-import { LayoutDashboard, TrendingUp, UserCircle, History } from "lucide-react";
+import { LayoutDashboard, TrendingUp, UserCircle, History, Wallet } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 
 const navItems = [
   { title: "İşlem", url: "/dashboard", icon: LayoutDashboard },
   { title: "Piyasalar", url: "/trading", icon: TrendingUp },
   { title: "Geçmiş", url: "/history", icon: History },
+  { title: "Finans", url: "/finance", icon: Wallet },
   { title: "Hesabım", url: "/profile", icon: UserCircle },
 ];
 
