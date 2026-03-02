@@ -389,7 +389,7 @@ const Trading = () => {
   );
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] animate-slide-up">
+    <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overflow-y-auto md:overflow-hidden">
       {/* Header */}
       <div className="p-3 border-b border-border flex items-center gap-3">
         <button onClick={() => setSelectedSymbol(null)} className="p-1 hover:bg-muted rounded">
@@ -442,7 +442,7 @@ const Trading = () => {
       </div>
 
       {/* Professional Chart */}
-      <div className="flex-1 min-h-0 relative">
+      <div className="h-[280px] md:flex-1 md:h-auto min-h-0 relative shrink-0">
         <div className="h-full flex">
           {/* Candle area */}
           <div className="flex-1 relative overflow-hidden bg-background">

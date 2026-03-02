@@ -15,7 +15,7 @@ import { useTheme } from "next-themes";
 // ─── Verification Steps ───
 const verificationSteps = [
   { id: 1, label: "Ön Yüz", description: "Kimlik belgenizin ön yüzünü yükleyin" },
-  { id: 2, label: "İkametgah", description: "İkametgah belgenizi yükleyin" },
+  { id: 2, label: "Arka Yüz", description: "Kimlik belgenizin arka yüzünü yükleyin" },
   { id: 3, label: "Tamamlandı", description: "Doğrulama talebiniz alındı" },
 ];
 
@@ -86,7 +86,7 @@ const Profile = () => {
 
     if (docs && docs.length > 0) {
       const hasFront = docs.find(d => d.type === "identity_front");
-      const hasAddress = docs.find(d => d.type === "address_proof");
+      const hasAddress = docs.find(d => d.type === "identity_back" || d.type === "address_proof");
 
       if (hasFront && hasAddress) {
         // Both uploaded
@@ -208,13 +208,13 @@ const Profile = () => {
     setSubmitting(true);
     try {
       const addrExt = addressFile.name.split(".").pop();
-      const addrPath = `${authUser.id}/address_${Date.now()}.${addrExt}`;
+      const addrPath = `${authUser.id}/id_back_${Date.now()}.${addrExt}`;
       const { error: addrUploadErr } = await supabase.storage.from("documents").upload(addrPath, addressFile);
       if (addrUploadErr) throw addrUploadErr;
 
       await supabase.from("documents").insert({
         user_id: authUser.id,
-        type: "address_proof",
+        type: "identity_back",
         file_url: addrPath,
       });
 
@@ -344,8 +344,8 @@ const Profile = () => {
 
               {currentStep === 2 && (
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-sm">İkametgah Belgesi</h3>
-                  <p className="text-xs text-muted-foreground">İkametgah belgenizin fotoğrafını veya PDF'ini yükleyin.</p>
+                  <h3 className="font-semibold text-sm">Kimlik Arka Yüz</h3>
+                  <p className="text-xs text-muted-foreground">TC Kimlik Kartınızın veya Pasaportunuzun arka yüzünü yükleyin.</p>
                   <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
                     <Upload className="h-8 w-8 text-muted-foreground mb-2" />
                     <span className="text-xs text-muted-foreground">{addressFile ? addressFile.name : "Dosya seçin"}</span>
