@@ -144,15 +144,13 @@ const DISPLAY_NAMES: Record<string, string> = {
   TSKB: "TSKB", AKSA: "Aksa Enerji", CIMSA: "Çimsa",
   AEFES: "Anadolu Efes", ULKER: "Ülker", DOAS: "Doğuş Otomotiv",
   OTKAR: "Otokar", MAVI: "Mavi", LOGO: "Logo Yazılım",
-  KOZAL: "Koza Altın", KOZAA: "Koza Anadolu Metal",
   AAPL: "Apple", TSLA: "Tesla", MSFT: "Microsoft", GOOGL: "Alphabet",
   AMZN: "Amazon", NVDA: "NVIDIA", META: "Meta Platforms",
   AMD: "AMD", NFLX: "Netflix", JPM: "JPMorgan Chase",
   COST: "Costco", AVGO: "Broadcom", LLY: "Eli Lilly",
   ORCL: "Oracle", CSCO: "Cisco", ADBE: "Adobe", QCOM: "Qualcomm",
-  PLTR: "Palantir", WMT: "Walmart", SQ: "Block Inc", SHOP: "Shopify",
-  PEPEUSD: "Pepe", JUPUSD: "Jupiter", POLUSD: "Polygon",
-  FTMUSD: "Fantom", EOSUSD: "EOS", FETCUSD: "Fetch.ai",
+  PLTR: "Palantir",
+  PEPEUSD: "Pepe", JUPUSD: "Jupiter", POLUSD: "Polygon", FETCUSD: "Fetch.ai",
 };
 
 // Infer category from TradingView ticker
