@@ -65,7 +65,7 @@ const Trading = () => {
   const [leverage, setLeverage] = useState("1:200");
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
-  const [timeframe, setTimeframe] = useState<Timeframe>("1m");
+  const [timeframe, setTimeframe] = useState<Timeframe>("15m");
   const [realCandles, setRealCandles] = useState<CandleRow[]>([]);
   const [candlesLoading, setCandlesLoading] = useState(false);
 
@@ -139,7 +139,7 @@ const Trading = () => {
       const aHasLogo = resolveLogoUrl(a.name, a.category) ? 0 : 1;
       const bHasLogo = resolveLogoUrl(b.name, b.category) ? 0 : 1;
       if (aHasLogo !== bHasLogo) return aHasLogo - bHasLogo;
-      if (selectedCategory === "all") {
+      if (selectedCategory === "all" || selectedCategory === "stock") {
         // Among those with logos, BIST stocks first
         const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
         const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
