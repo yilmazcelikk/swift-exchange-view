@@ -8,14 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  ArrowDownToLine, ArrowUpFromLine, Building2, XCircle, Pencil, Copy, Sun, Moon,
+  XCircle, Pencil, Sun, Moon,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-
-// ─── Payment Methods (only bank transfer now) ───
-const paymentMethods = [
-  { id: "bank", label: "Banka Transferi", icon: Building2 },
-];
 
 // ─── Verification Steps ───
 const verificationSteps = [
@@ -67,20 +62,7 @@ const Profile = () => {
   });
   const [isEditing, setIsEditing] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [bankAccounts, setBankAccounts] = useState<any[]>([]);
   const [profileLoading, setProfileLoading] = useState(true);
-
-  // Deposit state
-  const [selectedMethod, setSelectedMethod] = useState<string | null>(null);
-  const [depositAmount, setDepositAmount] = useState("");
-  const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [activeMoneyTab, setActiveMoneyTab] = useState<"deposit" | "withdraw">("deposit");
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
-
-  // Withdraw state
-  const [withdrawAccountName, setWithdrawAccountName] = useState("");
-  const [withdrawIban, setWithdrawIban] = useState("");
 
   // Verification state
   const [currentStep, setCurrentStep] = useState(1);
@@ -91,8 +73,6 @@ const Profile = () => {
   useEffect(() => {
     if (authUser) {
       loadProfile();
-      loadTransactions();
-      loadBankAccounts();
       loadVerificationStatus();
     }
   }, [authUser]);
@@ -131,14 +111,6 @@ const Profile = () => {
     }
   };
 
-  const loadBankAccounts = async () => {
-    const { data } = await supabase
-      .from("bank_accounts")
-      .select("*")
-      .eq("is_active", true);
-    setBankAccounts(data || []);
-  };
-
   const loadProfile = async () => {
     setProfileLoading(true);
     const { data } = await supabase
@@ -157,16 +129,6 @@ const Profile = () => {
       });
     }
     setProfileLoading(false);
-  };
-
-  const loadTransactions = async () => {
-    const { data } = await supabase
-      .from("transactions")
-      .select("*")
-      .eq("user_id", authUser!.id)
-      .order("created_at", { ascending: false })
-      .limit(10);
-    setTransactions(data || []);
   };
 
   const handleUpdateProfile = async () => {
@@ -216,63 +178,6 @@ const Profile = () => {
 
   const [submitting, setSubmitting] = useState(false);
 
-  const handleDeposit = async () => {
-    if (!authUser || !depositAmount || !receiptFile) return;
-    setSubmitting(true);
-    try {
-      // Upload receipt
-      const fileExt = receiptFile.name.split(".").pop();
-      const filePath = `${authUser.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, receiptFile);
-      if (uploadError) throw uploadError;
-
-      // Create transaction with receipt link
-      const { error } = await supabase.from("transactions").insert({
-        user_id: authUser.id,
-        type: "deposit",
-        amount: parseFloat(depositAmount),
-        method: "bank_transfer",
-        currency: "TRY",
-        receipt_url: filePath,
-      } as any);
-      if (error) throw error;
-
-      toast.success("Para yatırma talebi oluşturuldu");
-      setDepositAmount("");
-      setReceiptFile(null);
-      setSelectedMethod(null);
-      loadTransactions();
-    } catch (err: any) {
-      toast.error("İşlem başarısız: " + err.message);
-    }
-    setSubmitting(false);
-  };
-
-  const handleWithdraw = async () => {
-    if (!authUser || !withdrawAmount || !withdrawAccountName || !withdrawIban) return;
-    setSubmitting(true);
-    try {
-      const { error } = await supabase.from("transactions").insert({
-        user_id: authUser.id,
-        type: "withdrawal",
-        amount: parseFloat(withdrawAmount),
-        method: "bank_transfer",
-        currency: "TRY",
-      });
-      if (error) throw error;
-
-      toast.success("Para çekme talebi oluşturuldu");
-      setWithdrawAmount("");
-      setWithdrawAccountName("");
-      setWithdrawIban("");
-      setSelectedMethod(null);
-      loadTransactions();
-    } catch (err: any) {
-      toast.error("İşlem başarısız: " + err.message);
-    }
-    setSubmitting(false);
-  };
-
   const handleVerificationUpload = async () => {
     if (!authUser || !frontFile) return;
     setSubmitting(true);
@@ -321,9 +226,6 @@ const Profile = () => {
     setSubmitting(false);
   };
 
-  const isDepositDisabled = !depositAmount || !receiptFile || submitting;
-  const isWithdrawDisabled = !withdrawAmount || !withdrawAccountName || !withdrawIban || submitting;
-
   if (!authUser || profileLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -337,9 +239,8 @@ const Profile = () => {
       <h1 className="text-xl md:text-2xl font-bold">Hesabım</h1>
 
       <Tabs defaultValue="info" className="w-full">
-        <TabsList className="w-full grid grid-cols-3 h-auto">
+        <TabsList className="w-full grid grid-cols-2 h-auto">
           <TabsTrigger value="info" className="text-xs px-1 py-2">Bilgilerim</TabsTrigger>
-          <TabsTrigger value="money" className="text-xs px-1 py-2">Para İşlemleri</TabsTrigger>
           <TabsTrigger value="verify" className="text-xs px-1 py-2">Doğrulama</TabsTrigger>
         </TabsList>
 
@@ -401,197 +302,6 @@ const Profile = () => {
           <ThemeCard />
         </TabsContent>
 
-        {/* ─── Para İşlemleri ─── */}
-        <TabsContent value="money" className="space-y-4 mt-4">
-          <div className="grid grid-cols-2 gap-2">
-            <Button
-              variant={activeMoneyTab === "deposit" ? "default" : "outline"}
-              onClick={() => { setActiveMoneyTab("deposit"); setSelectedMethod(null); }}
-              className="gap-2"
-            >
-              <ArrowDownToLine className="h-4 w-4" /> Yatır
-            </Button>
-            <Button
-              variant={activeMoneyTab === "withdraw" ? "default" : "outline"}
-              onClick={() => { setActiveMoneyTab("withdraw"); setSelectedMethod(null); }}
-              className="gap-2"
-            >
-              <ArrowUpFromLine className="h-4 w-4" /> Çek
-            </Button>
-          </div>
-
-          {/* Payment Method Selection */}
-          <div className="space-y-2">
-            {paymentMethods.map((method) => (
-              <Card
-                key={method.id}
-                onClick={() => setSelectedMethod(method.id)}
-                className={`cursor-pointer transition-all ${
-                  selectedMethod === method.id
-                    ? "border-primary ring-2 ring-primary/20"
-                    : "border-border hover:border-primary/30"
-                }`}
-              >
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className="p-2 rounded-lg bg-muted">
-                    <method.icon className="h-5 w-5 text-primary" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-sm">{method.label}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {selectedMethod && activeMoneyTab === "deposit" && (
-            <>
-              {/* Bank accounts for deposit */}
-              {bankAccounts.length > 0 && (
-                <Card className="bg-card border-border">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm">Yatırım Yapılacak Hesaplar</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {bankAccounts.map((acc: any) => (
-                      <div key={acc.id} className="p-3 rounded-lg bg-muted/50 space-y-1.5">
-                        <p className="font-semibold text-sm">{acc.bank_name}</p>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs font-mono text-foreground">{acc.iban}</p>
-                          <button onClick={() => { navigator.clipboard.writeText(acc.iban); toast.success("IBAN kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
-                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <p className="text-xs text-muted-foreground">{acc.account_holder}</p>
-                          <button onClick={() => { navigator.clipboard.writeText(acc.account_holder); toast.success("Hesap adı kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
-                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </CardContent>
-                </Card>
-              )}
-
-              <Card className="bg-card border-border">
-                <CardContent className="p-4 space-y-3">
-                  <div>
-                  <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    value={depositAmount}
-                    onChange={(e) => setDepositAmount(e.target.value)}
-                    className="bg-muted/50 font-mono text-lg h-12"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {[1000, 5000, 10000, 25000].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setDepositAmount(v.toString())}
-                      className="px-3 py-1.5 rounded text-xs font-mono font-medium bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      {v.toLocaleString("tr-TR")}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Receipt upload */}
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Dekont Yükle</label>
-                  <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
-                    <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                    <span className="text-xs text-muted-foreground">{receiptFile ? receiptFile.name : "Dekont seçin"}</span>
-                    <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
-                  </label>
-                </div>
-
-                  <Button className="w-full h-11 font-semibold" disabled={isDepositDisabled} onClick={handleDeposit}>
-                    {submitting ? "Gönderiliyor..." : "Para Yatır"}
-                  </Button>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {selectedMethod && activeMoneyTab === "withdraw" && (
-            <Card className="bg-card border-border">
-              <CardContent className="p-4 space-y-3">
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Hesap Adı</label>
-                  <Input
-                    placeholder="Ad Soyad"
-                    value={withdrawAccountName}
-                    onChange={(e) => setWithdrawAccountName(e.target.value)}
-                    className="bg-muted/50"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1 block">IBAN</label>
-                  <Input
-                    placeholder="TR00 0000 0000 0000 0000 0000 00"
-                    value={withdrawIban}
-                    onChange={(e) => setWithdrawIban(e.target.value)}
-                    className="bg-muted/50 font-mono"
-                  />
-                </div>
-                <div>
-                  <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
-                  <Input
-                    type="number"
-                    placeholder="0.00"
-                    value={withdrawAmount}
-                    onChange={(e) => setWithdrawAmount(e.target.value)}
-                    className="bg-muted/50 font-mono text-lg h-12"
-                  />
-                </div>
-                <div className="flex flex-wrap gap-1.5">
-                  {[1000, 5000, 10000, 25000].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setWithdrawAmount(v.toString())}
-                      className="px-3 py-1.5 rounded text-xs font-mono font-medium bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                    >
-                      {v.toLocaleString("tr-TR")}
-                    </button>
-                  ))}
-                </div>
-
-                <Button className="w-full h-11 font-semibold" disabled={isWithdrawDisabled} onClick={handleWithdraw}>
-                  {submitting ? "Gönderiliyor..." : "Para Çek"}
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Recent Transactions */}
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Son Talepler</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-2">
-              {transactions.length > 0 ? transactions.map((tx) => (
-                <div key={tx.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                  <div className="flex items-center gap-2">
-                    {statusIcon(tx.status)}
-                    <div>
-                      <p className="text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(tx.created_at).toLocaleDateString("tr-TR")}</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-sm font-mono font-semibold">{Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}</p>
-                    <p className="text-xs text-muted-foreground">{statusLabel(tx.status)}</p>
-                  </div>
-                </div>
-              )) : (
-                <p className="text-sm text-muted-foreground text-center py-4">Henüz işlem yok.</p>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         {/* ─── Kimlik Doğrulama ─── */}
         <TabsContent value="verify" className="space-y-4 mt-4">
