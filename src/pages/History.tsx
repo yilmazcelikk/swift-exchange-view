@@ -13,6 +13,7 @@ interface ClosedOrder {
   pnl: number;
   created_at: string;
   closed_at: string | null;
+  close_reason: string | null;
 }
 
 const formatUsd = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -89,7 +90,10 @@ const History = () => {
               const commission = calculateCommission(order.symbol_name, Number(order.lots), Number(order.current_price));
               const pnl = Number(order.pnl);
               return (
-                <div key={order.id} className="py-3">
+                <div key={order.id} className={`py-3 rounded-lg px-2 -mx-2 ${
+                  order.close_reason === 'stop_loss' ? 'bg-sell/5 border-l-2 border-sell' :
+                  order.close_reason === 'take_profit' ? 'bg-buy/5 border-l-2 border-buy' : ''
+                }`}>
                   <div className="flex items-start justify-between">
                     <div>
                       <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
@@ -97,6 +101,13 @@ const History = () => {
                       <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
                         {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {Number(order.lots)}
                       </span>
+                      {order.close_reason && (
+                        <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          order.close_reason === 'stop_loss' ? 'bg-sell/15 text-sell' : 'bg-buy/15 text-buy'
+                        }`}>
+                          {order.close_reason === 'stop_loss' ? 'SL' : 'TP'}
+                        </span>
+                      )}
                     </div>
                     <div className="text-right">
                       <span className={`text-sm font-mono font-bold ${pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
