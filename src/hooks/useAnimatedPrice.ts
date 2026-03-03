@@ -13,7 +13,21 @@ export function useAnimatedPrice(targetPrice: number, duration = 600): number {
   const targetRef = useRef(targetPrice);
   const lastTimeRef = useRef(0);
 
+  // Track if this is the first real value to skip animation on initial load
+  const isFirstValueRef = useRef(true);
+
   useEffect(() => {
+    // If it's the first meaningful value, snap immediately without animation
+    if (isFirstValueRef.current && targetPrice !== 0) {
+      isFirstValueRef.current = false;
+      currentRef.current = targetPrice;
+      velocityRef.current = 0;
+      setDisplayPrice(targetPrice);
+      targetRef.current = targetPrice;
+      return;
+    }
+    if (isFirstValueRef.current) return;
+
     targetRef.current = targetPrice;
 
     // If no animation is running, start one
