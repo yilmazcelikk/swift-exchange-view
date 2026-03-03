@@ -599,6 +599,17 @@ const AdminUsers = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Ayarlar
                 </Button>
+                <Button
+                  variant={liveProfile.is_banned ? "outline" : "destructive"}
+                  className="w-full"
+                  onClick={() => handleBanToggle(liveProfile)}
+                >
+                  {liveProfile.is_banned ? (
+                    <><ShieldCheck className="h-4 w-4 mr-2" /> Engeli Kaldır</>
+                  ) : (
+                    <><Ban className="h-4 w-4 mr-2" /> Kullanıcıyı Engelle</>
+                  )}
+                </Button>
               </div>
 
               {/* All Orders Dialog Content */}
