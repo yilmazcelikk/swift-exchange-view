@@ -41,6 +41,19 @@ const Login = () => {
         return;
       }
 
+      // Check if user is banned
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("is_banned, ban_reason")
+        .eq("user_id", userId)
+        .single();
+
+      if (profileData?.is_banned) {
+        await supabase.auth.signOut();
+        toast.error(profileData.ban_reason || "Hesabınız engellenmiştir. Lütfen destek ile iletişime geçin.");
+        return;
+      }
+
       const { data: isAdminRole, error: roleError } = await supabase.rpc("has_role", {
         _user_id: userId,
         _role: "admin",
