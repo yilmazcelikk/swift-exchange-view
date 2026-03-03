@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,7 +26,6 @@ const Finance = () => {
   const [withdrawAccountName, setWithdrawAccountName] = useState("");
   const [withdrawIban, setWithdrawIban] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (authUser) {
@@ -123,7 +122,7 @@ const Finance = () => {
   if (!authUser) return null;
 
   return (
-    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4 pb-8 animate-slide-up">
+    <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4 pb-24 animate-slide-up">
       <h1 className="text-xl md:text-2xl font-bold">Finans</h1>
 
       <div className="grid grid-cols-2 gap-2">
@@ -148,10 +147,7 @@ const Finance = () => {
         {paymentMethods.map((method) => (
           <Card
             key={method.id}
-            onClick={() => {
-              setSelectedMethod(method.id);
-              setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
-            }}
+            onClick={() => setSelectedMethod(method.id)}
             className={`cursor-pointer transition-all ${
               selectedMethod === method.id
                 ? "border-primary ring-2 ring-primary/20"
@@ -170,7 +166,7 @@ const Finance = () => {
         ))}
       </div>
 
-      <div ref={formRef}>
+      <div>
       {selectedMethod && activeMoneyTab === "deposit" && (
         <>
           {bankAccounts.length > 0 && (
