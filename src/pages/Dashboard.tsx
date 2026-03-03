@@ -414,11 +414,14 @@ const Dashboard = () => {
                 </div>
                 <div className="flex justify-between text-sm border-t border-border pt-2">
                   <span className="text-muted-foreground font-medium">K/Z</span>
-                  <AnimatedPrice
-                    value={Math.abs(liveSelectedOrder.pnl)}
-                    live={false}
-                    className={`font-mono font-bold text-sm ${liveSelectedOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
-                  />
+                  <div className="flex items-center">
+                    {liveSelectedOrder.pnl < 0 && <span className="font-mono font-bold text-sm text-sell">-</span>}
+                    <AnimatedPrice
+                      value={Math.abs(liveSelectedOrder.pnl)}
+                      live={false}
+                      className={`font-mono font-bold text-sm ${liveSelectedOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -530,11 +533,14 @@ const Dashboard = () => {
                     </div>
                     <div className="flex justify-between text-sm border-t border-border pt-1 mt-1">
                       <span className="text-muted-foreground font-medium">Net K/Z</span>
-                      <AnimatedPrice
-                        value={Math.abs(closingNetPnl)}
-                        live={false}
-                        className={`font-mono font-bold text-sm ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`}
-                      />
+                      <div className="flex items-center">
+                        {closingNetPnl < 0 && <span className="font-mono font-bold text-sm text-sell">-</span>}
+                        <AnimatedPrice
+                          value={Math.abs(closingNetPnl)}
+                          live={false}
+                          className={`font-mono font-bold text-sm ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`}
+                        />
+                      </div>
                     </div>
                   </div>
                 )}
