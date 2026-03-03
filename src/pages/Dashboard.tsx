@@ -253,9 +253,40 @@ const Dashboard = () => {
   const handleSaveSlTp = async () => {
     if (!selectedOrder) return;
     setEditSaving(true);
+    
+    const slValue = editSL ? parseFloat(editSL) : null;
+    const tpValue = editTP ? parseFloat(editTP) : null;
+    const entry = selectedOrder.entryPrice;
+    const isBuy = selectedOrder.type === 'buy';
+
+    // Validate SL/TP based on order direction
+    if (isBuy) {
+      if (slValue !== null && slValue >= entry) {
+        toast.error("Alış pozisyonunda Zarar Durdur, giriş fiyatının altında olmalıdır.");
+        setEditSaving(false);
+        return;
+      }
+      if (tpValue !== null && tpValue <= entry) {
+        toast.error("Alış pozisyonunda Kâr Al, giriş fiyatının üzerinde olmalıdır.");
+        setEditSaving(false);
+        return;
+      }
+    } else {
+      if (slValue !== null && slValue <= entry) {
+        toast.error("Satış pozisyonunda Zarar Durdur, giriş fiyatının üzerinde olmalıdır.");
+        setEditSaving(false);
+        return;
+      }
+      if (tpValue !== null && tpValue >= entry) {
+        toast.error("Satış pozisyonunda Kâr Al, giriş fiyatının altında olmalıdır.");
+        setEditSaving(false);
+        return;
+      }
+    }
+
     const updates: any = {
-      stop_loss: editSL ? parseFloat(editSL) : null,
-      take_profit: editTP ? parseFloat(editTP) : null,
+      stop_loss: slValue,
+      take_profit: tpValue,
     };
     const { error } = await supabase
       .from("orders")

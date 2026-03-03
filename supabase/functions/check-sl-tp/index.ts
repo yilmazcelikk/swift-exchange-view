@@ -39,7 +39,7 @@ function calculatePnl(symbolName: string, type: string, lots: number, entryPrice
 function calculateCommission(symbolName: string, lots: number, currentPrice: number): number {
   const contractSize = getContractSize(symbolName);
   const notional = lots * contractSize * currentPrice;
-  return notional * 0.002;
+  return notional * 0.00002;
 }
 
 Deno.serve(async (req) => {
