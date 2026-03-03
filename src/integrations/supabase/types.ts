@@ -133,6 +133,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          close_reason: string | null
           closed_at: string | null
           created_at: string
           current_price: number
@@ -151,6 +152,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          close_reason?: string | null
           closed_at?: string | null
           created_at?: string
           current_price: number
@@ -169,6 +171,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          close_reason?: string | null
           closed_at?: string | null
           created_at?: string
           current_price?: number
