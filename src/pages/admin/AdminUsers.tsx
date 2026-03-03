@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown } from "lucide-react";
+import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown, Ban, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -40,6 +40,9 @@ interface Profile {
   verification_status: string;
   meta_id: number;
   created_at: string;
+  is_banned: boolean;
+  ban_reason: string | null;
+  referral_code: string | null;
 }
 
 interface OrderRow {
