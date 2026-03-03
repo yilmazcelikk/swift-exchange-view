@@ -290,13 +290,14 @@ const Dashboard = () => {
       {/* Top PnL Display */}
       {liveOrders.length > 0 && (
         <div className="flex items-center justify-center px-4 pt-4 pb-2">
+          {totalOpenPnl < 0 && <span className="text-lg md:text-xl font-bold font-mono text-sell">-</span>}
           <AnimatedPrice
             value={Math.abs(totalOpenPnl)}
             live={false}
             className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}
           />
           <span className={`text-lg md:text-xl font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-            {totalOpenPnl >= 0 ? '' : '-'}USD
+            USD
           </span>
         </div>
       )}
@@ -366,6 +367,7 @@ const Dashboard = () => {
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
+                    {order.pnl < 0 && <span className="text-sm font-mono font-bold text-sell">-</span>}
                     <AnimatedPrice
                       value={Math.abs(order.pnl)}
                       live={false}
