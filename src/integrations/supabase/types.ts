@@ -194,6 +194,7 @@ export type Database = {
       profiles: {
         Row: {
           balance: number
+          ban_reason: string | null
           birth_date: string | null
           country: string | null
           created_at: string
@@ -202,15 +203,18 @@ export type Database = {
           free_margin: number
           full_name: string | null
           id: string
+          is_banned: boolean
           leverage: string
           meta_id: number
           phone: string | null
+          referral_code: string | null
           updated_at: string
           user_id: string
           verification_status: string
         }
         Insert: {
           balance?: number
+          ban_reason?: string | null
           birth_date?: string | null
           country?: string | null
           created_at?: string
@@ -219,15 +223,18 @@ export type Database = {
           free_margin?: number
           full_name?: string | null
           id?: string
+          is_banned?: boolean
           leverage?: string
           meta_id?: number
           phone?: string | null
+          referral_code?: string | null
           updated_at?: string
           user_id: string
           verification_status?: string
         }
         Update: {
           balance?: number
+          ban_reason?: string | null
           birth_date?: string | null
           country?: string | null
           created_at?: string
@@ -236,12 +243,44 @@ export type Database = {
           free_margin?: number
           full_name?: string | null
           id?: string
+          is_banned?: boolean
           leverage?: string
           meta_id?: number
           phone?: string | null
+          referral_code?: string | null
           updated_at?: string
           user_id?: string
           verification_status?: string
+        }
+        Relationships: []
+      }
+      referral_codes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          updated_at: string
+          usage_count: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          usage_count?: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          updated_at?: string
+          usage_count?: number
         }
         Relationships: []
       }
