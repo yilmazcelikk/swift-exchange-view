@@ -53,7 +53,8 @@ const ThemeCard = () => {
 };
 
 const Profile = () => {
-  const { user: authUser } = useAuth();
+  const { user: authUser, signOut } = useAuth();
+  const navigate = useNavigate();
   const [profile, setProfile] = useState({
     fullName: "",
     email: "",
