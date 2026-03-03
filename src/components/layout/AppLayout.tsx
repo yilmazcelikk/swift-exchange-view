@@ -15,8 +15,8 @@ export function AppLayout({ children }: AppLayoutProps) {
           <AppSidebar />
         </div>
 
-        <div className="flex-1 flex flex-col min-w-0">
-          <main className="flex-1 overflow-y-auto overflow-x-hidden md:pb-0 pt-[env(safe-area-inset-top)]" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))', WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 flex flex-col min-w-0 min-h-0">
+          <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-y-auto md:pb-0 pt-[env(safe-area-inset-top)]" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
             {children}
           </main>
         </div>
