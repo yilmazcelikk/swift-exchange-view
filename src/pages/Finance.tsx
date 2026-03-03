@@ -26,13 +26,24 @@ const Finance = () => {
   const [withdrawAccountName, setWithdrawAccountName] = useState("");
   const [withdrawIban, setWithdrawIban] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [isVerified, setIsVerified] = useState<boolean | null>(null);
 
   useEffect(() => {
     if (authUser) {
       loadTransactions();
       loadBankAccounts();
+      loadVerificationStatus();
     }
   }, [authUser]);
+
+  const loadVerificationStatus = async () => {
+    const { data } = await supabase
+      .from("profiles")
+      .select("verification_status")
+      .eq("user_id", authUser!.id)
+      .single();
+    setIsVerified(data?.verification_status === "verified");
+  };
 
   const loadBankAccounts = async () => {
     const { data } = await supabase.from("bank_accounts").select("*").eq("is_active", true);
