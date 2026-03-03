@@ -9,6 +9,7 @@ interface AnimatedPriceProps {
   live?: boolean;
   changePercent?: number;
   disableFlashColor?: boolean;
+  formatFn?: (price: number) => string;
 }
 
 function formatAnimatedPrice(price: number): string {
@@ -20,7 +21,7 @@ function formatAnimatedPrice(price: number): string {
 }
 
 const AnimatedPriceBase = forwardRef<HTMLSpanElement, AnimatedPriceProps>(function AnimatedPrice(
-  { value, className = "", duration = 600, live = false, changePercent = 0, disableFlashColor = false },
+  { value, className = "", duration = 600, live = false, changePercent = 0, disableFlashColor = false, formatFn },
   ref,
 ) {
   const liveValue = useLiveTickPrice(value, { enabled: live, changePercent });
@@ -42,7 +43,7 @@ const AnimatedPriceBase = forwardRef<HTMLSpanElement, AnimatedPriceProps>(functi
 
   return (
     <span ref={ref} className={`tabular-nums transition-colors duration-300 ${className} ${flashClass}`}>
-      {formatAnimatedPrice(displayValue)}
+      {(formatFn || formatAnimatedPrice)(displayValue)}
     </span>
   );
 });
