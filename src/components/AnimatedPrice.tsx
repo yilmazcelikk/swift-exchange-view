@@ -21,7 +21,7 @@ function formatAnimatedPrice(price: number): string {
 }
 
 const AnimatedPriceBase = forwardRef<HTMLSpanElement, AnimatedPriceProps>(function AnimatedPrice(
-  { value, className = "", duration = 600, live = false, changePercent = 0, disableFlashColor = false },
+  { value, className = "", duration = 600, live = false, changePercent = 0, disableFlashColor = false, formatFn },
   ref,
 ) {
   const liveValue = useLiveTickPrice(value, { enabled: live, changePercent });
