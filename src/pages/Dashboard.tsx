@@ -193,13 +193,14 @@ const Dashboard = () => {
   const dynamicFreeMargin = dynamicEquity - usedMargin;
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
 
+  const hasOpenOrders = liveOrders.length > 0;
   const accountStats = [
     { label: "Bakiye", value: profile.balance },
     ...(profile.credit > 0 ? [{ label: "Kredi", value: profile.credit }] : []),
     { label: "Varlık", value: Math.round(dynamicEquity * 100) / 100 },
-    { label: "Teminat", value: Math.round(usedMargin * 100) / 100 },
-    { label: "Serbest teminat", value: Math.round(dynamicFreeMargin * 100) / 100 },
-    { label: "Teminat seviyesi (%)", value: Math.round(marginLevel * 100) / 100 },
+    ...(hasOpenOrders ? [{ label: "Teminat", value: Math.round(usedMargin * 100) / 100 }] : []),
+    ...(hasOpenOrders ? [{ label: "Serbest teminat", value: Math.round(dynamicFreeMargin * 100) / 100 }] : []),
+    ...(hasOpenOrders ? [{ label: "Teminat seviyesi (%)", value: Math.round(marginLevel * 100) / 100 }] : []),
   ];
 
   const handleClosePosition = async (order: Order) => {
