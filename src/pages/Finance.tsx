@@ -166,7 +166,7 @@ const Finance = () => {
         ))}
       </div>
 
-      <div>
+      <div className="space-y-4">
       {selectedMethod && activeMoneyTab === "deposit" && (
         <>
           {bankAccounts.length > 0 && (
