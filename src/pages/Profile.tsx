@@ -8,8 +8,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  XCircle, Pencil, Sun, Moon,
+  XCircle, Pencil, Sun, Moon, LogOut,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
 
 // ─── Verification Steps ───
@@ -395,6 +396,18 @@ const Profile = () => {
         </TabsContent>
 
       </Tabs>
+
+      <Button
+        variant="outline"
+        className="w-full gap-2 border-destructive/30 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+        onClick={async () => {
+          await signOut();
+          navigate("/login");
+        }}
+      >
+        <LogOut className="h-4 w-4" />
+        Çıkış Yap
+      </Button>
     </div>
   );
 };
