@@ -138,6 +138,7 @@ const Register = () => {
             <div>
               <label className="text-sm font-medium mb-1.5 block">Referans Kodu (opsiyonel)</label>
               <Input placeholder="Varsa referans kodunuzu girin" value={formData.referralCode} onChange={(e) => update("referralCode", e.target.value.toUpperCase())} className="bg-muted/50 font-mono" />
+            </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre</label>
               <div className="relative">
