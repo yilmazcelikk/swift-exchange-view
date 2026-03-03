@@ -199,7 +199,7 @@ const Dashboard = () => {
     ...(profile.credit > 0 ? [{ label: "Kredi", value: profile.credit }] : []),
     { label: "Varlık", value: Math.round(dynamicEquity * 100) / 100 },
     ...(hasOpenOrders ? [{ label: "Teminat", value: Math.round(usedMargin * 100) / 100 }] : []),
-    ...(hasOpenOrders ? [{ label: "Serbest teminat", value: Math.round(dynamicFreeMargin * 100) / 100 }] : []),
+    { label: "Serbest teminat", value: Math.round(dynamicFreeMargin * 100) / 100 },
     ...(hasOpenOrders ? [{ label: "Teminat seviyesi (%)", value: Math.round(marginLevel * 100) / 100 }] : []),
   ];
 
