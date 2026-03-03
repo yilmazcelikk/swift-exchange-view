@@ -294,6 +294,7 @@ const Dashboard = () => {
           <AnimatedPrice
             value={Math.abs(totalOpenPnl)}
             live={false}
+            disableFlashColor
             className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}
           />
           <span className={`text-lg md:text-xl font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
@@ -371,6 +372,7 @@ const Dashboard = () => {
                     <AnimatedPrice
                       value={Math.abs(order.pnl)}
                       live={false}
+                      disableFlashColor
                       className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
                     />
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
@@ -419,6 +421,7 @@ const Dashboard = () => {
                     <AnimatedPrice
                       value={Math.abs(liveSelectedOrder.pnl)}
                       live={false}
+                      disableFlashColor
                       className={`font-mono font-bold text-sm ${liveSelectedOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
                     />
                   </div>
@@ -538,6 +541,7 @@ const Dashboard = () => {
                         <AnimatedPrice
                           value={Math.abs(closingNetPnl)}
                           live={false}
+                          disableFlashColor
                           className={`font-mono font-bold text-sm ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`}
                         />
                       </div>
