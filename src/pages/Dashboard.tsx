@@ -344,7 +344,7 @@ const Dashboard = () => {
               <AnimatedPrice
                 value={Math.abs(stat.value)}
                 live={false}
-                formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
+                formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 className={`text-xs font-mono font-medium ${
                   stat.label === "Serbest teminat" && stat.value < 0 ? "text-sell" : "text-foreground"
                 }`}
