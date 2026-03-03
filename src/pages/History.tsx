@@ -90,24 +90,31 @@ const History = () => {
               const commission = calculateCommission(order.symbol_name, Number(order.lots), Number(order.current_price));
               const pnl = Number(order.pnl);
               return (
-                <div key={order.id} className={`py-3 rounded-lg px-2 -mx-2 ${
-                  order.close_reason === 'stop_loss' ? 'bg-sell/5 border-l-2 border-sell' :
-                  order.close_reason === 'take_profit' ? 'bg-buy/5 border-l-2 border-buy' : ''
+              <div key={order.id} className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
+                  order.close_reason === 'stop_loss'
+                    ? 'bg-gradient-to-r from-sell/10 via-sell/5 to-transparent border border-sell/20 shadow-[0_0_12px_-4px] shadow-sell/20'
+                    : order.close_reason === 'take_profit'
+                    ? 'bg-gradient-to-r from-buy/10 via-buy/5 to-transparent border border-buy/20 shadow-[0_0_12px_-4px] shadow-buy/20'
+                    : 'bg-card/50'
                 }`}>
                   <div className="flex items-start justify-between">
-                    <div>
-                      <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
-                      {' '}
-                      <span className={`text-sm font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
-                        {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {Number(order.lots)}
-                      </span>
+                    <div className="flex items-center gap-2">
                       {order.close_reason && (
-                        <span className={`ml-1.5 text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                          order.close_reason === 'stop_loss' ? 'bg-sell/15 text-sell' : 'bg-buy/15 text-buy'
+                        <div className={`flex items-center justify-center w-7 h-7 rounded-lg text-[10px] font-black tracking-tight ${
+                          order.close_reason === 'stop_loss'
+                            ? 'bg-sell/20 text-sell ring-1 ring-sell/30'
+                            : 'bg-buy/20 text-buy ring-1 ring-buy/30'
                         }`}>
                           {order.close_reason === 'stop_loss' ? 'SL' : 'TP'}
-                        </span>
+                        </div>
                       )}
+                      <div>
+                        <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
+                        {' '}
+                        <span className={`text-xs font-medium ${order.type === 'buy' ? 'text-buy' : 'text-sell'}`}>
+                          {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {Number(order.lots)}
+                        </span>
+                      </div>
                     </div>
                     <div className="text-right">
                       <span className={`text-sm font-mono font-bold ${pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
@@ -118,7 +125,7 @@ const History = () => {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-0.5">
+                  <div className="flex items-center justify-between mt-1">
                     <p className="text-xs text-muted-foreground font-mono">
                       {formatUsd(Number(order.entry_price))} → {formatUsd(Number(order.current_price))}
                     </p>
