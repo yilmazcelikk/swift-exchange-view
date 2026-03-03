@@ -114,6 +114,7 @@ Deno.serve(async (req) => {
             closed_at: new Date().toISOString(),
             current_price: currentPrice,
             pnl: netPnl,
+            close_reason: closeReason,
           })
           .eq("id", order.id);
 
