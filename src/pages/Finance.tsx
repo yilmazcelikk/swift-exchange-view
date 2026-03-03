@@ -166,7 +166,7 @@ const Finance = () => {
         ))}
       </div>
 
-      <div ref={formRef}>
+      <div>
       {selectedMethod && activeMoneyTab === "deposit" && (
         <>
           {bankAccounts.length > 0 && (
