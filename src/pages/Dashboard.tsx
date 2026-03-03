@@ -186,7 +186,7 @@ const Dashboard = () => {
   }, [openOrders, livePrices]);
 
   const totalOpenPnl = liveOrders.reduce((sum, o) => sum + o.pnl, 0);
-  const dynamicEquity = profile.balance + totalOpenPnl;
+  const dynamicEquity = profile.balance + profile.credit + totalOpenPnl;
   const usedMargin = liveOrders.reduce((sum, o) => {
     return sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, 200);
   }, 0);
@@ -383,7 +383,7 @@ const Dashboard = () => {
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span className="text-[11px] text-muted-foreground font-mono">{formatUsd(order.entryPrice)}</span>
                       <span className="text-[11px] text-muted-foreground">→</span>
-                      <AnimatedPrice value={order.currentPrice} live={false} className="text-[11px] font-mono text-foreground" />
+                      <AnimatedPrice value={order.currentPrice} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className="text-[11px] font-mono text-foreground" />
                     </div>
                     {(order.stopLoss || order.takeProfit) && (
                       <div className="flex items-center gap-2 mt-0.5">
@@ -406,6 +406,7 @@ const Dashboard = () => {
                       value={Math.abs(order.pnl)}
                       live={false}
                       disableFlashColor
+                      formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
                     />
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
