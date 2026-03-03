@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,7 @@ const Finance = () => {
   const [withdrawAccountName, setWithdrawAccountName] = useState("");
   const [withdrawIban, setWithdrawIban] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (authUser) {
@@ -147,7 +148,10 @@ const Finance = () => {
         {paymentMethods.map((method) => (
           <Card
             key={method.id}
-            onClick={() => setSelectedMethod(method.id)}
+            onClick={() => {
+              setSelectedMethod(method.id);
+              setTimeout(() => formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+            }}
             className={`cursor-pointer transition-all ${
               selectedMethod === method.id
                 ? "border-primary ring-2 ring-primary/20"
@@ -166,6 +170,7 @@ const Finance = () => {
         ))}
       </div>
 
+      <div ref={formRef}>
       {selectedMethod && activeMoneyTab === "deposit" && (
         <>
           {bankAccounts.length > 0 && (
@@ -285,6 +290,7 @@ const Finance = () => {
           </CardContent>
         </Card>
       )}
+      </div>
 
       {/* Recent Transactions */}
       <Card className="bg-card border-border">
