@@ -50,7 +50,7 @@ const Login = () => {
 
       if (profileData?.is_banned) {
         await supabase.auth.signOut();
-        toast.error(profileData.ban_reason || "Hesabınız engellenmiştir. Lütfen destek ile iletişime geçin.");
+        toast.error("Giriş başarısız. E-posta veya şifre hatalı.");
         return;
       }
 
