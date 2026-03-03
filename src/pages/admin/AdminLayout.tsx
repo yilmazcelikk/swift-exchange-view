@@ -23,6 +23,7 @@ import AdminTransactions from "./AdminTransactions";
 import AdminDocuments from "./AdminDocuments";
 import AdminSettings from "./AdminSettings";
 import AdminProducts from "./AdminProducts";
+import AdminReferrals from "./AdminReferrals";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 
 const navSections = [
@@ -50,6 +51,12 @@ const navSections = [
     title: "FİNANSAL",
     items: [
       { key: "finance", label: "Finans Talepleri", icon: Landmark },
+    ],
+  },
+  {
+    title: "PAZARLAMA",
+    items: [
+      { key: "referrals", label: "Referans Linkleri", icon: Landmark },
     ],
   },
   {
@@ -87,6 +94,7 @@ const AdminLayout = () => {
       case "documents": return <AdminDocuments />;
       case "settings": return <AdminSettings />;
       case "products": return <AdminProducts />;
+      case "referrals": return <AdminReferrals />;
       default: return <AdminDashboard onNavigate={setActiveTab} />;
     }
   };

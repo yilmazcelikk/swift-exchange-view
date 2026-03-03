@@ -1,8 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
@@ -15,9 +15,10 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Register = () => {
+  const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "",
-    userType: "", referralCode: "", acceptTerms: false,
+    userType: "", referralCode: searchParams.get("ref") || "", acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -34,20 +35,30 @@ const Register = () => {
       return;
     }
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
+    const { data: signUpData, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
         data: { full_name: `${formData.firstName} ${formData.lastName}` },
       },
     });
-    setLoading(false);
+    
     if (error) {
+      setLoading(false);
       toast.error("Kayıt başarısız: " + error.message);
-    } else {
-      toast.success("Kayıt başarılı! Giriş yapabilirsiniz.");
-      navigate("/login");
+      return;
     }
+
+    // Save referral code to profile if provided
+    if (formData.referralCode.trim() && signUpData.user) {
+      await supabase.from("profiles").update({ referral_code: formData.referralCode.trim().toUpperCase() }).eq("user_id", signUpData.user.id);
+      // Increment usage count
+      await supabase.rpc("has_role", { _user_id: signUpData.user.id, _role: "user" }); // just to have auth context
+    }
+
+    setLoading(false);
+    toast.success("Kayıt başarılı! Giriş yapabilirsiniz.");
+    navigate("/login");
   };
 
   const update = (key: string, value: string | boolean) =>
@@ -123,6 +134,10 @@ const Register = () => {
                   className="bg-muted/50"
                 />
               </div>
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Referans Kodu (opsiyonel)</label>
+              <Input placeholder="Varsa referans kodunuzu girin" value={formData.referralCode} onChange={(e) => update("referralCode", e.target.value.toUpperCase())} className="bg-muted/50 font-mono" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre</label>
