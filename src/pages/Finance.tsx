@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Upload, CheckCircle, Clock, XCircle, Copy,
-  ArrowDownToLine, ArrowUpFromLine, Building2,
+  ArrowDownToLine, ArrowUpFromLine, Building2, ShieldAlert,
 } from "lucide-react";
 
 const paymentMethods = [
@@ -153,29 +153,44 @@ const Finance = () => {
         </Button>
       </div>
 
+      {/* Verification Warning */}
+      {isVerified === false && (
+        <Card className="border-warning/30 bg-warning/5">
+          <CardContent className="p-4 flex items-center gap-3">
+            <ShieldAlert className="h-5 w-5 text-warning shrink-0" />
+            <div>
+              <p className="font-semibold text-sm">Hesabınız henüz doğrulanmamış</p>
+              <p className="text-xs text-muted-foreground">Para yatırma ve çekme işlemleri için hesabınızın doğrulanması gerekmektedir. Hesabım sayfasından belgelerinizi yükleyebilirsiniz.</p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Payment Method Selection */}
-      <div className="space-y-2">
-        {paymentMethods.map((method) => (
-          <Card
-            key={method.id}
-            onClick={() => setSelectedMethod(method.id)}
-            className={`cursor-pointer transition-all ${
-              selectedMethod === method.id
-                ? "border-primary ring-2 ring-primary/20"
-                : "border-border hover:border-primary/30"
-            }`}
-          >
-            <CardContent className="p-4 flex items-center gap-3">
-              <div className="p-2 rounded-lg bg-muted">
-                <method.icon className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="font-semibold text-sm">{method.label}</p>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      {isVerified && (
+        <div className="space-y-2">
+          {paymentMethods.map((method) => (
+            <Card
+              key={method.id}
+              onClick={() => setSelectedMethod(method.id)}
+              className={`cursor-pointer transition-all ${
+                selectedMethod === method.id
+                  ? "border-primary ring-2 ring-primary/20"
+                  : "border-border hover:border-primary/30"
+              }`}
+            >
+              <CardContent className="p-4 flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-muted">
+                  <method.icon className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">{method.label}</p>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
       <div className="space-y-4">
       {selectedMethod && activeMoneyTab === "deposit" && (
