@@ -296,6 +296,21 @@ const AdminUsers = () => {
     setLoadingAllOrders(false);
   };
 
+  const handleBanToggle = async (profile: Profile) => {
+    const newBanned = !profile.is_banned;
+    const reason = newBanned ? prompt("Engelleme sebebi (opsiyonel):") || "Hesap engellenmiştir" : null;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ is_banned: newBanned, ban_reason: reason })
+      .eq("id", profile.id);
+    if (error) {
+      toast.error("İşlem başarısız: " + error.message);
+    } else {
+      toast.success(newBanned ? "Kullanıcı engellendi" : "Engel kaldırıldı");
+      loadProfiles();
+    }
+  };
+
   const getVerificationBadge = (status: string) => {
     switch (status) {
       case "verified":
@@ -360,13 +375,18 @@ const AdminUsers = () => {
                   <TableCell className="font-mono text-xs">{profile.meta_id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                        <span className="text-xs font-bold text-primary">
+                      <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${profile.is_banned ? "bg-destructive/10" : "bg-primary/10"}`}>
+                        <span className={`text-xs font-bold ${profile.is_banned ? "text-destructive" : "text-primary"}`}>
                           {(profile.full_name || "?")[0]?.toUpperCase()}
                         </span>
                       </div>
                       <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{profile.full_name || "İsimsiz"}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-sm font-medium truncate">{profile.full_name || "İsimsiz"}</p>
+                          {profile.is_banned && (
+                            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive font-medium">Engelli</span>
+                          )}
+                        </div>
                         <p className="text-xs text-muted-foreground font-mono truncate">{profile.user_id.slice(0, 12)}...</p>
                       </div>
                     </div>
