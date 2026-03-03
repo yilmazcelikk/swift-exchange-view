@@ -100,13 +100,11 @@ const History = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
                       {order.close_reason && (
-                        <div className={`flex items-center justify-center w-7 h-7 rounded-lg text-[10px] font-black tracking-tight ${
+                        <div className={`w-1.5 h-7 rounded-full ${
                           order.close_reason === 'stop_loss'
-                            ? 'bg-sell/20 text-sell ring-1 ring-sell/30'
-                            : 'bg-buy/20 text-buy ring-1 ring-buy/30'
-                        }`}>
-                          {order.close_reason === 'stop_loss' ? 'SL' : 'TP'}
-                        </div>
+                            ? 'bg-sell'
+                            : 'bg-buy'
+                        }`} />
                       )}
                       <div>
                         <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
