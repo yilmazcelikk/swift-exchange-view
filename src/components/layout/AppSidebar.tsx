@@ -54,9 +54,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <div className="h-14 flex items-center justify-center border-b border-sidebar-border px-3">
         {!collapsed ? (
-          <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-10 w-auto object-contain" />
+          <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-10 w-auto object-contain" />
         ) : (
-          <img src="/tacirler-logo.png" alt="Tacirler" className="h-8 w-8 object-cover rounded" />
+          <img src="/marbas-logo.png" alt="Marbaş" className="h-8 w-8 object-cover rounded" />
         )}
       </div>
 

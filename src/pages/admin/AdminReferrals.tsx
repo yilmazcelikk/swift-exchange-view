@@ -21,7 +21,7 @@ interface ReferralCode {
   created_at: string;
 }
 
-const SITE_URL = "https://tacirlermenkulkiymetler.com";
+const SITE_URL = "https://marbasmenkulkiymetler.com";
 
 const AdminReferrals = () => {
   const [codes, setCodes] = useState<ReferralCode[]>([]);
@@ -153,7 +153,7 @@ const AdminReferrals = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1 block">Kod</label>
-              <Input placeholder="Örn: TACIRLER2025" value={newCode} onChange={(e) => setNewCode(e.target.value.toUpperCase())} className="bg-muted/50 font-mono" />
+              <Input placeholder="Örn: MARBAS2025" value={newCode} onChange={(e) => setNewCode(e.target.value.toUpperCase())} className="bg-muted/50 font-mono" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Açıklama (opsiyonel)</label>
