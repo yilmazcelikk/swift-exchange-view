@@ -31,8 +31,8 @@ export default function Home() {
       {/* Navbar */}
       <nav className="h-16 border-b border-border bg-card flex items-center justify-between px-6 md:px-12 sticky top-0 z-50">
         <Link to="/" className="flex items-center gap-2">
-          <img src="/tacirler-logo.png" alt="Tacirler Yatırım" className="h-8 w-8 object-contain" />
-          <span className="font-bold text-foreground text-lg tracking-tight hidden sm:inline">TACİRLER</span>
+          <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-8 w-8 object-contain" />
+          <span className="font-bold text-foreground text-lg tracking-tight hidden sm:inline">MARBAŞ</span>
         </Link>
         <Link to="/login">
           <Button size="sm" className="gap-1.5">
@@ -54,7 +54,7 @@ export default function Home() {
         <div className="relative z-10 max-w-7xl mx-auto flex flex-col md:flex-row items-center gap-12">
           <div className="flex-1 space-y-6">
             <h1 className="text-3xl md:text-5xl font-bold text-white leading-tight">
-              Tacirler Yatırım ile<br />
+              Marbaş Menkul Değerler ile<br />
               Birikimlerinizi Yönetin
             </h1>
             <p className="text-white/70 text-base md:text-lg max-w-lg leading-relaxed">
@@ -71,23 +71,19 @@ export default function Home() {
           <div className="w-full max-w-xs rounded-2xl border border-white/10 bg-white/5 backdrop-blur-sm p-6 space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-white/60 text-xs">Tacirler Yatırım</p>
-                <p className="text-white font-bold text-sm">1991'den Beri</p>
+                <p className="text-white/60 text-xs">Marbaş Menkul Değerler</p>
+                <p className="text-white font-bold text-sm">Güvenilir Yatırım Ortağınız</p>
               </div>
               <TrendingUp className="h-5 w-5 text-green-400" />
             </div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-bold text-white font-mono">₺8.74</span>
-              <span className="text-xs text-white/50">Milyar Aktif</span>
-            </div>
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
               <div>
-                <p className="text-white/50 text-[10px]">Öz Varlık</p>
-                <p className="text-white text-xs font-semibold font-mono">₺3.61 Milyar</p>
+                <p className="text-white/50 text-[10px]">Lisans</p>
+                <p className="text-white text-xs font-semibold font-mono">SPK</p>
               </div>
               <div>
-                <p className="text-white/50 text-[10px]">Kuruluş</p>
-                <p className="text-white text-xs font-semibold font-mono">1991</p>
+                <p className="text-white/50 text-[10px]">Hizmet</p>
+                <p className="text-white text-xs font-semibold font-mono">Forex & CFD</p>
               </div>
             </div>
           </div>
@@ -98,7 +94,7 @@ export default function Home() {
       <section className="py-16 md:py-24 px-6 md:px-12 bg-background">
         <div className="max-w-7xl mx-auto">
           <h2 className="text-xl md:text-2xl font-bold text-foreground text-center mb-12">
-            Neden Tacirler Yatırım?
+            Neden Marbaş Menkul Değerler?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {features.map((f) => (
@@ -118,9 +114,9 @@ export default function Home() {
       <footer className="border-t border-border bg-card py-8 px-6 md:px-12 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2">
-            <img src="/tacirler-logo.png" alt="Tacirler" className="h-6 w-6 object-contain" />
+            <img src="/marbas-logo.png" alt="Marbaş" className="h-6 w-6 object-contain" />
             <span className="text-xs text-muted-foreground">
-              © {new Date().getFullYear()} Tacirler Yatırım Menkul Değerler A.Ş. Tüm hakları saklıdır.
+              © {new Date().getFullYear()} Marbaş Menkul Değerler A.Ş. Tüm hakları saklıdır.
             </span>
           </div>
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
