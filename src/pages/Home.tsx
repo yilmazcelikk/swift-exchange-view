@@ -3,27 +3,27 @@ import { ArrowRight, Zap, Shield, BarChart3, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const features = [
-  {
-    icon: Zap,
-    title: "Hızlı Emir İletimiyle İşlem Yap",
-    desc: "Anlık piyasa verilerine erişin ve hızla emir gönderin.",
-  },
-  {
-    icon: Shield,
-    title: "Güvenli Yatırım",
-    desc: "SPK lisanslı, güvenilir altyapı ile yatırımlarınızı koruyun.",
-  },
-  {
-    icon: BarChart3,
-    title: "Ücretsiz Canlı Veri Takibi",
-    desc: "Piyasa verilerini canlı olarak takip edin, portföyünüzü anlık izleyin.",
-  },
-  {
-    icon: TrendingUp,
-    title: "Kaldıraçlı İşlem",
-    desc: "Forex ve emtia piyasalarında kaldıraçlı işlem fırsatlarından yararlanın.",
-  },
-];
+{
+  icon: Zap,
+  title: "Hızlı Emir İletimiyle İşlem Yap",
+  desc: "Anlık piyasa verilerine erişin ve hızla emir gönderin."
+},
+{
+  icon: Shield,
+  title: "Güvenli Yatırım",
+  desc: "SPK lisanslı, güvenilir altyapı ile yatırımlarınızı koruyun."
+},
+{
+  icon: BarChart3,
+  title: "Ücretsiz Canlı Veri Takibi",
+  desc: "Piyasa verilerini canlı olarak takip edin, portföyünüzü anlık izleyin."
+},
+{
+  icon: TrendingUp,
+  title: "Kaldıraçlı İşlem",
+  desc: "Forex ve emtia piyasalarında kaldıraçlı işlem fırsatlarından yararlanın."
+}];
+
 
 export default function Home() {
   return (
@@ -32,7 +32,9 @@ export default function Home() {
       <nav className="h-16 border-b border-border bg-card flex items-center justify-between px-6 md:px-12 sticky top-0 z-50">
         <Link to="/" className="flex items-center gap-2">
           <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-8 w-8 object-contain" />
-          <span className="font-bold text-foreground text-lg tracking-tight hidden sm:inline">MARBAŞ YATIRIMI</span>
+          <span className="font-bold text-foreground text-lg tracking-tight hidden sm:inline">MARBAŞ YATIRIM
+
+          </span>
         </Link>
         <Link to="/login">
           <Button size="sm" className="gap-1.5">
@@ -42,10 +44,8 @@ export default function Home() {
       </nav>
 
       {/* Hero */}
-      <section
-        className="relative py-20 md:py-28 px-6 md:px-12"
-        style={{ background: "linear-gradient(135deg, #0a1628 0%, #122044 50%, #1a3068 100%)" }}
-      >
+      <section className="relative py-20 md:py-28 px-6 md:px-12" style={{ background: "linear-gradient(135deg, #0a1628 0%, #122044 50%, #1a3068 100%)" }}>
+        
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-10 right-10 w-80 h-80 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }} />
           <div className="absolute bottom-20 left-10 w-64 h-64 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, #1d4ed8 0%, transparent 70%)" }} />
@@ -97,15 +97,15 @@ export default function Home() {
             Neden Marbaş Menkul Değerler?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((f) => (
-              <div key={f.title} className="rounded-xl border border-border bg-card p-6 space-y-3 hover:shadow-md transition-shadow">
+            {features.map((f) =>
+            <div key={f.title} className="rounded-xl border border-border bg-card p-6 space-y-3 hover:shadow-md transition-shadow">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <f.icon className="h-5 w-5 text-primary" />
                 </div>
                 <h3 className="font-semibold text-foreground text-sm">{f.title}</h3>
                 <p className="text-muted-foreground text-xs leading-relaxed">{f.desc}</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
@@ -125,6 +125,6 @@ export default function Home() {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>);
+
 }
