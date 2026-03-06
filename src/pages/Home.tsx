@@ -83,7 +83,8 @@ export default function Home() {
               </div>
               <div>
                 <p className="text-white/50 text-[10px]">Hizmet</p>
-                <p className="text-white text-xs font-semibold font-mono">Forex & CFD</p>
+                <p className="text-white text-xs font-semibold font-mono">
+</p>
               </div>
             </div>
           </div>
@@ -97,8 +98,7 @@ export default function Home() {
             Neden Marbaş Menkul Değerler?
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {features.map((f) =>
-            <div key={f.title} className="rounded-xl border border-border bg-card p-6 space-y-3 hover:shadow-md transition-shadow">
+            {features.map((f) => <div key={f.title} className="rounded-xl border border-border bg-card p-6 space-y-3 hover:shadow-md transition-shadow">
                 <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
                   <f.icon className="h-5 w-5 text-primary" />
                 </div>
