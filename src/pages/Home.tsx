@@ -32,7 +32,7 @@ export default function Home() {
       <nav className="h-16 border-b border-border bg-card flex items-center justify-between px-6 md:px-12 sticky top-0 z-50">
         <Link to="/" className="flex items-center gap-2">
           <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-8 w-8 object-contain" />
-          <span className="font-bold text-foreground text-lg tracking-tight hidden sm:inline">MARBAŞ</span>
+          <span className="font-bold text-foreground text-lg tracking-tight hidden sm:inline">MARBAŞ YATIRIMI</span>
         </Link>
         <Link to="/login">
           <Button size="sm" className="gap-1.5">
