@@ -95,11 +95,11 @@ const Login = () => {
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3 pt-4">
-            {[
-              { label: "Lisans", value: "SPK" },
-              { label: "Hizmet", value: "Forex & CFD" },
-              { label: "Güvenlik", value: "A+" },
-            ].map((s) => (
+             {[
+               { label: "Lisans", value: "SPK" },
+               { label: "Hizmet", value: "Borsa İstanbul" },
+               { label: "Güvenlik", value: "A+" },
+             ].map((s) => (
               <div key={s.label} className="text-center p-3 rounded-xl bg-white/5 backdrop-blur border border-white/10">
                 <p className="text-base font-bold text-white">{s.value}</p>
                 <p className="text-[11px] text-white/50 mt-1">{s.label}</p>
