@@ -83,8 +83,7 @@ export default function Home() {
               </div>
               <div>
                 <p className="text-white/50 text-[10px]">Hizmet</p>
-                <p className="text-white text-xs font-semibold font-mono">
-</p>
+                <p className="text-white text-xs font-semibold font-mono">Borsa İstanbul</p>
               </div>
             </div>
           </div>
