@@ -76,7 +76,7 @@ export default function Home() {
               </div>
               <TrendingUp className="h-5 w-5 text-green-400" />
             </div>
-            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-white/10">
               <div>
                 <p className="text-white/50 text-[10px]">Lisans</p>
                 <p className="text-white text-xs font-semibold font-mono">SPK</p>
@@ -84,6 +84,10 @@ export default function Home() {
               <div>
                 <p className="text-white/50 text-[10px]">Hizmet</p>
                 <p className="text-white text-xs font-semibold font-mono">Borsa İstanbul</p>
+              </div>
+              <div>
+                <p className="text-white/50 text-[10px]">Güvenlik</p>
+                <p className="text-white text-xs font-semibold font-mono">A+</p>
               </div>
             </div>
           </div>
