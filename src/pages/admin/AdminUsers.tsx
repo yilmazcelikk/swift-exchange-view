@@ -802,13 +802,19 @@ const AdminUsers = () => {
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-foreground">{editingOrder.symbol_name}</h3>
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {/* Direction Toggle */}
+                        {/* Direction Toggle */}
+                        <div className="flex items-center gap-2 mt-1.5">
                           <button
-                            onClick={() => setOrderEditForm(prev => ({ ...prev, type: prev.type === "buy" ? "sell" : "buy" }))}
-                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer transition-colors ${orderType === "buy" ? "bg-buy/20 text-buy hover:bg-buy/30" : "bg-sell/20 text-sell hover:bg-sell/30"}`}
+                            onClick={() => setOrderEditForm(prev => ({ ...prev, type: "buy" }))}
+                            className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${orderType === "buy" ? "bg-buy text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
                           >
-                            {orderType === "buy" ? "ALIŞ ↔" : "SATIŞ ↔"}
+                            ALIŞ
+                          </button>
+                          <button
+                            onClick={() => setOrderEditForm(prev => ({ ...prev, type: "sell" }))}
+                            className={`text-xs font-bold px-3 py-1.5 rounded-lg transition-all ${orderType === "sell" ? "bg-sell text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                          >
+                            SATIŞ
                           </button>
                           <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">1:200</span>
                         </div>
