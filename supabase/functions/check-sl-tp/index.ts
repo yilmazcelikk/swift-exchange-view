@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            currentBalance += netPnl;
+            currentBalance = Math.max(0, currentBalance + netPnl);
             remainingOrders = remainingOrders.filter(ro => ro.order.id !== item.order.id);
             stopOutClosedCount++;
             console.log(`Stop out closed: ${item.order.symbol_name} ${item.order.type}, PnL: ${netPnl.toFixed(2)}`);
