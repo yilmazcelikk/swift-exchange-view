@@ -61,6 +61,7 @@ interface OrderRow {
   leverage: string;
   stop_loss: number | null;
   take_profit: number | null;
+  created_at: string;
 }
 
 const AdminUsers = () => {
