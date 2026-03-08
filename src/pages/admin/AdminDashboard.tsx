@@ -148,15 +148,24 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
         <Card className="bg-card border-border">
           <CardHeader className="pb-3"><CardTitle className="text-base">Sistem Durumu</CardTitle></CardHeader>
           <CardContent className="space-y-2">
-            {systemStatus.map((s) => (
-              <div key={s.label} className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-success/5">
-                <div className="flex items-center gap-2">
-                  <span className="h-2 w-2 rounded-full bg-success" />
-                  <span className="text-sm">{s.label}</span>
-                </div>
-                <span className="text-xs font-medium text-success">{s.status}</span>
+            <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-success/5">
+              <div className="flex items-center gap-2">
+                <span className={`h-2 w-2 rounded-full ${dbOnline ? "bg-success" : "bg-destructive"}`} />
+                <span className="text-sm">Veritabanı</span>
               </div>
-            ))}
+              <span className={`text-xs font-medium ${dbOnline ? "text-success" : "text-destructive"}`}>
+                {dbOnline ? "Çevrimiçi" : "Bağlantı Hatası"}
+              </span>
+            </div>
+            <div className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-success/5">
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-success" />
+                <span className="text-sm">Edge Functions</span>
+              </div>
+              <span className="flex items-center gap-1 text-xs font-medium text-success">
+                <CheckCircle className="h-3 w-3" /> Aktif
+              </span>
+            </div>
             <p className="text-xs text-muted-foreground text-right mt-2">Son kontrol: {new Date().toLocaleString("tr-TR")}</p>
           </CardContent>
         </Card>
