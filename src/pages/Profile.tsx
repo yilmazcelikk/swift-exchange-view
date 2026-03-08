@@ -364,6 +364,15 @@ const Profile = () => {
               <div className="px-4 py-3.5 space-y-3">
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Mevcut Şifre</p>
+                    <Input type="password" placeholder="••••••••" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="mt-1 h-8 text-sm bg-muted/50 border-border" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
                     <KeyRound className="h-4 w-4 text-muted-foreground" />
                   </div>
                   <div className="flex-1">
