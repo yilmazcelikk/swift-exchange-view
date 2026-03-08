@@ -17,6 +17,19 @@ interface ClosedOrder {
   close_reason: string | null;
 }
 
+interface Transaction {
+  id: string;
+  type: string;
+  amount: number;
+  created_at: string;
+  status: string;
+  method: string | null;
+}
+
+type HistoryItem = 
+  | { itemType: 'order'; data: ClosedOrder }
+  | { itemType: 'transaction'; data: Transaction };
+
 const formatNum = (v: number) =>
   v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
