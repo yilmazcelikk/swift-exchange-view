@@ -188,35 +188,19 @@ const AdminPositions = () => {
     const swap = calculateSwap(order.symbol_name, order.lots, daysHeld);
     const netPnl = order.pnl - commission + swap;
 
-    const { error } = await supabase
-      .from("orders")
-      .update({ status: "closed", closed_at: new Date().toISOString(), current_price: order.current_price, pnl: netPnl, swap: swap } as any)
-      .eq("id", order.id);
+    const { data, error } = await supabase.rpc("close_position", {
+      p_order_id: order.id,
+      p_close_price: order.current_price,
+      p_net_pnl: netPnl,
+      p_swap: swap,
+      p_close_reason: "admin_close",
+    });
 
     if (error) {
-      toast.error("Pozisyon kapatılamadı");
+      toast.error("Pozisyon kapatılamadı: " + error.message);
+    } else if (data && typeof data === "object" && !(data as any).success) {
+      toast.error("Pozisyon kapatılamadı: " + ((data as any).reason || "Bilinmeyen hata"));
     } else {
-      const profile = profiles.get(order.user_id);
-      if (profile) {
-        // Recalculate properly: new balance = old balance + netPnl
-        const newBalance = Math.max(0, profile.balance + netPnl);
-
-        // Get remaining open orders for this user to compute equity correctly
-        const remainingOrders = orders.filter(o => o.user_id === order.user_id && o.id !== order.id);
-        const remainingPnl = remainingOrders.reduce((sum, o) => sum + o.pnl, 0);
-        const remainingMargin = remainingOrders.reduce((sum, o) => {
-          return sum + calculateMargin(o.symbol_name, o.lots, o.entry_price, 200);
-        }, 0);
-
-        const newEquity = newBalance + (profile.credit || 0) + remainingPnl;
-        const newFreeMargin = newEquity - remainingMargin;
-
-        await supabase.from("profiles").update({
-          balance: newBalance,
-          equity: newEquity,
-          free_margin: newFreeMargin,
-        }).eq("user_id", order.user_id);
-      }
       toast.success(`${order.symbol_name} pozisyon kapatıldı (K/Z: ${formatUsd(netPnl)})`);
       setClosingOrder(null);
       loadOrders();
