@@ -264,7 +264,7 @@ const Dashboard = () => {
 
     const freshBalance = freshProfile ? Number(freshProfile.balance) : profile.balance;
     const freshCredit = freshProfile ? Number(freshProfile.credit) : profile.credit;
-    const newBalance = Math.max(0, freshBalance + netPnl);
+    const newBalance = freshBalance + netPnl;
     
     // Recalculate with remaining open orders
     const remainingOrders = liveOrders.filter(o => o.id !== order.id);
