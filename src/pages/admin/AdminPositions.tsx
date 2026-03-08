@@ -52,6 +52,12 @@ const AdminPositions = () => {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [profiles, setProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [closingOrder, setClosingOrder] = useState<OrderRow | null>(null);
+  const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
+  const [editEntry, setEditEntry] = useState("");
+  const [editSL, setEditSL] = useState("");
+  const [editTP, setEditTP] = useState("");
+  const [editLots, setEditLots] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
