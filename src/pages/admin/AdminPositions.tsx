@@ -691,8 +691,7 @@ const AdminPositions = () => {
             const slVal = editSL ? parseFloat(editSL) : null;
             const tpVal = editTP ? parseFloat(editTP) : null;
             const currentPnl = calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, editingOrder.current_price);
-            const leverageNum = parseInt(editingOrder.leverage.split(":")[1]) || 200;
-            const margin = calculateMargin(editingOrder.symbol_name, lotsVal, entryVal, leverageNum);
+            const margin = calculateMargin(editingOrder.symbol_name, lotsVal, entryVal, 200);
 
             // Calculate potential PnL at SL/TP
             const slPnl = slVal ? calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, slVal) : null;
