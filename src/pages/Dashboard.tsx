@@ -132,6 +132,7 @@ const Dashboard = () => {
   };
 
   const loadOrders = async () => {
+    // Load open orders
     const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
 
     if (data) {
@@ -142,10 +143,9 @@ const Dashboard = () => {
         .in("id", symbolIds);
       const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
 
-      // Store symbol categories for market hour checks
       const catMap: Record<string, string> = {};
       symbolsData?.forEach(s => { catMap[s.id] = s.category; });
-      setSymbolCategories(catMap);
+      setSymbolCategories(prev => ({ ...prev, ...catMap }));
 
       setOrders(data.map((o: any) => {
         const symbolInfo = priceMap.get(o.symbol_id);
@@ -168,6 +168,22 @@ const Dashboard = () => {
           createdAt: o.created_at,
         };
       }));
+    }
+
+    // Load pending orders
+    const { data: pendData } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "pending");
+    if (pendData) {
+      // Also fetch symbol categories for pending orders
+      const pendSymbolIds = [...new Set(pendData.map((o: any) => o.symbol_id))];
+      if (pendSymbolIds.length > 0) {
+        const { data: pendSymbolsData } = await supabase.from("symbols").select("id, current_price, category").in("id", pendSymbolIds);
+        const catMap: Record<string, string> = {};
+        pendSymbolsData?.forEach(s => { catMap[s.id] = s.category; });
+        setSymbolCategories(prev => ({ ...prev, ...catMap }));
+      }
+      setPendingOrders(pendData);
+    } else {
+      setPendingOrders([]);
     }
   };
 
