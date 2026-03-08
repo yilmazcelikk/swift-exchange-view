@@ -54,12 +54,13 @@ const History = () => {
   // Summary calculations
   const totalPnl = closedOrders.reduce((s, o) => s + Number(o.pnl), 0);
   const totalSwap = closedOrders.reduce((s, o) => s + o.swap, 0);
+  const totalCommission = closedOrders.reduce((s, o) => s + calculateCommission(o.symbol_name, Number(o.lots), Number(o.current_price)), 0);
 
-  // Summary rows like the reference image
   const summaryRows = [
     { label: "Para yatır", value: totalDeposit, color: "text-foreground" },
     { label: "Kâr", value: totalPnl, color: totalPnl >= 0 ? "text-buy" : "text-sell" },
     { label: "Swap", value: totalSwap, color: totalSwap >= 0 ? "text-foreground" : "text-sell" },
+    { label: "Komisyon", value: -totalCommission, color: "text-sell" },
     { label: "Bakiye", value: balance, color: "text-foreground" },
   ];
 
