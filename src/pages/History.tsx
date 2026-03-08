@@ -17,14 +17,33 @@ interface ClosedOrder {
   close_reason: string | null;
 }
 
+interface Transaction {
+  id: string;
+  type: string;
+  amount: number;
+  created_at: string;
+  status: string;
+  method: string | null;
+}
+
+type HistoryItem = 
+  | { itemType: 'order'; data: ClosedOrder }
+  | { itemType: 'transaction'; data: Transaction };
+
 const formatNum = (v: number) =>
   v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+const generateRefNumber = (id: string) => {
+  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return `REF-${String(hash).slice(0, 6).padStart(6, '0')}`;
+};
+
 const History = () => {
   const { user: authUser } = useAuth();
-  const [closedOrders, setClosedOrders] = useState<ClosedOrder[]>([]);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [balance, setBalance] = useState(0);
   const [totalDeposit, setTotalDeposit] = useState(0);
+  const [totalWithdrawal, setTotalWithdrawal] = useState(0);
   const [accountType, setAccountType] = useState("standard");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
@@ -35,12 +54,20 @@ const History = () => {
     if (authUser?.id) {
       loadHistory(0);
 
-      const channel = supabase
+      const ordersChannel = supabase
         .channel("history-orders")
         .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { setPage(0); loadHistory(0); })
         .subscribe();
 
-      return () => { supabase.removeChannel(channel); };
+      const transactionsChannel = supabase
+        .channel("history-transactions")
+        .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `user_id=eq.${authUser.id}` }, () => { setPage(0); loadHistory(0); })
+        .subscribe();
+
+      return () => { 
+        supabase.removeChannel(ordersChannel);
+        supabase.removeChannel(transactionsChannel);
+      };
     }
   }, [authUser?.id]);
 
@@ -48,32 +75,69 @@ const History = () => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
-  }, [closedOrders.length]);
+  }, [historyItems.length]);
 
   const loadHistory = async (pageNum = 0) => {
     const from = pageNum * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    const [ordersRes, profileRes, depositsRes] = await Promise.all([
-      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }).range(from, to),
+    const [ordersRes, profileRes, transactionsRes] = await Promise.all([
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
       supabase.from("profiles").select("balance, account_type").eq("user_id", authUser!.id).single(),
-      supabase.from("transactions").select("amount").eq("user_id", authUser!.id).eq("type", "deposit").eq("status", "approved"),
+      supabase.from("transactions").select("*").eq("user_id", authUser!.id).eq("status", "approved").order("created_at", { ascending: true }),
     ]);
 
+    // Combine orders and transactions into unified history
+    const items: HistoryItem[] = [];
+    
     if (ordersRes.data) {
-      if (pageNum === 0) {
-        setClosedOrders(ordersRes.data.map((o: any) => ({ ...o, swap: Number(o.swap) || 0 })) as ClosedOrder[]);
-      } else {
-        setClosedOrders(prev => [...prev, ...ordersRes.data!.map((o: any) => ({ ...o, swap: Number(o.swap) || 0 })) as ClosedOrder[]]);
-      }
-      setHasMore(ordersRes.data.length === PAGE_SIZE);
+      ordersRes.data.forEach((o: any) => {
+        items.push({
+          itemType: 'order',
+          data: { ...o, swap: Number(o.swap) || 0 } as ClosedOrder
+        });
+      });
     }
+
+    if (transactionsRes.data) {
+      transactionsRes.data.forEach((t: any) => {
+        items.push({
+          itemType: 'transaction',
+          data: t as Transaction
+        });
+      });
+    }
+
+    // Sort by date (use closed_at for orders, created_at for transactions)
+    items.sort((a, b) => {
+      const dateA = a.itemType === 'order' ? new Date(a.data.closed_at || a.data.created_at) : new Date(a.data.created_at);
+      const dateB = b.itemType === 'order' ? new Date(b.data.closed_at || b.data.created_at) : new Date(b.data.created_at);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    // Apply pagination
+    const paginatedItems = items.slice(from, to + 1);
+    
+    if (pageNum === 0) {
+      setHistoryItems(paginatedItems);
+    } else {
+      setHistoryItems(prev => [...prev, ...paginatedItems]);
+    }
+    setHasMore(items.length > to + 1);
+
     if (profileRes.data) {
       setBalance(Number(profileRes.data.balance));
       setAccountType(profileRes.data.account_type || "standard");
     }
-    if (depositsRes.data) setTotalDeposit(depositsRes.data.reduce((s: number, t: any) => s + Number(t.amount), 0));
+
+    if (transactionsRes.data) {
+      const deposits = transactionsRes.data.filter((t: any) => t.type === 'deposit');
+      const withdrawals = transactionsRes.data.filter((t: any) => t.type === 'withdrawal');
+      setTotalDeposit(deposits.reduce((s: number, t: any) => s + Number(t.amount), 0));
+      setTotalWithdrawal(withdrawals.reduce((s: number, t: any) => s + Number(t.amount), 0));
+    }
   };
 
+  const closedOrders = historyItems.filter(item => item.itemType === 'order').map(item => item.data as ClosedOrder);
   const totalPnl = closedOrders.reduce((s, o) => s + Number(o.pnl), 0);
   const totalSwap = closedOrders.reduce((s, o) => s + o.swap, 0);
   const totalCommission = closedOrders.reduce(
@@ -82,6 +146,7 @@ const History = () => {
   );
 
   const summaryRows = [
+    { label: "Para çek", value: -totalWithdrawal, color: "text-sell" },
     { label: "Para yatır", value: totalDeposit, color: "text-foreground" },
     { label: "Net Kâr/Zarar", value: totalPnl, color: totalPnl >= 0 ? "text-buy" : "text-sell" },
     { label: "Komisyon", value: -Math.abs(totalCommission), color: "text-sell" },
@@ -97,61 +162,105 @@ const History = () => {
 
       {/* Scrollable orders area - takes remaining space above summary */}
       <div ref={listRef} className="flex-1 min-h-0 overflow-auto px-4">
-        {closedOrders.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
+        {historyItems.length === 0 ? (
+          <p className="text-sm text-muted-foreground text-center py-8">Geçmiş bulunmuyor.</p>
         ) : (
           <div className="divide-y divide-border">
-            {closedOrders.map((order) => {
-              const pnl = Number(order.pnl);
-              const commission = calculateCommission(order.symbol_name, Number(order.lots), Number(order.current_price), accountType);
-              return (
-                <div
-                  key={order.id}
-                  className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
-                    (order.close_reason === "stop_loss" || order.close_reason === "stop_out")
-                      ? "bg-gradient-to-r from-sell/10 via-sell/5 to-transparent border border-sell/20 shadow-[0_0_12px_-4px] shadow-sell/20"
-                      : pnl > 0
-                      ? "bg-gradient-to-r from-buy/10 via-buy/5 to-transparent border border-buy/20 shadow-[0_0_12px_-4px] shadow-buy/20"
-                      : "bg-card/50"
-                  }`}
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-center gap-2">
-                      {(order.close_reason === "stop_loss" || order.close_reason === "stop_out" || pnl > 0) && (
-                        <div className={`w-1.5 h-7 rounded-full ${(order.close_reason === "stop_loss" || order.close_reason === "stop_out") ? "bg-sell" : "bg-buy"}`} />
-                      )}
-                      <div>
-                        <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>{" "}
-                        <span className={`text-xs font-medium ${order.type === "buy" ? "text-buy" : "text-sell"}`}>
-                          {order.type === "buy" ? "ALIŞ" : "SATIŞ"} {Number(order.lots)}
+            {historyItems.map((item) => {
+              if (item.itemType === 'transaction') {
+                const txn = item.data as Transaction;
+                const isDeposit = txn.type === 'deposit';
+                const refNumber = generateRefNumber(txn.id);
+                return (
+                  <div
+                    key={txn.id}
+                    className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
+                      isDeposit
+                        ? "bg-gradient-to-r from-buy/10 via-buy/5 to-transparent border border-buy/20 shadow-[0_0_12px_-4px] shadow-buy/20"
+                        : "bg-gradient-to-r from-sell/10 via-sell/5 to-transparent border border-sell/20 shadow-[0_0_12px_-4px] shadow-sell/20"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        <div className={`w-1.5 h-7 rounded-full ${isDeposit ? "bg-buy" : "bg-sell"}`} />
+                        <div>
+                          <span className="text-sm font-semibold text-foreground">
+                            {isDeposit ? "Para Yatırma" : "Para Çekme"}
+                          </span>
+                          <p className="text-[10px] text-muted-foreground font-mono mt-0.5">
+                            {refNumber}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-sm font-mono font-bold ${isDeposit ? "text-buy" : "text-sell"}`}>
+                          {isDeposit ? "+" : "-"}{formatNum(Number(txn.amount))} USD
                         </span>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <span className={`text-sm font-mono font-bold ${pnl >= 0 ? "text-buy" : "text-sell"}`}>
-                        {pnl >= 0 ? "+" : ""}{formatNum(pnl)} USD
-                      </span>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs text-muted-foreground">
+                        {txn.method || "Banka Transferi"}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(txn.created_at).toLocaleDateString("tr-TR")} {new Date(txn.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between mt-1">
-                    <p className="text-xs text-muted-foreground font-mono">
-                      {formatNum(Number(order.entry_price))} → {formatNum(Number(order.current_price))}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground">
-                      {order.closed_at
-                        ? `${new Date(order.closed_at).toLocaleDateString("tr-TR")} ${new Date(order.closed_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`
-                        : new Date(order.created_at).toLocaleDateString("tr-TR")}
-                    </p>
+                );
+              } else {
+                const order = item.data as ClosedOrder;
+                const pnl = Number(order.pnl);
+                const commission = calculateCommission(order.symbol_name, Number(order.lots), Number(order.current_price), accountType);
+                return (
+                  <div
+                    key={order.id}
+                    className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
+                      (order.close_reason === "stop_loss" || order.close_reason === "stop_out")
+                        ? "bg-gradient-to-r from-sell/10 via-sell/5 to-transparent border border-sell/20 shadow-[0_0_12px_-4px] shadow-sell/20"
+                        : pnl > 0
+                        ? "bg-gradient-to-r from-buy/10 via-buy/5 to-transparent border border-buy/20 shadow-[0_0_12px_-4px] shadow-buy/20"
+                        : "bg-card/50"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2">
+                        {(order.close_reason === "stop_loss" || order.close_reason === "stop_out" || pnl > 0) && (
+                          <div className={`w-1.5 h-7 rounded-full ${(order.close_reason === "stop_loss" || order.close_reason === "stop_out") ? "bg-sell" : "bg-buy"}`} />
+                        )}
+                        <div>
+                          <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>{" "}
+                          <span className={`text-xs font-medium ${order.type === "buy" ? "text-buy" : "text-sell"}`}>
+                            {order.type === "buy" ? "ALIŞ" : "SATIŞ"} {Number(order.lots)}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <span className={`text-sm font-mono font-bold ${pnl >= 0 ? "text-buy" : "text-sell"}`}>
+                          {pnl >= 0 ? "+" : ""}{formatNum(pnl)} USD
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between mt-1">
+                      <p className="text-xs text-muted-foreground font-mono">
+                        {formatNum(Number(order.entry_price))} → {formatNum(Number(order.current_price))}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {order.closed_at
+                          ? `${new Date(order.closed_at).toLocaleDateString("tr-TR")} ${new Date(order.closed_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`
+                          : new Date(order.created_at).toLocaleDateString("tr-TR")}
+                      </p>
+                    </div>
+                    <div className="mt-1 text-[10px] text-muted-foreground font-mono text-right">
+                      Komisyon: -{formatNum(Math.abs(commission))} USD
+                    </div>
                   </div>
-                  <div className="mt-1 text-[10px] text-muted-foreground font-mono text-right">
-                    Komisyon: -{formatNum(Math.abs(commission))} USD
-                  </div>
-                </div>
-              );
+                );
+              }
             })}
           </div>
         )}
-        {hasMore && closedOrders.length > 0 && (
+        {hasMore && historyItems.length > 0 && (
           <button
             onClick={() => { const next = page + 1; setPage(next); loadHistory(next); }}
             className="w-full py-2 mt-2 text-xs text-primary font-medium hover:underline"
