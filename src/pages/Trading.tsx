@@ -436,7 +436,7 @@ const Trading = () => {
             <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
           </div>
         </div>
-        <AnimatedPrice value={price} live changePercent={selectedSymbol.change_percent ?? 0} className="text-lg font-bold font-mono" />
+        <AnimatedPrice value={price} live={currentMarketStatus.isOpen} changePercent={selectedSymbol.change_percent ?? 0} className="text-lg font-bold font-mono" />
       </div>
 
       {/* Timeframe Selector */}
