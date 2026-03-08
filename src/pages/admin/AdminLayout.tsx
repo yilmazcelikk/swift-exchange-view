@@ -25,6 +25,7 @@ import AdminSettings from "./AdminSettings";
 import AdminProducts from "./AdminProducts";
 import AdminReferrals from "./AdminReferrals";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { AdminNotifications } from "@/components/admin/AdminNotifications";
 
 const navSections = [
   {
@@ -161,6 +162,7 @@ const AdminLayout = () => {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="flex items-center gap-2 ml-auto">
+            <AdminNotifications />
             <ThemeToggle />
             <span className="text-xs text-muted-foreground bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">Admin</span>
           </div>
