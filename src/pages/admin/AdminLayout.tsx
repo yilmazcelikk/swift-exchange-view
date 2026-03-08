@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import {
+import { lazy, Suspense } from "react";
   LayoutDashboard,
   Users,
   TrendingUp,
