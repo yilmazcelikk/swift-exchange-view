@@ -261,6 +261,7 @@ const Profile = () => {
                     Hesap No: <span className="font-semibold text-primary">{profile.metaId}</span>
                   </p>
                 )}
+                <div className="mt-2">
                   {verificationStatus === "approved" ? (
                     <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-buy/10 text-buy">
                       <ShieldCheck className="h-3 w-3" /> Doğrulanmış
