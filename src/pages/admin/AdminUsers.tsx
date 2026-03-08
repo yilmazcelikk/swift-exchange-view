@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -111,9 +112,7 @@ const AdminUsers = () => {
 
         const enriched = ordersData.map(o => {
           const livePrice = priceMap.get((o as any).symbol_id) || Number(o.current_price);
-          // Simple PnL calc
-          const diff = o.type === "buy" ? livePrice - Number(o.entry_price) : Number(o.entry_price) - livePrice;
-          const pnl = diff * Number(o.lots) * 100; // simplified contract size
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice);
           return { ...o, current_price: livePrice, pnl } as OrderRow;
         });
         setSelectedUserOrders(enriched);
@@ -196,15 +195,15 @@ const AdminUsers = () => {
     // Calculate used margin from open orders
     const { data: marginOrders } = await supabase
       .from("orders")
-      .select("lots, entry_price, leverage")
+      .select("lots, entry_price, leverage, symbol_name")
       .eq("user_id", editingUser.user_id)
       .eq("status", "open");
     
     let usedMargin = 0;
     if (marginOrders) {
       for (const o of marginOrders) {
-        const lev = parseFloat(o.leverage?.replace("1:", "") || "100");
-        usedMargin += (Number(o.lots) * Number(o.entry_price)) / lev;
+        const lev = parseFloat(o.leverage?.replace("1:", "") || "200");
+        usedMargin += calculateMargin((o as any).symbol_name || "", Number(o.lots), Number(o.entry_price), lev);
       }
     }
     const newFreeMargin = newEquity - usedMargin;
@@ -266,21 +265,68 @@ const AdminUsers = () => {
   };
 
   const handleOrderClose = async () => {
-    if (!editingOrder) return;
+    if (!editingOrder || !selectedUser) return;
+    const closePnl = parseFloat(orderEditForm.pnl) || 0;
+    const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price));
+    const netPnl = closePnl - commission;
+    
     const { error } = await supabase
       .from("orders")
       .update({
         status: "closed",
         closed_at: new Date().toISOString(),
-        pnl: parseFloat(orderEditForm.pnl) || 0,
+        pnl: netPnl,
       })
       .eq("id", editingOrder.id);
     if (error) {
       toast.error("Kapatma başarısız: " + error.message);
     } else {
+      // Update user balance
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("balance, credit")
+        .eq("user_id", selectedUser.user_id)
+        .single();
+      
+      if (profileData) {
+        const newBalance = Number(profileData.balance) + netPnl;
+        
+        // Recalculate with remaining orders
+        const { data: remainingOrders } = await supabase
+          .from("orders")
+          .select("symbol_name, type, lots, entry_price, leverage, symbol_id")
+          .eq("user_id", selectedUser.user_id)
+          .eq("status", "open")
+          .neq("id", editingOrder.id);
+        
+        let remainingPnl = 0;
+        let remainingMargin = 0;
+        if (remainingOrders) {
+          const symbolIds = [...new Set(remainingOrders.map(o => (o as any).symbol_id).filter(Boolean))];
+          const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
+          const priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+          
+          for (const o of remainingOrders) {
+            const livePrice = priceMap.get((o as any).symbol_id) || Number((o as any).entry_price);
+            remainingPnl += calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice);
+            const lev = parseInt(o.leverage?.split(":")[1]) || 200;
+            remainingMargin += calculateMargin(o.symbol_name, Number(o.lots), Number(o.entry_price), lev);
+          }
+        }
+        
+        const newEquity = newBalance + Number(profileData.credit) + remainingPnl;
+        const newFreeMargin = newEquity - remainingMargin;
+        
+        await supabase
+          .from("profiles")
+          .update({ balance: newBalance, equity: newEquity, free_margin: newFreeMargin })
+          .eq("user_id", selectedUser.user_id);
+      }
+      
       toast.success("Pozisyon kapatıldı");
       setEditingOrder(null);
-      if (selectedUser) loadUserOrders(selectedUser.user_id);
+      loadUserOrders(selectedUser.user_id);
+      loadProfiles();
     }
   };
 

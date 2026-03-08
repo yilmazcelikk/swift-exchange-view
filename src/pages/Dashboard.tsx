@@ -162,6 +162,7 @@ const Dashboard = () => {
           stopLoss: o.stop_loss ? Number(o.stop_loss) : undefined,
           takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
           pnl: 0,
+          leverage: o.leverage || "1:200",
           status: o.status as "open" | "closed",
           createdAt: o.created_at,
         };
@@ -198,7 +199,8 @@ const Dashboard = () => {
   const totalOpenPnl = liveOrders.reduce((sum, o) => sum + o.pnl, 0);
   const dynamicEquity = profile.balance + profile.credit + totalOpenPnl;
   const usedMargin = liveOrders.reduce((sum, o) => {
-    return sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, 200);
+    const leverageNum = parseInt(o.leverage?.split(":")[1]) || 200;
+    return sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, leverageNum);
   }, 0);
   const dynamicFreeMargin = dynamicEquity - usedMargin;
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
@@ -245,12 +247,23 @@ const Dashboard = () => {
     }
 
     const newBalance = profile.balance + netPnl;
+    
+    // Recalculate with remaining open orders
+    const remainingOrders = liveOrders.filter(o => o.id !== order.id);
+    const remainingPnl = remainingOrders.reduce((s, o) => s + o.pnl, 0);
+    const remainingMargin = remainingOrders.reduce((s, o) => {
+      const levNum = parseInt(o.leverage?.split(":")[1]) || 200;
+      return s + calculateMargin(o.symbolName, o.lots, o.entryPrice, levNum);
+    }, 0);
+    const newEquity = newBalance + profile.credit + remainingPnl;
+    const newFreeMargin = newEquity - remainingMargin;
+
     await supabase
       .from("profiles")
       .update({ 
         balance: newBalance,
-        equity: newBalance,
-        free_margin: newBalance,
+        equity: newEquity,
+        free_margin: newFreeMargin,
       })
       .eq("user_id", authUser!.id);
 
