@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
-import { X, ChevronRight, ShieldAlert, Target, BarChart3 } from "lucide-react";
+import { X, ChevronRight, ShieldAlert, Target, BarChart3, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
