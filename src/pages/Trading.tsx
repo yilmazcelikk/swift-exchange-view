@@ -812,11 +812,6 @@ const Trading = () => {
           </div>
         </div>
 
-        {/* Spread info */}
-        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
-          <span>Spread: {formatPrice(spread)}</span>
-          <span className="opacity-60">Bid / Ask</span>
-        </div>
 
         {/* Buy / Sell buttons */}
         {orderType === "market" ? (
