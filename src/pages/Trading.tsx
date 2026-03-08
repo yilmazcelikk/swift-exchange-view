@@ -54,7 +54,7 @@ const categories = [
   { key: "crypto", label: "Kripto", icon: Bitcoin },
 ];
 
-const CONTRACT_SIZE = 100000; // Standard forex lot size
+const CONTRACT_SIZE = 100000; // Standard forex lot size (unused but kept for reference)
 
 const Trading = () => {
   const { user: authUser } = useAuth();
