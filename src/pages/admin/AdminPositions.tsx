@@ -38,6 +38,7 @@ interface OrderRow {
   status: string;
   leverage: string;
   created_at: string;
+  swap: number;
 }
 
 interface UserProfile {
