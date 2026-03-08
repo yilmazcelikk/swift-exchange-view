@@ -40,9 +40,10 @@ const generateRefNumber = (id: string) => {
 
 const History = () => {
   const { user: authUser } = useAuth();
-  const [closedOrders, setClosedOrders] = useState<ClosedOrder[]>([]);
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
   const [balance, setBalance] = useState(0);
   const [totalDeposit, setTotalDeposit] = useState(0);
+  const [totalWithdrawal, setTotalWithdrawal] = useState(0);
   const [accountType, setAccountType] = useState("standard");
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
