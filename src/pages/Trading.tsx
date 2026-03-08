@@ -57,6 +57,7 @@ const CONTRACT_SIZE = 100000; // Standard forex lot size
 
 const Trading = () => {
   const { user: authUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSymbol, setSelectedSymbol] = useState<DBSymbol | null>(null);
