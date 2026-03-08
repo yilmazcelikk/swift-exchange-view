@@ -1,4 +1,4 @@
-import { memo, useState, useEffect, forwardRef } from "react";
+import { memo, useState, useEffect, forwardRef, useCallback } from "react";
 import { resolveLogoUrl } from "@/data/symbolLogos";
 
 interface SymbolLogoProps {
@@ -25,7 +25,6 @@ const textSizeClasses = {
   lg: "text-sm",
 };
 
-// Deterministic color from symbol name
 const AVATAR_COLORS = [
   "from-blue-500/80 to-blue-700/80",
   "from-emerald-500/80 to-emerald-700/80",
@@ -48,29 +47,64 @@ function getAvatarColor(symbol: string): string {
 }
 
 function getInitials(symbol: string): string {
-  // Remove USD/USDT suffix for crypto, show first 2 chars
   const clean = symbol.replace(/(USD[T]?|EUR|GBP|JPY|TRY)$/i, "");
   return clean.slice(0, 2).toUpperCase();
 }
 
-export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(function SymbolLogo({ symbol, category, size = "md" }, ref) {
-  const [imgError, setImgError] = useState(false);
-  const logoUrl = resolveLogoUrl(symbol, category);
+/** Build ordered list of logo URLs to try for a symbol */
+function buildLogoUrls(symbol: string, category?: string): string[] {
+  const urls: string[] = [];
+  
+  // 1. Explicit mapping (highest priority)
+  const mapped = resolveLogoUrl(symbol, category);
+  if (mapped) urls.push(mapped);
+  
+  // 2. Speculative TradingView S3 (works for many instruments)
+  const tvSlug = symbol.toLowerCase().replace(/[^a-z0-9]/g, "");
+  urls.push(`https://s3-symbol-logo.tradingview.com/${tvSlug}--big.svg`);
+  
+  // 3. For crypto, try CoinGecko-style with cleaned name
+  if (category === "crypto") {
+    const coinName = symbol.replace(/(USD[T]?|EUR)$/i, "").toLowerCase();
+    urls.push(`https://s3-symbol-logo.tradingview.com/${coinName}--big.svg`);
+  }
 
-  // Reset error state when symbol changes
+  // Deduplicate
+  return [...new Set(urls)];
+}
+
+export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(function SymbolLogo({ symbol, category, size = "md" }, ref) {
+  const [urlIndex, setUrlIndex] = useState(0);
+  const [allFailed, setAllFailed] = useState(false);
+  
+  const urls = buildLogoUrls(symbol, category);
+
+  // Reset on symbol change
   useEffect(() => {
-    setImgError(false);
+    setUrlIndex(0);
+    setAllFailed(false);
   }, [symbol]);
 
-  // Image logo (stock, crypto, commodity icon, flag)
-  if (logoUrl && !imgError) {
+  const handleError = useCallback(() => {
+    setUrlIndex(prev => {
+      const next = prev + 1;
+      if (next >= urls.length) {
+        setAllFailed(true);
+        return prev;
+      }
+      return next;
+    });
+  }, [urls.length]);
+
+  // Show image if we still have URLs to try
+  if (!allFailed && urlIndex < urls.length) {
     return (
       <div ref={ref} className={`${sizeClasses[size]} rounded-full bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
         <img
-          src={logoUrl}
+          src={urls[urlIndex]}
           alt={symbol}
           className={`${imgSizeClasses[size]} object-contain`}
-          onError={() => setImgError(true)}
+          onError={handleError}
           loading="lazy"
           referrerPolicy="no-referrer"
         />
@@ -78,7 +112,7 @@ export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(funct
     );
   }
 
-  // Text avatar fallback - show initials with colored gradient
+  // Last resort: text avatar
   const initials = getInitials(symbol);
   const colorClass = getAvatarColor(symbol);
 
