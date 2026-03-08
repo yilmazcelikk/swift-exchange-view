@@ -105,16 +105,16 @@ const Register = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Ad</label>
-                <Input placeholder="Ad" value={formData.firstName} onChange={(e) => update("firstName", e.target.value)} className="bg-muted/50" />
+                <Input placeholder="Adınızı girin" value={formData.firstName} onChange={(e) => update("firstName", e.target.value)} className="bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Soyad</label>
-                <Input placeholder="Soyad" value={formData.lastName} onChange={(e) => update("lastName", e.target.value)} className="bg-muted/50" />
+                <Input placeholder="Soyadınızı girin" value={formData.lastName} onChange={(e) => update("lastName", e.target.value)} className="bg-muted/50" />
               </div>
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">E-posta</label>
-              <Input type="email" placeholder="ornek@email.com" value={formData.email} onChange={(e) => update("email", e.target.value)} className="bg-muted/50" />
+              <Input type="email" placeholder="E-posta adresinizi girin" value={formData.email} onChange={(e) => update("email", e.target.value)} className="bg-muted/50" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Telefon</label>
@@ -140,7 +140,7 @@ const Register = () => {
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre</label>
               <div className="relative">
-                <Input type={showPassword ? "text" : "password"} placeholder="••••••••" value={formData.password} onChange={(e) => update("password", e.target.value)} className="bg-muted/50 pr-10" />
+                <Input type={showPassword ? "text" : "password"} placeholder="Şifrenizi girin" value={formData.password} onChange={(e) => update("password", e.target.value)} className="bg-muted/50 pr-10" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -148,7 +148,7 @@ const Register = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre Tekrar</label>
-              <Input type="password" placeholder="••••••••" value={formData.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)} className="bg-muted/50" />
+              <Input type="password" placeholder="Şifrenizi tekrar girin" value={formData.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)} className="bg-muted/50" />
             </div>
             <label className="flex items-start gap-2 text-sm">
               <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => update("acceptTerms", e.target.checked)} className="rounded border-border mt-0.5" />
