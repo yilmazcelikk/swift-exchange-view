@@ -400,8 +400,12 @@ const Trading = () => {
   const ask = price + spread / 2;
   const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
 
-  // Chart calculations
-  const displayCandles = candleData.slice(-70);
+  // Chart calculations with zoom
+  const totalCandles = candleData.length;
+  const clampedOffset = Math.min(chartOffset, Math.max(0, totalCandles - chartVisibleCount));
+  const startIdx = Math.max(0, totalCandles - chartVisibleCount - clampedOffset);
+  const endIdx = startIdx + chartVisibleCount;
+  const displayCandles = candleData.slice(startIdx, endIdx);
   const chartHigh = Math.max(...displayCandles.map(c => c.high));
   const chartLow = Math.min(...displayCandles.map(c => c.low));
   const chartRange = chartHigh - chartLow || 1;
@@ -412,7 +416,56 @@ const Trading = () => {
     chartLow + (chartRange * i) / priceSteps
   );
 
-  return (
+  const zoomIn = () => setChartVisibleCount(prev => Math.max(15, prev - 10));
+  const zoomOut = () => setChartVisibleCount(prev => Math.min(totalCandles, prev + 10));
+  const resetZoom = () => { setChartVisibleCount(50); setChartOffset(0); };
+
+  // Mouse wheel zoom on chart
+  const handleWheel = useCallback((e: React.WheelEvent) => {
+    e.preventDefault();
+    if (e.ctrlKey || e.metaKey) {
+      // Pinch zoom on trackpad
+      if (e.deltaY > 0) zoomOut();
+      else zoomIn();
+    } else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      // Horizontal scroll = pan
+      setChartOffset(prev => Math.max(0, Math.min(totalCandles - chartVisibleCount, prev + (e.deltaX > 0 ? -3 : 3))));
+    } else {
+      // Vertical scroll = zoom
+      if (e.deltaY > 0) zoomOut();
+      else zoomIn();
+    }
+  }, [totalCandles, chartVisibleCount]);
+
+  // Touch gestures for pan
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartRef.current = { x: e.touches[0].clientX, dist: 0 };
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      touchStartRef.current = { x: 0, dist };
+    }
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    if (e.touches.length === 1 && touchStartRef.current.dist === 0) {
+      const dx = e.touches[0].clientX - touchStartRef.current.x;
+      if (Math.abs(dx) > 10) {
+        const candlesMoved = Math.round(dx / 8);
+        setChartOffset(prev => Math.max(0, Math.min(totalCandles - chartVisibleCount, prev + candlesMoved)));
+        touchStartRef.current.x = e.touches[0].clientX;
+      }
+    } else if (e.touches.length === 2 && touchStartRef.current.dist > 0) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const diff = dist - touchStartRef.current.dist;
+      if (Math.abs(diff) > 15) {
+        if (diff > 0) setChartVisibleCount(prev => Math.max(15, prev - 5));
+        else setChartVisibleCount(prev => Math.min(totalCandles, prev + 5));
+        touchStartRef.current.dist = dist;
+      }
+    }
+  }, [totalCandles, chartVisibleCount]);
     <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overflow-y-auto md:overflow-hidden">
       {/* Header */}
       <div className="p-3 border-b border-border flex items-center gap-3">
