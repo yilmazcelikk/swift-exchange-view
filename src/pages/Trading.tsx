@@ -565,7 +565,7 @@ const Trading = () => {
   };
 
   return (
-    <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] animate-slide-up overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <div className="p-3 border-b border-border flex items-center gap-3">
         <button onClick={() => setSelectedSymbol(null)} className="p-1 hover:bg-muted rounded">
