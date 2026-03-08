@@ -72,7 +72,7 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
     { label: "KYC İncele", icon: FileText, tab: "documents" },
     { label: "Pozisyonlar", icon: BarChart3, tab: "positions" },
     { label: "Finans Talepleri", icon: Landmark, tab: "finance" },
-    { label: "Ürünler", icon: ClipboardList, tab: "products" },
+    { label: "Ürünler", icon: ShoppingBag, tab: "products" },
     { label: "Ayarlar", icon: Settings, tab: "settings" },
   ];
 
