@@ -82,6 +82,16 @@ function calculateMargin(symbolName: string, lots: number, entryPrice: number, l
   return (lots * contractSize * entryPrice) / leverageRatio;
 }
 
+function calculateSwap(symbolName: string, lots: number, daysHeld: number): number {
+  const name = symbolName.toUpperCase();
+  let rate = -0.5;
+  if (["XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD"].includes(name)) rate = -1.2;
+  else if (["USOIL", "UKOIL", "NATGAS"].includes(name)) rate = -0.8;
+  else if (["BTCUSD", "ETHUSD", "BNBUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "ADAUSD"].includes(name)) rate = -2.0;
+  else if (["US500", "US30", "USTEC", "DE40", "UK100", "JP225"].includes(name)) rate = -0.6;
+  return rate * lots * daysHeld;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
