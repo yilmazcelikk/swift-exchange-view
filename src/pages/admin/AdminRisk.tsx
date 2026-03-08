@@ -129,7 +129,7 @@ const AdminRisk = () => {
         freeMargin,
         noSlCount,
         maxLoss,
-        riskScore: marginLevel === Infinity ? 0 : marginLevel < 50 ? 3 : marginLevel < 100 ? 2 : marginLevel < 200 ? 1 : 0,
+        riskScore: marginLevel === Infinity ? 0 : marginLevel < 30 ? 3 : marginLevel < 100 ? 2 : marginLevel < 200 ? 1 : 0,
       };
     }).sort((a, b) => b.riskScore - a.riskScore || a.marginLevel - b.marginLevel);
   }, [orders, profiles]);
