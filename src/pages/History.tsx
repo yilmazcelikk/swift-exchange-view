@@ -54,12 +54,20 @@ const History = () => {
     if (authUser?.id) {
       loadHistory(0);
 
-      const channel = supabase
+      const ordersChannel = supabase
         .channel("history-orders")
         .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { setPage(0); loadHistory(0); })
         .subscribe();
 
-      return () => { supabase.removeChannel(channel); };
+      const transactionsChannel = supabase
+        .channel("history-transactions")
+        .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `user_id=eq.${authUser.id}` }, () => { setPage(0); loadHistory(0); })
+        .subscribe();
+
+      return () => { 
+        supabase.removeChannel(ordersChannel);
+        supabase.removeChannel(transactionsChannel);
+      };
     }
   }, [authUser?.id]);
 
