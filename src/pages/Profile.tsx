@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  XCircle, Pencil, Sun, Moon, LogOut, Mail, Phone, MapPin, Calendar, User,
+  XCircle, Pencil, Sun, Moon, LogOut, Mail, Phone, MapPin, Calendar, User, Lock, KeyRound,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
@@ -318,16 +318,37 @@ const Profile = () => {
           <ThemeCard />
 
           <Card className="bg-card border-border overflow-hidden">
-            <CardContent className="p-4 space-y-3">
-              <div className="flex items-center gap-3 mb-1">
+            <CardContent className="p-0">
+              <div className="flex items-center gap-3 px-4 pt-4 pb-3">
                 <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
-                  <ShieldCheck className="h-4.5 w-4.5 text-primary" />
+                  <Lock className="h-4 w-4 text-primary" />
                 </div>
                 <span className="text-sm font-semibold">Şifre Değiştir</span>
               </div>
-              <Input type="password" placeholder="Yeni Şifre" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="bg-muted/50" />
-              <Input type="password" placeholder="Yeni Şifre Tekrar" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="bg-muted/50" />
-              <Button variant="outline" className="w-full" onClick={handleChangePassword}>Şifre Değiştir</Button>
+              <div className="h-px bg-border mx-4" />
+              <div className="px-4 py-3.5 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                    <KeyRound className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Yeni Şifre</p>
+                    <Input type="password" placeholder="••••••••" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="mt-1 h-8 text-sm bg-muted/50 border-border" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                    <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Şifre Tekrar</p>
+                    <Input type="password" placeholder="••••••••" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="mt-1 h-8 text-sm bg-muted/50 border-border" />
+                  </div>
+                </div>
+              </div>
+              <div className="px-4 pb-4">
+                <Button variant="outline" className="w-full" onClick={handleChangePassword}>Şifre Değiştir</Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
