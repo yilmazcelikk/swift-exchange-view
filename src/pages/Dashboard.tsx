@@ -183,7 +183,7 @@ const Dashboard = () => {
       }
     }
     return map;
-  }, [openOrders]);
+  }, [openOrders, symbolCategories]);
 
   const livePrices = useLiveSymbolPrices(symbolPriceMap, openOrders.length > 0);
 
