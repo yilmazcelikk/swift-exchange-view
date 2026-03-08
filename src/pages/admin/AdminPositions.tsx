@@ -58,6 +58,7 @@ const AdminPositions = () => {
   const [editSL, setEditSL] = useState("");
   const [editTP, setEditTP] = useState("");
   const [editLots, setEditLots] = useState("");
+  const [editSwap, setEditSwap] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
