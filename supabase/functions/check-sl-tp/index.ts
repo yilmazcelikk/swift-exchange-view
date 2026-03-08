@@ -256,7 +256,7 @@ Deno.serve(async (req) => {
           let remainingOrders = [...orderPnls];
 
           for (const item of orderPnls) {
-            const commission = calculateCommission(item.order.symbol_name, Number(item.order.lots), item.currentPrice);
+            const commission = calculateCommission(item.order.symbol_name, Number(item.order.lots), item.currentPrice, profile.account_type || "standard");
             const netPnl = item.pnl - commission;
 
             // Atomic close - only if still open
