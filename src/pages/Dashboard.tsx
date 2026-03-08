@@ -26,6 +26,7 @@ import {
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
+import { getMarketStatus } from "@/lib/marketHours";
 
 const Dashboard = () => {
   const { user: authUser } = useAuth();
