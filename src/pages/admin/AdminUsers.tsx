@@ -179,6 +179,10 @@ const AdminUsers = () => {
       credit: profile.credit.toString(),
       leverage: profile.leverage,
       verification_status: profile.verification_status,
+      full_name: profile.full_name || "",
+      phone: profile.phone || "",
+      country: (profile as any).country || "",
+      birth_date: (profile as any).birth_date || "",
     });
   };
 
