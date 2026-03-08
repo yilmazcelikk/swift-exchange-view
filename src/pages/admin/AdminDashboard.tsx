@@ -10,7 +10,7 @@ import {
 const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
   const [stats, setStats] = useState({
     totalUsers: 0, verifiedUsers: 0, openPositions: 0,
-    pendingWithdrawals: 0, pendingDeposits: 0, onlineUsers: 0,
+    pendingWithdrawals: 0, pendingDeposits: 0,
   });
   const [recentActivities, setRecentActivities] = useState<{ id: string; type: string; description: string; time: string }[]>([]);
   const [loading, setLoading] = useState(false);
