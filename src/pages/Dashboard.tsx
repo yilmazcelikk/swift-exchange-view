@@ -344,37 +344,37 @@ const Dashboard = () => {
         {/* Pending Orders */}
         {pendingOrders.length > 0 && (
           <>
-            <div className="pt-4 pb-2">
-              <h2 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
-                Bekleyen Emirler ({pendingOrders.length})
+            <div className="px-3 py-2 border-b border-border/50 flex items-center">
+              <h2 className="text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+                <Clock className="h-3 w-3" />
+                Bekleyen Emirler <span className="text-foreground">({pendingOrders.length})</span>
               </h2>
             </div>
-            <div className="divide-y divide-border">
+            <div>
               {pendingOrders.map((order: any) => {
                 const orderTypeLabels: Record<string, string> = { buy_limit: "BUY LIMIT", sell_limit: "SELL LIMIT", buy_stop: "BUY STOP", sell_stop: "SELL STOP" };
                 const isBuy = order.type === "buy";
                 return (
-                  <div key={order.id} className="py-3 px-2 -mx-2 flex items-center gap-3">
+                  <div key={order.id} className="py-2.5 px-3 terminal-row flex items-center gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isBuy ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'}`}>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs font-mono font-bold text-foreground">{order.symbol_name}</span>
+                        <span className={`text-[9px] font-mono font-bold px-1 py-px rounded-sm ${isBuy ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'}`}>
                           {orderTypeLabels[order.order_type] || order.order_type}
                         </span>
                       </div>
-                      <span className="text-[11px] text-muted-foreground font-mono">{Number(order.lots)} lot @ {formatUsd(Number(order.target_price))}</span>
+                      <span className="text-[10px] text-muted-foreground font-mono tabular-nums">{Number(order.lots)} lot @ {formatUsd(Number(order.target_price))}</span>
                     </div>
                     <Button
                       variant="ghost" size="icon"
-                      className="h-8 w-8 shrink-0 text-sell hover:bg-sell/10"
+                      className="h-7 w-7 shrink-0 text-sell hover:bg-sell/10"
                       onClick={async () => {
                         const { error } = await supabase.from("orders").update({ status: "closed", closed_at: new Date().toISOString(), close_reason: "cancelled", pnl: 0 } as any).eq("id", order.id).eq("status", "pending");
                         if (error) toast.error("İptal başarısız: " + error.message);
                         else { toast.success(`${order.symbol_name} bekleyen emir iptal edildi`); loadData(); }
                       }}
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 );
