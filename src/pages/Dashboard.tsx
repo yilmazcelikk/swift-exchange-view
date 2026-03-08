@@ -270,7 +270,6 @@ const Dashboard = () => {
           <span className={`text-base font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>USD</span>
         </div>
       )}
-      </div>
 
       {/* Account Stats */}
       <div className="px-4 pb-1.5">
