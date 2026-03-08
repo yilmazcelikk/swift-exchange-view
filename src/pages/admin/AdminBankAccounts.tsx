@@ -170,7 +170,7 @@ const AdminBankAccounts = () => {
                         <Switch checked={acc.is_active} onCheckedChange={() => toggleAccount(acc.id, acc.is_active)} />
                       </td>
                       <td className="px-4 py-3.5 text-center">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => deleteAccount(acc.id)}>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => setDeletingId(acc.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </td>
