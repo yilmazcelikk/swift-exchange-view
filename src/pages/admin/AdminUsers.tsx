@@ -202,8 +202,8 @@ const AdminUsers = () => {
     let usedMargin = 0;
     if (marginOrders) {
       for (const o of marginOrders) {
-        const lev = parseFloat(o.leverage?.replace("1:", "") || "100");
-        usedMargin += (Number(o.lots) * Number(o.entry_price)) / lev;
+        const lev = parseFloat(o.leverage?.replace("1:", "") || "200");
+        usedMargin += calculateMargin((o as any).symbol_name || "", Number(o.lots), Number(o.entry_price), lev);
       }
     }
     const newFreeMargin = newEquity - usedMargin;
