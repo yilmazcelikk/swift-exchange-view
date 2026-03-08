@@ -101,6 +101,16 @@ const Finance = () => {
 
     setSubmitting(true);
     try {
+      // Check for existing pending withdrawals
+      const { data: pendingWithdrawals } = await supabase
+        .from("transactions")
+        .select("amount")
+        .eq("user_id", authUser.id)
+        .eq("type", "withdrawal")
+        .eq("status", "pending");
+
+      const totalPendingAmount = (pendingWithdrawals || []).reduce((s: number, t: any) => s + Number(t.amount), 0);
+
       const { data: profileData } = await supabase
         .from("profiles")
         .select("balance, free_margin")
@@ -120,17 +130,19 @@ const Finance = () => {
         .single();
       const usdTryRate = rateData?.current_price && Number(rateData.current_price) > 0 ? Number(rateData.current_price) : 32.0;
       const amountInUsd = amount / usdTryRate;
+      const totalPendingUsd = totalPendingAmount / usdTryRate;
 
-      // Check against free margin (accounts for open positions)
-      const freeMargin = Number(profileData.free_margin);
-      if (amountInUsd > freeMargin) {
-        toast.error(`Yetersiz serbest teminat. Açık pozisyonlarınız dikkate alındığında çekilebilir: $${freeMargin.toLocaleString("en-US", { minimumFractionDigits: 2 })}`);
+      // Check against free margin minus already pending withdrawals
+      const availableFreeMargin = Number(profileData.free_margin) - totalPendingUsd;
+      if (amountInUsd > availableFreeMargin) {
+        toast.error(`Yetersiz serbest teminat. Bekleyen çekim talepleri dahil çekilebilir: $${Math.max(0, availableFreeMargin).toLocaleString("en-US", { minimumFractionDigits: 2 })}`);
         setSubmitting(false);
         return;
       }
 
-      if (amountInUsd > Number(profileData.balance)) {
-        toast.error(`Yetersiz bakiye. Mevcut bakiyeniz: $${Number(profileData.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}`);
+      const availableBalance = Number(profileData.balance) - totalPendingUsd;
+      if (amountInUsd > availableBalance) {
+        toast.error(`Yetersiz bakiye. Bekleyen talepler dahil çekilebilir: $${Math.max(0, availableBalance).toLocaleString("en-US", { minimumFractionDigits: 2 })}`);
         setSubmitting(false);
         return;
       }

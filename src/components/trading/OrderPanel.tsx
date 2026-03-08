@@ -68,7 +68,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       return;
     }
 
-    // Check free margin (not just balance > 0)
+    // Check free margin including open positions PnL
     const { data: profileData } = await supabase
       .from("profiles")
       .select("balance, equity, free_margin, credit")
@@ -80,13 +80,27 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       return;
     }
 
+    // Also get all open orders to calculate real-time used margin
+    const { data: openOrders } = await supabase
+      .from("orders")
+      .select("symbol_name, lots, entry_price, leverage")
+      .eq("user_id", userId)
+      .eq("status", "open");
+
+    const currentUsedMargin = (openOrders || []).reduce((sum, o: any) => {
+      const oLev = parseInt((o.leverage || "1:200").split(":")[1] || "200", 10);
+      const cs = getContractSizeForMargin(o.symbol_name);
+      return sum + (Number(o.lots) * cs * Number(o.entry_price)) / oLev;
+    }, 0);
+
     const midPrice = price;
     const entryPriceForMargin = isPending ? (pendingTargetPrice || midPrice) : (type === "buy" ? ask : bid);
     const requiredMargin = calculateMargin(symbol.name, lots, entryPriceForMargin, leverageRatio);
-    const currentFreeMargin = Number(profileData.free_margin);
+    const realEquity = Number(profileData.balance) + Number(profileData.credit);
+    const realFreeMargin = realEquity - currentUsedMargin;
 
-    if (requiredMargin > currentFreeMargin) {
-      toast.error(`Yetersiz serbest teminat. Gerekli: $${requiredMargin.toFixed(2)}, Mevcut: $${currentFreeMargin.toFixed(2)}`);
+    if (requiredMargin > realFreeMargin) {
+      toast.error(`Yetersiz serbest teminat. Gerekli: $${requiredMargin.toFixed(2)}, Mevcut: $${realFreeMargin.toFixed(2)}`);
       return;
     }
 
