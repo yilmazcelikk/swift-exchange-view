@@ -290,7 +290,9 @@ const AdminUsers = () => {
     if (!editingOrder || !selectedUser) return;
     const closePnl = parseFloat(orderEditForm.pnl) || 0;
     const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price), selectedUser?.account_type || "standard");
-    const netPnl = closePnl - commission;
+    const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(editingOrder.created_at).getTime()) / 86400000));
+    const swap = calculateSwap(editingOrder.symbol_name, Number(editingOrder.lots), daysHeld);
+    const netPnl = closePnl - commission + swap;
     
     const { error } = await supabase
       .from("orders")
@@ -298,7 +300,8 @@ const AdminUsers = () => {
         status: "closed",
         closed_at: new Date().toISOString(),
         pnl: netPnl,
-      })
+        swap: swap,
+      } as any)
       .eq("id", editingOrder.id);
     if (error) {
       toast.error("Kapatma başarısız: " + error.message);
