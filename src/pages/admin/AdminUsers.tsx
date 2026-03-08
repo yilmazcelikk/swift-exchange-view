@@ -82,6 +82,7 @@ const AdminUsers = () => {
     phone: "",
     country: "",
     birth_date: "",
+    account_type: "standard",
   });
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
   const [orderEditForm, setOrderEditForm] = useState({
