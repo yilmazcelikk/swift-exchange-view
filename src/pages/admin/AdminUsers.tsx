@@ -43,6 +43,7 @@ interface Profile {
   created_at: string;
   is_banned: boolean;
   ban_reason: string | null;
+  ban_type: string;
   referral_code: string | null;
 }
 
