@@ -720,9 +720,22 @@ const Trading = () => {
         </div>
 
         {/* Buy / Sell */}
+        {/* Spread info */}
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+          <span>Spread: {formatPrice(spread)}</span>
+          <span className="opacity-60">Bid / Ask</span>
+        </div>
+
+        {/* Buy / Sell with bid/ask prices */}
         <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-11 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50">SAT</Button>
-          <Button onClick={() => handleOrder("buy")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-11 bg-buy hover:bg-buy/90 text-buy-foreground font-bold disabled:opacity-50">AL</Button>
+          <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
+            <span className="text-xs opacity-80">SAT</span>
+            <span className="text-sm font-mono">{formatPrice(bid)}</span>
+          </Button>
+          <Button onClick={() => handleOrder("buy")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-buy hover:bg-buy/90 text-buy-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
+            <span className="text-xs opacity-80">AL</span>
+            <span className="text-sm font-mono">{formatPrice(ask)}</span>
+          </Button>
         </div>
       </div>
     </div>
