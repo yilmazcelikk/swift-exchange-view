@@ -1,26 +1,15 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
 import {
   CheckCircle, XCircle, ArrowDownToLine, ArrowUpFromLine,
-  RefreshCw, Plus, Landmark, FileText, Trash2, Wallet, Clock, Eye, User,
+  RefreshCw, Wallet, Clock, Eye, User,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
+  Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
-
-interface BankAccount {
-  id: string;
-  bank_name: string;
-  account_holder: string;
-  iban: string;
-  currency: string;
-  is_active: boolean;
-}
 
 interface TransactionRow {
   id: string;
@@ -35,45 +24,39 @@ interface TransactionRow {
   user_name?: string;
 }
 
-type TabKey = "all" | "deposits" | "withdrawals" | "bank";
+type TabKey = "all" | "deposits" | "withdrawals";
 
 const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "all", label: "Tümü", icon: Wallet },
   { key: "deposits", label: "Yatırma", icon: ArrowDownToLine },
   { key: "withdrawals", label: "Çekme", icon: ArrowUpFromLine },
-  { key: "bank", label: "Banka Hesapları", icon: Landmark },
 ];
 
 const AdminTransactions = () => {
-  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
-  const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newAccount, setNewAccount] = useState({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
 
-  useEffect(() => { loadAll(); }, []);
+  useEffect(() => { load(); }, []);
 
-  const loadAll = async () => {
+  const load = async () => {
     setLoading(true);
-    const [bankRes, txRes] = await Promise.all([
-      supabase.from("bank_accounts").select("*").order("created_at"),
-      supabase.from("transactions").select("*").order("created_at", { ascending: false }),
-    ]);
-    setBankAccounts((bankRes.data as BankAccount[]) || []);
-    
-    const txData = (txRes.data || []) as any[];
-    // Fetch user names
-    if (txData.length > 0) {
-      const userIds = [...new Set(txData.map(t => t.user_id))];
+    const { data: txData } = await supabase
+      .from("transactions")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    const txList = (txData || []) as any[];
+    if (txList.length > 0) {
+      const userIds = [...new Set(txList.map(t => t.user_id))];
       const { data: profiles } = await supabase
         .from("profiles")
         .select("user_id, full_name")
         .in("user_id", userIds);
       const profileMap = new Map(profiles?.map(p => [p.user_id, p.full_name]) || []);
-      setTransactions(txData.map(t => ({
+      setTransactions(txList.map(t => ({
         ...t,
         user_name: profileMap.get(t.user_id) || t.user_id.slice(0, 8) + "...",
       })));
@@ -83,47 +66,13 @@ const AdminTransactions = () => {
     setLoading(false);
   };
 
-  const handleAddAccount = async () => {
-    if (!newAccount.bank_name.trim() || !newAccount.iban.trim() || !newAccount.account_holder.trim()) {
-      toast.error("Tüm alanları doldurun");
-      return;
-    }
-    const { error } = await supabase.from("bank_accounts").insert({
-      bank_name: newAccount.bank_name,
-      account_holder: newAccount.account_holder,
-      iban: newAccount.iban,
-      currency: newAccount.currency,
-    });
-    if (error) { toast.error("Ekleme başarısız: " + error.message); return; }
-    toast.success("Banka hesabı eklendi");
-    setNewAccount({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
-    setShowAddDialog(false);
-    loadAll();
-  };
-
-  const toggleAccount = async (id: string, currentActive: boolean) => {
-    await supabase.from("bank_accounts").update({ is_active: !currentActive }).eq("id", id);
-    toast.success(!currentActive ? "Hesap aktif edildi" : "Hesap devre dışı bırakıldı");
-    loadAll();
-  };
-
-  const deleteAccount = async (id: string) => {
-    await supabase.from("bank_accounts").delete().eq("id", id);
-    toast.success("Hesap silindi");
-    loadAll();
-  };
-
   const getUsdTryRate = async (): Promise<number> => {
     const { data } = await supabase
       .from("symbols")
       .select("current_price")
       .eq("name", "USDTRY")
       .single();
-    if (data?.current_price && Number(data.current_price) > 0) {
-      return Number(data.current_price);
-    }
-    // Fallback rate
-    return 32.0;
+    return data?.current_price && Number(data.current_price) > 0 ? Number(data.current_price) : 32.0;
   };
 
   const updateTxStatus = async (id: string, status: string) => {
@@ -131,8 +80,7 @@ const AdminTransactions = () => {
     const { error } = await supabase.from("transactions").update({ status }).eq("id", id);
     if (error) { toast.error("Güncelleme başarısız"); return; }
 
-    // If approving a deposit, convert TRY to USD and add to balance
-    if (status === "approved" && tx && tx.type === "deposit") {
+    if (status === "approved" && tx) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("balance, equity, free_margin")
@@ -140,59 +88,31 @@ const AdminTransactions = () => {
         .single();
 
       if (profile) {
-        let amountToAdd = Number(tx.amount);
-        // Convert TRY to USD using current USDTRY rate
+        let amount = Number(tx.amount);
         if (tx.currency === "TRY") {
           const rate = await getUsdTryRate();
-          amountToAdd = Number((amountToAdd / rate).toFixed(2));
-          toast.info(`Kur: 1 USD = ${rate.toFixed(2)} TRY → ${amountToAdd.toFixed(2)} USD eklendi`);
+          amount = Number((amount / rate).toFixed(2));
+          toast.info(`Kur: 1 USD = ${rate.toFixed(2)} TRY → ${amount.toFixed(2)} USD`);
         }
-        const newBalance = Number(profile.balance) + amountToAdd;
-        const newEquity = Number(profile.equity) + amountToAdd;
-        const newFreeMargin = Number(profile.free_margin) + amountToAdd;
-        await supabase.from("profiles").update({
-          balance: newBalance,
-          equity: newEquity,
-          free_margin: newFreeMargin,
-        }).eq("user_id", tx.user_id);
-      }
-    }
 
-    // If approving a withdrawal, convert TRY to USD and subtract from balance
-    if (status === "approved" && tx && tx.type === "withdrawal") {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("balance, equity, free_margin")
-        .eq("user_id", tx.user_id)
-        .single();
-
-      if (profile) {
-        let amountToSubtract = Number(tx.amount);
-        if (tx.currency === "TRY") {
-          const rate = await getUsdTryRate();
-          amountToSubtract = Number((amountToSubtract / rate).toFixed(2));
-          toast.info(`Kur: 1 USD = ${rate.toFixed(2)} TRY → ${amountToSubtract.toFixed(2)} USD çıkarıldı`);
-        }
-        const newBalance = Number(profile.balance) - amountToSubtract;
-        const newEquity = Number(profile.equity) - amountToSubtract;
-        const newFreeMargin = Number(profile.free_margin) - amountToSubtract;
+        const sign = tx.type === "deposit" ? 1 : -1;
         await supabase.from("profiles").update({
-          balance: newBalance,
-          equity: newEquity,
-          free_margin: newFreeMargin,
+          balance: Number(profile.balance) + sign * amount,
+          equity: Number(profile.equity) + sign * amount,
+          free_margin: Number(profile.free_margin) + sign * amount,
         }).eq("user_id", tx.user_id);
       }
     }
 
     toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
-    loadAll();
+    load();
   };
 
-  const pendingCount = transactions.filter((t) => t.status === "pending").length;
-  const depositTotal = transactions.filter((t) => t.type === "deposit" && t.status === "approved").reduce((s, t) => s + Number(t.amount), 0);
-  const withdrawTotal = transactions.filter((t) => t.type === "withdrawal" && t.status === "approved").reduce((s, t) => s + Number(t.amount), 0);
+  const pendingCount = transactions.filter(t => t.status === "pending").length;
+  const depositTotal = transactions.filter(t => t.type === "deposit" && t.status === "approved").reduce((s, t) => s + Number(t.amount), 0);
+  const withdrawTotal = transactions.filter(t => t.type === "withdrawal" && t.status === "approved").reduce((s, t) => s + Number(t.amount), 0);
 
-  const filteredTx = transactions.filter((tx) => {
+  const filteredTx = transactions.filter(tx => {
     if (activeTab === "deposits") return tx.type === "deposit";
     if (activeTab === "withdrawals") return tx.type === "withdrawal";
     return true;
@@ -204,57 +124,50 @@ const AdminTransactions = () => {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Finans Talepleri</h2>
-          <p className="text-sm text-muted-foreground">Banka hesapları ve para transferi talepleri</p>
+          <p className="text-sm text-muted-foreground">Para yatırma ve çekme taleplerini yönetin</p>
         </div>
-        <Button variant="outline" size="sm" onClick={loadAll} disabled={loading}>
-          <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+        <Button variant="outline" size="sm" onClick={load} disabled={loading}>
+          <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
           Yenile
         </Button>
       </div>
 
-      {/* Stats — matches AdminSettings system info style */}
-      <Card className="border-border">
-        <CardContent className="divide-y divide-border p-0">
-          <div className="flex items-center justify-between px-4 py-3">
-            <div>
-              <p className="text-sm font-semibold">Bekleyen Talepler</p>
-              <p className="text-xs text-muted-foreground">Onay bekleyen yatırma/çekme</p>
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="border-border bg-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-warning/10">
+              <Clock className="h-5 w-5 text-warning" />
             </div>
-            <span className={`flex items-center gap-1.5 text-sm font-bold ${pendingCount > 0 ? "text-warning" : "text-buy"}`}>
-              <Clock className="h-4 w-4" />
-              {pendingCount}
-            </span>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3">
             <div>
-              <p className="text-sm font-semibold">Toplam Yatırma</p>
-              <p className="text-xs text-muted-foreground">Onaylanan yatırma toplamı</p>
+              <p className="text-2xl font-bold">{pendingCount}</p>
+              <p className="text-xs text-muted-foreground">Bekleyen Talep</p>
             </div>
-            <span className="text-sm font-mono font-bold text-buy">
-              {depositTotal.toLocaleString("tr-TR")} ₺
-            </span>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3">
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-buy/10">
+              <ArrowDownToLine className="h-5 w-5 text-buy" />
+            </div>
             <div>
-              <p className="text-sm font-semibold">Toplam Çekim</p>
-              <p className="text-xs text-muted-foreground">Onaylanan çekim toplamı</p>
+              <p className="text-2xl font-bold font-mono">{depositTotal.toLocaleString("tr-TR")} ₺</p>
+              <p className="text-xs text-muted-foreground">Toplam Yatırma</p>
             </div>
-            <span className="text-sm font-mono font-bold text-sell">
-              {withdrawTotal.toLocaleString("tr-TR")} ₺
-            </span>
-          </div>
-          <div className="flex items-center justify-between px-4 py-3">
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-sell/10">
+              <ArrowUpFromLine className="h-5 w-5 text-sell" />
+            </div>
             <div>
-              <p className="text-sm font-semibold">Banka Hesapları</p>
-              <p className="text-xs text-muted-foreground">Aktif / Toplam</p>
+              <p className="text-2xl font-bold font-mono">{withdrawTotal.toLocaleString("tr-TR")} ₺</p>
+              <p className="text-xs text-muted-foreground">Toplam Çekim</p>
             </div>
-            <span className="flex items-center gap-1.5 text-sm font-bold text-buy">
-              <CheckCircle className="h-4 w-4" />
-              {bankAccounts.filter((a) => a.is_active).length} / {bankAccounts.length}
-            </span>
-          </div>
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Tabs */}
       <div className="flex gap-2 flex-wrap">
@@ -262,222 +175,135 @@ const AdminTransactions = () => {
           <button
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition-all ${
               activeTab === tab.key
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted/60 text-muted-foreground hover:bg-muted"
             }`}
           >
             <tab.icon className="h-4 w-4" />
             {tab.label}
-            {tab.key === "all" && <span className="text-xs opacity-70">({transactions.length})</span>}
-            {tab.key === "deposits" && <span className="text-xs opacity-70">({transactions.filter((t) => t.type === "deposit").length})</span>}
-            {tab.key === "withdrawals" && <span className="text-xs opacity-70">({transactions.filter((t) => t.type === "withdrawal").length})</span>}
-            {tab.key === "bank" && <span className="text-xs opacity-70">({bankAccounts.length})</span>}
+            <span className="text-xs opacity-70 ml-0.5">
+              ({activeTab === tab.key ? filteredTx.length : 
+                tab.key === "all" ? transactions.length :
+                tab.key === "deposits" ? transactions.filter(t => t.type === "deposit").length :
+                transactions.filter(t => t.type === "withdrawal").length
+              })
+            </span>
           </button>
         ))}
       </div>
 
-      {/* Bank Accounts Tab */}
-      {activeTab === "bank" && (
-        <>
-          <div className="flex justify-end">
-            <Button size="sm" onClick={() => setShowAddDialog(true)} className="gap-1">
-              <Plus className="h-4 w-4" /> Hesap Ekle
-            </Button>
-          </div>
-          <Card className="border-border">
-            <CardContent className="p-0">
-              {bankAccounts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                  <FileText className="h-10 w-10 mb-3 opacity-40" />
-                  <p className="text-sm">Henüz tanımlı banka bulunmuyor.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead>
-                      <tr className="border-b border-border">
-                        <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Banka</th>
-                        <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Hesap Sahibi</th>
-                        <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">IBAN</th>
-                        <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Birim</th>
-                        <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
-                        <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {bankAccounts.map((acc) => (
-                        <tr key={acc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-2">
-                              <div className="p-1.5 rounded-lg bg-primary/10">
-                                <Landmark className="h-4 w-4 text-primary" />
-                              </div>
-                              <span className="text-sm font-semibold">{acc.bank_name}</span>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-sm">{acc.account_holder}</td>
-                          <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{acc.iban}</td>
-                          <td className="px-4 py-3 text-center text-xs font-medium">{acc.currency}</td>
-                          <td className="px-4 py-3 text-center">
-                            <Switch checked={acc.is_active} onCheckedChange={() => toggleAccount(acc.id, acc.is_active)} />
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteAccount(acc.id)}>
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </>
-      )}
-
-      {/* Transactions List */}
-      {activeTab !== "bank" && (
-        <Card className="border-border">
-          <CardContent className="p-0">
-            {filteredTx.length === 0 ? (
-              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-                <Wallet className="h-10 w-10 mb-3 opacity-40" />
-                <p className="text-sm">İşlem bulunamadı.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Tür</th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Kullanıcı</th>
-                      <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Tarih</th>
-                      <th className="text-right text-xs font-semibold text-muted-foreground px-4 py-3">Tutar</th>
-                      <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Dekont</th>
-                      <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
-                      <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredTx.map((tx) => (
-                      <tr key={tx.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
-                            <div className={`p-1.5 rounded-lg ${tx.type === "deposit" ? "bg-buy/10" : "bg-sell/10"}`}>
-                              {tx.type === "deposit"
-                                ? <ArrowDownToLine className="h-4 w-4 text-buy" />
-                                : <ArrowUpFromLine className="h-4 w-4 text-sell" />
-                              }
-                            </div>
-                            <span className="text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</span>
+      {/* Transactions Table */}
+      <Card className="border-border overflow-hidden">
+        <CardContent className="p-0">
+          {filteredTx.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <Wallet className="h-12 w-12 mb-3 opacity-30" />
+              <p className="text-sm font-medium">İşlem bulunamadı</p>
+              <p className="text-xs opacity-60 mt-1">Henüz bir finans talebi yok</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tür</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Kullanıcı</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tarih</th>
+                    <th className="text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tutar</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Dekont</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Durum</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">İşlem</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredTx.map((tx) => (
+                    <tr key={tx.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className={`p-1.5 rounded-lg ${tx.type === "deposit" ? "bg-buy/10" : "bg-sell/10"}`}>
+                            {tx.type === "deposit"
+                              ? <ArrowDownToLine className="h-4 w-4 text-buy" />
+                              : <ArrowUpFromLine className="h-4 w-4 text-sell" />
+                            }
                           </div>
-                        </td>
-                        <td className="px-4 py-3">
-                          <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</span>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-full bg-muted flex items-center justify-center">
                             <User className="h-3.5 w-3.5 text-muted-foreground" />
-                            <div>
-                              <p className="text-sm font-medium">{tx.user_name || tx.user_id.slice(0, 8)}</p>
-                              <p className="text-[10px] font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</p>
-                            </div>
                           </div>
-                        </td>
-                        <td className="px-4 py-3 text-xs text-muted-foreground">
-                          {new Date(tx.created_at).toLocaleDateString("tr-TR")}
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <span className="text-sm font-mono font-bold">
-                            {Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {tx.receipt_url ? (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              className="h-7 w-7 text-primary hover:bg-primary/10"
-                              onClick={async () => {
-                                const { data } = await supabase.storage.from("receipts").createSignedUrl(tx.receipt_url!, 300);
-                                if (data?.signedUrl) {
-                                  setReceiptPreviewUrl(data.signedUrl);
-                                  setReceiptPreviewOpen(true);
-                                } else {
-                                  toast.error("Dekont yüklenemedi");
-                                }
-                              }}
-                            >
-                              <Eye className="h-4 w-4" />
+                          <div>
+                            <p className="text-sm font-medium leading-tight">{tx.user_name}</p>
+                            <p className="text-[10px] font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        <p className="text-sm">{new Date(tx.created_at).toLocaleDateString("tr-TR")}</p>
+                        <p className="text-[10px] text-muted-foreground">{new Date(tx.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</p>
+                      </td>
+                      <td className="px-4 py-3.5 text-right">
+                        <span className={`text-sm font-mono font-bold ${tx.type === "deposit" ? "text-buy" : "text-sell"}`}>
+                          {tx.type === "deposit" ? "+" : "-"}{Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-center">
+                        {tx.receipt_url ? (
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            className="h-7 w-7 text-primary hover:bg-primary/10"
+                            onClick={async () => {
+                              const { data } = await supabase.storage.from("receipts").createSignedUrl(tx.receipt_url!, 300);
+                              if (data?.signedUrl) {
+                                setReceiptPreviewUrl(data.signedUrl);
+                                setReceiptPreviewOpen(true);
+                              } else {
+                                toast.error("Dekont yüklenemedi");
+                              }
+                            }}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5 text-center">
+                        <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
+                          tx.status === "approved" ? "bg-buy/15 text-buy" :
+                          tx.status === "pending" ? "bg-warning/15 text-warning" :
+                          "bg-sell/15 text-sell"
+                        }`}>
+                          {tx.status === "approved" ? "Onaylı" : tx.status === "pending" ? "Bekliyor" : "Reddedildi"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3.5 text-center">
+                        {tx.status === "pending" ? (
+                          <div className="flex justify-center gap-1">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-buy hover:bg-buy/10 rounded-lg" onClick={() => updateTxStatus(tx.id, "approved")}>
+                              <CheckCircle className="h-4 w-4" />
                             </Button>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span className={`text-xs px-2 py-0.5 rounded-full ${
-                            tx.status === "approved" ? "bg-buy/20 text-buy" :
-                            tx.status === "pending" ? "bg-warning/20 text-warning" :
-                            "bg-sell/20 text-sell"
-                          }`}>
-                            {tx.status === "approved" ? "Onaylı" : tx.status === "pending" ? "Bekliyor" : "Reddedildi"}
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          {tx.status === "pending" ? (
-                            <div className="flex justify-center gap-1">
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-buy hover:bg-buy/10" onClick={() => updateTxStatus(tx.id, "approved")}>
-                                <CheckCircle className="h-4 w-4" />
-                              </Button>
-                              <Button size="icon" variant="ghost" className="h-7 w-7 text-sell hover:bg-sell/10" onClick={() => updateTxStatus(tx.id, "rejected")}>
-                                <XCircle className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          ) : (
-                            <span className="text-xs text-muted-foreground">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Add Account Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Banka Hesabı Ekle</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Banka Adı</label>
-              <Input placeholder="Örn: Ziraat Bankası" value={newAccount.bank_name} onChange={(e) => setNewAccount({ ...newAccount, bank_name: e.target.value })} className="bg-muted/50" />
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-sell hover:bg-sell/10 rounded-lg" onClick={() => updateTxStatus(tx.id, "rejected")}>
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Hesap Sahibi</label>
-              <Input placeholder="Ad Soyad" value={newAccount.account_holder} onChange={(e) => setNewAccount({ ...newAccount, account_holder: e.target.value })} className="bg-muted/50" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">IBAN</label>
-              <Input placeholder="TR00 0000 0000 0000 0000 0000 00" value={newAccount.iban} onChange={(e) => setNewAccount({ ...newAccount, iban: e.target.value })} className="bg-muted/50 font-mono" />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Para Birimi</label>
-              <Input placeholder="TRY" value={newAccount.currency} onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value.toUpperCase() })} className="bg-muted/50" />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowAddDialog(false)}>İptal</Button>
-            <Button onClick={handleAddAccount}>Ekle</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Receipt Preview Dialog */}
       <Dialog open={receiptPreviewOpen} onOpenChange={setReceiptPreviewOpen}>
