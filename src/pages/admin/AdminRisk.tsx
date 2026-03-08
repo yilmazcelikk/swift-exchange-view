@@ -44,8 +44,22 @@ const AdminRisk = () => {
 
   useEffect(() => {
     loadAll();
-    const interval = setInterval(loadAll, 3000);
-    return () => clearInterval(interval);
+
+    // Realtime subscriptions instead of polling
+    const ordersChannel = supabase
+      .channel('admin-risk-orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadAll())
+      .subscribe();
+
+    const symbolsChannel = supabase
+      .channel('admin-risk-symbols')
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, () => loadAll())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(symbolsChannel);
+    };
   }, []);
 
   const loadAll = async () => {
