@@ -86,21 +86,58 @@ const History = () => {
       supabase.from("transactions").select("*").eq("user_id", authUser!.id).eq("status", "approved").order("created_at", { ascending: true }),
     ]);
 
+    // Combine orders and transactions into unified history
+    const items: HistoryItem[] = [];
+    
     if (ordersRes.data) {
-      if (pageNum === 0) {
-        setClosedOrders(ordersRes.data.map((o: any) => ({ ...o, swap: Number(o.swap) || 0 })) as ClosedOrder[]);
-      } else {
-        setClosedOrders(prev => [...prev, ...ordersRes.data!.map((o: any) => ({ ...o, swap: Number(o.swap) || 0 })) as ClosedOrder[]]);
-      }
-      setHasMore(ordersRes.data.length === PAGE_SIZE);
+      ordersRes.data.forEach((o: any) => {
+        items.push({
+          itemType: 'order',
+          data: { ...o, swap: Number(o.swap) || 0 } as ClosedOrder
+        });
+      });
     }
+
+    if (transactionsRes.data) {
+      transactionsRes.data.forEach((t: any) => {
+        items.push({
+          itemType: 'transaction',
+          data: t as Transaction
+        });
+      });
+    }
+
+    // Sort by date (use closed_at for orders, created_at for transactions)
+    items.sort((a, b) => {
+      const dateA = a.itemType === 'order' ? new Date(a.data.closed_at || a.data.created_at) : new Date(a.data.created_at);
+      const dateB = b.itemType === 'order' ? new Date(b.data.closed_at || b.data.created_at) : new Date(b.data.created_at);
+      return dateA.getTime() - dateB.getTime();
+    });
+
+    // Apply pagination
+    const paginatedItems = items.slice(from, to + 1);
+    
+    if (pageNum === 0) {
+      setHistoryItems(paginatedItems);
+    } else {
+      setHistoryItems(prev => [...prev, ...paginatedItems]);
+    }
+    setHasMore(items.length > to + 1);
+
     if (profileRes.data) {
       setBalance(Number(profileRes.data.balance));
       setAccountType(profileRes.data.account_type || "standard");
     }
-    if (depositsRes.data) setTotalDeposit(depositsRes.data.reduce((s: number, t: any) => s + Number(t.amount), 0));
+
+    if (transactionsRes.data) {
+      const deposits = transactionsRes.data.filter((t: any) => t.type === 'deposit');
+      const withdrawals = transactionsRes.data.filter((t: any) => t.type === 'withdrawal');
+      setTotalDeposit(deposits.reduce((s: number, t: any) => s + Number(t.amount), 0));
+      setTotalWithdrawal(withdrawals.reduce((s: number, t: any) => s + Number(t.amount), 0));
+    }
   };
 
+  const closedOrders = historyItems.filter(item => item.itemType === 'order').map(item => item.data as ClosedOrder);
   const totalPnl = closedOrders.reduce((s, o) => s + Number(o.pnl), 0);
   const totalSwap = closedOrders.reduce((s, o) => s + o.swap, 0);
   const totalCommission = closedOrders.reduce(
