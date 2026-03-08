@@ -310,6 +310,26 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
         </div>
       </div>
 
+      {/* Margin Info */}
+      {freeMarginInfo && (
+        <div className="flex items-center justify-between text-[11px] bg-muted/40 rounded-lg px-2.5 py-1.5">
+          <div className="flex items-center gap-3">
+            <div>
+              <span className="text-muted-foreground">Serbest: </span>
+              <span className={`font-mono font-semibold ${freeMarginInfo.freeMargin < 0 ? 'text-sell' : 'text-foreground'}`}>
+                ${freeMarginInfo.freeMargin.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Gerekli: </span>
+              <span className="font-mono font-semibold text-foreground">
+                ${calculateMargin(symbol.name, lots, price, leverageRatio).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Action Buttons */}
       {orderType === "market" ? (
         <div className="grid grid-cols-2 gap-2">
