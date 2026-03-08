@@ -264,7 +264,7 @@ const Dashboard = () => {
     <div className="flex flex-col h-full animate-slide-up">
       {/* Top PnL */}
       {liveOrders.length > 0 && (
-        <div className="flex items-center justify-center px-4 pt-4 pb-2">
+        <div className="flex items-center justify-center px-4 pt-3 pb-1.5">
           {totalOpenPnl < 0 && <span className="text-lg md:text-xl font-bold font-mono text-sell">-</span>}
           <AnimatedPrice value={Math.abs(totalOpenPnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`} />
           <span className={`text-lg md:text-xl font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>USD</span>
@@ -272,7 +272,7 @@ const Dashboard = () => {
       )}
 
       {/* Account Stats */}
-      <div className="px-4 pb-3 space-y-1">
+      <div className="px-4 pb-2.5 space-y-0.5">
         {accountStats.map((stat) => {
           const isMarginLevel = stat.label === "Teminat seviyesi (%)";
           const isLowMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 100;
@@ -284,7 +284,7 @@ const Dashboard = () => {
           else if (isNegativeFreeMargin) valueColorClass = "text-sell";
 
           return (
-            <div key={stat.label} className={`flex items-center justify-between ${isCriticalMargin ? "bg-sell/10 -mx-4 px-4 py-0.5 rounded-lg" : ""}`}>
+            <div key={stat.label} className={`flex items-center justify-between min-h-[28px] ${isCriticalMargin ? "bg-sell/10 -mx-4 px-4 py-0.5 rounded-lg" : ""}`}>
               <span className={`text-xs ${isCriticalMargin ? "text-sell font-medium" : "text-muted-foreground"}`}>{stat.label}:</span>
               <span className="text-xs font-mono font-medium text-foreground">
                 <AnimatedPrice value={Math.abs(stat.value)} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-xs font-mono font-medium ${valueColorClass}`} />
@@ -296,14 +296,18 @@ const Dashboard = () => {
       </div>
 
       {/* Positions Header */}
-      <div className="px-4 pb-2">
+      <div className="px-4 pb-1.5">
         <h2 className="text-sm font-semibold text-foreground">Pozisyonlar ({liveOrders.length})</h2>
       </div>
 
       {/* Positions List */}
-      <div className="flex-1 overflow-auto px-4 pb-4">
+      <div className="flex-1 overflow-auto px-4 pb-4 overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         {liveOrders.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Açık pozisyon bulunmuyor.</p>
+          <div className="flex flex-col items-center justify-center py-12 text-center">
+            <BarChart3 className="h-10 w-10 text-muted-foreground/30 mb-3" />
+            <p className="text-sm text-muted-foreground">Açık pozisyon bulunmuyor.</p>
+            <button onClick={() => navigate('/trading')} className="mt-3 text-xs text-primary font-medium hover:underline">Piyasalara Git →</button>
+          </div>
         ) : (
           <div className="divide-y divide-border">
             {liveOrders.map((order) => (
