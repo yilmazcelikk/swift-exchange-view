@@ -82,6 +82,7 @@ const AdminUsers = () => {
     stop_loss: "",
     take_profit: "",
     pnl: "",
+    type: "buy" as "buy" | "sell",
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
