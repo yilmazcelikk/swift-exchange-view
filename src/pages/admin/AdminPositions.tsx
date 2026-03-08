@@ -229,6 +229,7 @@ const AdminPositions = () => {
     setEditSL(order.stop_loss ? String(order.stop_loss) : "");
     setEditTP(order.take_profit ? String(order.take_profit) : "");
     setEditLots(String(order.lots));
+    setEditSwap(String(order.swap || 0));
   };
 
   const handleSaveEdit = async () => {
