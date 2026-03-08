@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { calculateCommission } from "@/lib/trading";
 
 interface ClosedOrder {
   id: string;
@@ -40,7 +41,7 @@ const History = () => {
 
   const loadHistory = async () => {
     const [ordersRes, profileRes, depositsRes] = await Promise.all([
-      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: false }),
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
       supabase.from("profiles").select("balance").eq("user_id", authUser!.id).single(),
       supabase.from("transactions").select("amount").eq("user_id", authUser!.id).eq("type", "deposit").eq("status", "approved"),
     ]);
@@ -53,12 +54,13 @@ const History = () => {
   // Summary calculations
   const totalPnl = closedOrders.reduce((s, o) => s + Number(o.pnl), 0);
   const totalSwap = closedOrders.reduce((s, o) => s + o.swap, 0);
+  const totalCommission = closedOrders.reduce((s, o) => s + calculateCommission(o.symbol_name, Number(o.lots), Number(o.current_price)), 0);
 
-  // Summary rows like the reference image
   const summaryRows = [
     { label: "Para yatır", value: totalDeposit, color: "text-foreground" },
     { label: "Kâr", value: totalPnl, color: totalPnl >= 0 ? "text-buy" : "text-sell" },
     { label: "Swap", value: totalSwap, color: totalSwap >= 0 ? "text-foreground" : "text-sell" },
+    { label: "Komisyon", value: -totalCommission, color: "text-sell" },
     { label: "Bakiye", value: balance, color: "text-foreground" },
   ];
 
@@ -69,20 +71,7 @@ const History = () => {
       </div>
 
       <div className="flex-1 overflow-auto px-4 pb-24 md:pb-4">
-        {/* Summary section at top */}
-        <div className="pb-3 mb-3 border-b border-border space-y-2">
-          {summaryRows.map((row) => (
-            <div key={row.label} className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{row.label}</span>
-              <span className={`text-sm font-mono font-bold ${row.color}`}>
-                {row.value < 0 ? "-" : ""}
-                {formatNum(Math.abs(row.value))}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Order list below */}
+        {/* Order list */}
         {closedOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
         ) : (
@@ -134,6 +123,19 @@ const History = () => {
             })}
           </div>
         )}
+
+        {/* Summary section at bottom */}
+        <div className="mt-4 pt-4 border-t border-border space-y-2">
+          {summaryRows.map((row) => (
+            <div key={row.label} className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{row.label}</span>
+              <span className={`text-sm font-mono font-bold ${row.color}`}>
+                {row.value < 0 ? "-" : ""}
+                {formatNum(Math.abs(row.value))}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
