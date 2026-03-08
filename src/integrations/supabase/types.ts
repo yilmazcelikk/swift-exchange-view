@@ -145,6 +145,7 @@ export type Database = {
           pnl: number
           status: string
           stop_loss: number | null
+          swap: number
           symbol_id: string
           symbol_name: string
           take_profit: number | null
@@ -164,6 +165,7 @@ export type Database = {
           pnl?: number
           status?: string
           stop_loss?: number | null
+          swap?: number
           symbol_id: string
           symbol_name: string
           take_profit?: number | null
@@ -183,6 +185,7 @@ export type Database = {
           pnl?: number
           status?: string
           stop_loss?: number | null
+          swap?: number
           symbol_id?: string
           symbol_name?: string
           take_profit?: number | null
