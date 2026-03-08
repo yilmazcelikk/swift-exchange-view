@@ -303,37 +303,37 @@ const Dashboard = () => {
       </div>
 
       {/* Positions List */}
-      <div className="flex-1 overflow-auto px-4 pb-4">
+      <div className="flex-1 overflow-auto pb-4">
         {liveOrders.length === 0 ? (
-          <p className="text-sm text-muted-foreground text-center py-8">Açık pozisyon bulunmuyor.</p>
+          <p className="text-xs text-muted-foreground text-center py-8 font-mono">Açık pozisyon bulunmuyor.</p>
         ) : (
-          <div className="divide-y divide-border">
+          <div>
             {liveOrders.map((order) => (
-              <button key={order.id} onClick={() => openOrderSheet(order)} className="w-full py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-colors rounded-lg px-2 -mx-2">
-                <div className="flex items-center gap-3">
+              <button key={order.id} onClick={() => openOrderSheet(order)} className="w-full py-2.5 px-3 text-left terminal-row active:bg-primary/5 transition-colors">
+                <div className="flex items-center gap-2">
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-semibold text-foreground">{order.symbolName}</span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${order.type === 'buy' ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'}`}>
-                        {order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} {order.lots}
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-mono font-bold text-foreground">{order.symbolName}</span>
+                      <span className={`text-[9px] font-mono font-bold px-1 py-px rounded-sm ${order.type === 'buy' ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'}`}>
+                        {order.type === 'buy' ? 'BUY' : 'SELL'} {order.lots}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5">
-                      <span className="text-[11px] text-muted-foreground font-mono">{formatUsd(order.entryPrice)}</span>
-                      <span className="text-[11px] text-muted-foreground">→</span>
-                      <AnimatedPrice value={order.currentPrice} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className="text-[11px] font-mono text-foreground" />
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="text-[10px] text-muted-foreground font-mono tabular-nums">{formatUsd(order.entryPrice)}</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">→</span>
+                      <AnimatedPrice value={order.currentPrice} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className="text-[10px] font-mono tabular-nums text-foreground" />
                     </div>
                     {(order.stopLoss || order.takeProfit) && (
                       <div className="flex items-center gap-2 mt-0.5">
-                        {order.stopLoss && <span className="text-[10px] text-sell font-mono flex items-center gap-0.5"><ShieldAlert className="h-2.5 w-2.5" /> {formatUsd(order.stopLoss)}</span>}
-                        {order.takeProfit && <span className="text-[10px] text-buy font-mono flex items-center gap-0.5"><Target className="h-2.5 w-2.5" /> {formatUsd(order.takeProfit)}</span>}
+                        {order.stopLoss && <span className="text-[9px] text-sell font-mono flex items-center gap-0.5"><ShieldAlert className="h-2.5 w-2.5" /> {formatUsd(order.stopLoss)}</span>}
+                        {order.takeProfit && <span className="text-[9px] text-buy font-mono flex items-center gap-0.5"><Target className="h-2.5 w-2.5" /> {formatUsd(order.takeProfit)}</span>}
                       </div>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    {order.pnl < 0 && <span className="text-sm font-mono font-bold text-sell">-</span>}
-                    <AnimatedPrice value={Math.abs(order.pnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`} />
-                    <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                  <div className="flex items-center gap-1 shrink-0">
+                    {order.pnl < 0 && <span className="text-xs font-mono font-bold text-sell glow-sell">-</span>}
+                    <AnimatedPrice value={Math.abs(order.pnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-xs font-mono font-bold tabular-nums ${order.pnl >= 0 ? 'text-buy glow-buy' : 'text-sell glow-sell'}`} />
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
                   </div>
                 </div>
               </button>
