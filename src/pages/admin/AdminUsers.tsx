@@ -112,9 +112,7 @@ const AdminUsers = () => {
 
         const enriched = ordersData.map(o => {
           const livePrice = priceMap.get((o as any).symbol_id) || Number(o.current_price);
-          // Simple PnL calc
-          const diff = o.type === "buy" ? livePrice - Number(o.entry_price) : Number(o.entry_price) - livePrice;
-          const pnl = diff * Number(o.lots) * 100; // simplified contract size
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice);
           return { ...o, current_price: livePrice, pnl } as OrderRow;
         });
         setSelectedUserOrders(enriched);

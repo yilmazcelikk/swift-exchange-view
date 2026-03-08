@@ -247,12 +247,23 @@ const Dashboard = () => {
     }
 
     const newBalance = profile.balance + netPnl;
+    
+    // Recalculate with remaining open orders
+    const remainingOrders = liveOrders.filter(o => o.id !== order.id);
+    const remainingPnl = remainingOrders.reduce((s, o) => s + o.pnl, 0);
+    const remainingMargin = remainingOrders.reduce((s, o) => {
+      const levNum = parseInt(o.leverage?.split(":")[1]) || 200;
+      return s + calculateMargin(o.symbolName, o.lots, o.entryPrice, levNum);
+    }, 0);
+    const newEquity = newBalance + profile.credit + remainingPnl;
+    const newFreeMargin = newEquity - remainingMargin;
+
     await supabase
       .from("profiles")
       .update({ 
         balance: newBalance,
-        equity: newBalance,
-        free_margin: newBalance,
+        equity: newEquity,
+        free_margin: newFreeMargin,
       })
       .eq("user_id", authUser!.id);
 
