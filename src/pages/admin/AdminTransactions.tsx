@@ -135,7 +135,14 @@ const AdminTransactions = () => {
       }
     }
 
-    toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
+    if (status === "approved" && tx.currency === "TRY") {
+      const rate = await getUsdTryRate();
+      let amount = Number(tx.amount);
+      const usdAmount = Number((amount / rate).toFixed(2));
+      toast.success(`Onaylandı - ${amount.toLocaleString("tr-TR")} TL → ${usdAmount.toFixed(2)} USD (Kur: ${rate.toFixed(2)})`);
+    } else {
+      toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
+    }
     setConfirmAction(null);
     load();
   };
