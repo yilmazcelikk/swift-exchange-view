@@ -146,6 +146,7 @@ const History = () => {
   );
 
   const summaryRows = [
+    { label: "Para çek", value: -totalWithdrawal, color: "text-sell" },
     { label: "Para yatır", value: totalDeposit, color: "text-foreground" },
     { label: "Net Kâr/Zarar", value: totalPnl, color: totalPnl >= 0 ? "text-buy" : "text-sell" },
     { label: "Komisyon", value: -Math.abs(totalCommission), color: "text-sell" },
