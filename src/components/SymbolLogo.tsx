@@ -1,5 +1,5 @@
-import { memo, useState, useEffect, forwardRef, useCallback } from "react";
-import { resolveLogoUrl } from "@/data/symbolLogos";
+import { memo, useState, useEffect, forwardRef, useCallback, useMemo } from "react";
+import { resolveLogoUrls } from "@/data/symbolLogos";
 
 interface SymbolLogoProps {
   symbol: string;
@@ -38,55 +38,29 @@ const AVATAR_COLORS = [
   "from-indigo-500/80 to-indigo-700/80",
 ];
 
-function getAvatarColor(symbol: string): string {
-  let hash = 0;
-  for (let i = 0; i < symbol.length; i++) {
-    hash = symbol.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+function getAvatarColor(s: string): string {
+  let h = 0;
+  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
+  return AVATAR_COLORS[Math.abs(h) % AVATAR_COLORS.length];
 }
 
-function getInitials(symbol: string): string {
-  const clean = symbol.replace(/(USD[T]?|EUR|GBP|JPY|TRY)$/i, "");
-  return clean.slice(0, 2).toUpperCase();
-}
-
-/** Build ordered list of logo URLs to try for a symbol */
-function buildLogoUrls(symbol: string, category?: string): string[] {
-  const urls: string[] = [];
-  
-  // 1. Explicit mapping (highest priority)
-  const mapped = resolveLogoUrl(symbol, category);
-  if (mapped) urls.push(mapped);
-  
-  // 2. Speculative TradingView S3 (works for many instruments)
-  const tvSlug = symbol.toLowerCase().replace(/[^a-z0-9]/g, "");
-  urls.push(`https://s3-symbol-logo.tradingview.com/${tvSlug}--big.svg`);
-  
-  // 3. For crypto, try CoinGecko-style with cleaned name
-  if (category === "crypto") {
-    const coinName = symbol.replace(/(USD[T]?|EUR)$/i, "").toLowerCase();
-    urls.push(`https://s3-symbol-logo.tradingview.com/${coinName}--big.svg`);
-  }
-
-  // Deduplicate
-  return [...new Set(urls)];
+function getInitials(s: string): string {
+  return s.replace(/(USD[T]?|EUR|GBP|JPY|TRY)$/i, "").slice(0, 2).toUpperCase();
 }
 
 export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(function SymbolLogo({ symbol, category, size = "md" }, ref) {
-  const [urlIndex, setUrlIndex] = useState(0);
+  const [urlIdx, setUrlIdx] = useState(0);
   const [allFailed, setAllFailed] = useState(false);
-  
-  const urls = buildLogoUrls(symbol, category);
 
-  // Reset on symbol change
+  const urls = useMemo(() => resolveLogoUrls(symbol, category), [symbol, category]);
+
   useEffect(() => {
-    setUrlIndex(0);
+    setUrlIdx(0);
     setAllFailed(false);
   }, [symbol]);
 
   const handleError = useCallback(() => {
-    setUrlIndex(prev => {
+    setUrlIdx(prev => {
       const next = prev + 1;
       if (next >= urls.length) {
         setAllFailed(true);
@@ -96,12 +70,11 @@ export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(funct
     });
   }, [urls.length]);
 
-  // Show image if we still have URLs to try
-  if (!allFailed && urlIndex < urls.length) {
+  if (!allFailed && urls.length > 0 && urlIdx < urls.length) {
     return (
       <div ref={ref} className={`${sizeClasses[size]} rounded-full bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
         <img
-          src={urls[urlIndex]}
+          src={urls[urlIdx]}
           alt={symbol}
           className={`${imgSizeClasses[size]} object-contain`}
           onError={handleError}
@@ -112,14 +85,11 @@ export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(funct
     );
   }
 
-  // Last resort: text avatar
-  const initials = getInitials(symbol);
-  const colorClass = getAvatarColor(symbol);
-
+  // Last resort text avatar
   return (
-    <div ref={ref} className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${colorClass} flex items-center justify-center shrink-0 border border-border/30 overflow-hidden`}>
+    <div ref={ref} className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${getAvatarColor(symbol)} flex items-center justify-center shrink-0 border border-border/30 overflow-hidden`}>
       <span className={`${textSizeClasses[size]} font-bold text-white leading-none select-none`}>
-        {initials}
+        {getInitials(symbol)}
       </span>
     </div>
   );
