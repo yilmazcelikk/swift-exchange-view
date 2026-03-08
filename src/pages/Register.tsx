@@ -109,7 +109,7 @@ const Register = () => {
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Soyad</label>
-                <Input placeholder="Soyad" value={formData.lastName} onChange={(e) => update("lastName", e.target.value)} className="bg-muted/50" />
+                <Input placeholder="Soyadınızı girin" value={formData.lastName} onChange={(e) => update("lastName", e.target.value)} className="bg-muted/50" />
               </div>
             </div>
             <div>
