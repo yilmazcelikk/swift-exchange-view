@@ -466,6 +466,8 @@ const Trading = () => {
       }
     }
   }, [totalCandles, chartVisibleCount]);
+
+  return (
     <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overflow-y-auto md:overflow-hidden">
       {/* Header */}
       <div className="p-3 border-b border-border flex items-center gap-3">
