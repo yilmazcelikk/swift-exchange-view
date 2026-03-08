@@ -214,6 +214,14 @@ const Dashboard = () => {
   ];
 
   const handleClosePosition = async (order: Order) => {
+    // Check market hours
+    const cat = symbolCategories[order.symbolId] || "";
+    const mStatus = getMarketStatus(order.symbolName, cat);
+    if (!mStatus.isOpen) {
+      toast.error("Piyasa kapalı. Kapalı piyasalarda pozisyon kapatılamaz.");
+      return;
+    }
+
     setClosingOrder(null);
     setSelectedOrder(null);
     
