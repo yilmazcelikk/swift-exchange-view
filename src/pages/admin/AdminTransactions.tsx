@@ -104,7 +104,18 @@ const AdminTransactions = () => {
       }
     }
 
-    const { error } = await supabase.from("transactions").update({ status }).eq("id", id);
+    // Update transaction status and store exchange rate info
+    const updateData: any = { status };
+    if (status === "approved" && tx.currency === "TRY") {
+      const rate = await getUsdTryRate();
+      updateData.exchange_rate = rate;
+      updateData.original_amount = tx.amount;
+      updateData.original_currency = tx.currency;
+      const usdAmount = Number((Number(tx.amount) / rate).toFixed(2));
+      updateData.amount = usdAmount;
+    }
+
+    const { error } = await supabase.from("transactions").update(updateData).eq("id", id);
     if (error) { toast.error("Güncelleme başarısız"); return; }
 
     if (status === "approved" && tx) {
@@ -119,7 +130,6 @@ const AdminTransactions = () => {
         if (tx.currency === "TRY") {
           const rate = await getUsdTryRate();
           amount = Number((amount / rate).toFixed(2));
-          toast.info(`Kur: 1 USD = ${rate.toFixed(2)} TRY → ${amount.toFixed(2)} USD`);
         }
 
         const sign = tx.type === "deposit" ? 1 : -1;
