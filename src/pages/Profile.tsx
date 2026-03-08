@@ -129,6 +129,7 @@ const Profile = () => {
         birthDate: data.birth_date || "",
         country: data.country || "",
         metaId: data.meta_id || 0,
+        accountType: (data as any).account_type || "standard",
       });
     }
     setProfileLoading(false);
