@@ -33,6 +33,8 @@ interface Profile {
   user_id: string;
   full_name: string | null;
   phone: string | null;
+  country: string | null;
+  birth_date: string | null;
   balance: number;
   credit: number;
   equity: number;
@@ -181,8 +183,8 @@ const AdminUsers = () => {
       verification_status: profile.verification_status,
       full_name: profile.full_name || "",
       phone: profile.phone || "",
-      country: (profile as any).country || "",
-      birth_date: (profile as any).birth_date || "",
+      country: profile.country || "",
+      birth_date: profile.birth_date || "",
     });
   };
 
