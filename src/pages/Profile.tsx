@@ -61,6 +61,7 @@ const Profile = () => {
     phone: "",
     birthDate: "",
     country: "",
+    metaId: 0,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
@@ -125,6 +126,7 @@ const Profile = () => {
         phone: data.phone || "",
         birthDate: data.birth_date || "",
         country: data.country || "",
+        metaId: data.meta_id || 0,
       });
     }
     setProfileLoading(false);
@@ -254,6 +256,11 @@ const Profile = () => {
                   {profile.fullName || "İsim belirtilmemiş"}
                 </h2>
                 <p className="text-xs text-muted-foreground truncate mt-0.5">{profile.email}</p>
+                {profile.metaId > 0 && (
+                  <p className="text-[11px] font-mono text-primary/80 mt-0.5">
+                    Hesap No: <span className="font-semibold text-primary">{profile.metaId}</span>
+                  </p>
+                )}
                 <div className="mt-2">
                   {verificationStatus === "approved" ? (
                     <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-buy/10 text-buy">
