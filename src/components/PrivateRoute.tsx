@@ -8,7 +8,7 @@ interface PrivateRouteProps {
 }
 
 export function PrivateRoute({ children, adminOnly = false }: PrivateRouteProps) {
-  const { user, isAdmin, loading, roleResolved } = useAuth();
+  const { user, isAdmin, isFullBanned, loading, roleResolved } = useAuth();
 
   if (loading || !roleResolved) {
     return (
@@ -20,6 +20,10 @@ export function PrivateRoute({ children, adminOnly = false }: PrivateRouteProps)
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (isFullBanned && !adminOnly) {
+    return <Navigate to="/blocked" replace />;
   }
 
   if (adminOnly && !isAdmin) {
