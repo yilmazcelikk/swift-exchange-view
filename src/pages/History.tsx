@@ -33,11 +33,11 @@ const History = () => {
 
   useEffect(() => {
     if (authUser?.id) {
-      loadHistory();
+      loadHistory(0);
 
       const channel = supabase
         .channel("history-orders")
-        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => loadHistory())
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { setPage(0); loadHistory(0); })
         .subscribe();
 
       return () => { supabase.removeChannel(channel); };
