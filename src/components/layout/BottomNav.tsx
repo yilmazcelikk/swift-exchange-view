@@ -11,7 +11,7 @@ const navItems = [
 
 export function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border pb-[env(safe-area-inset-bottom,8px)]" style={{ marginBottom: '6px' }}>
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}>
       <div className="flex items-center justify-around h-14">
         {navItems.map((item) => (
           <NavLink

@@ -16,7 +16,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         <div className="flex-1 flex flex-col min-w-0 min-h-0">
-          <main className="flex-1 h-0 overflow-y-auto overflow-x-hidden md:pb-0 pt-[env(safe-area-inset-top)]" style={{ paddingBottom: 'calc(5rem + env(safe-area-inset-bottom, 0px))' }}>
+          <main className="flex-1 h-0 overflow-y-auto overflow-x-hidden md:pb-0 pt-[env(safe-area-inset-top)]" style={{ paddingBottom: 'calc(3.5rem + max(env(safe-area-inset-bottom, 0px), 8px) + 0.5rem)' }}>
             {children}
           </main>
         </div>
