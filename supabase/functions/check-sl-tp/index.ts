@@ -142,8 +142,11 @@ Deno.serve(async (req) => {
       }
 
       if (shouldClose) {
+        // Fetch profile for account_type
+        const { data: userProfile } = await supabase.from("profiles").select("account_type").eq("user_id", order.user_id).single();
+        const accountType = userProfile?.account_type || "standard";
         const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), currentPrice);
-        const commission = calculateCommission(order.symbol_name, Number(order.lots), currentPrice);
+        const commission = calculateCommission(order.symbol_name, Number(order.lots), currentPrice, accountType);
         const netPnl = pnl - commission;
 
         // Atomic: only close if still open (prevents double-close race condition)
