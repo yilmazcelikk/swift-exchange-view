@@ -178,6 +178,9 @@ const Trading = () => {
         const aIsBist = a.category === "stock" && BIST_NAMES.has(a.name) ? 0 : 1;
         const bIsBist = b.category === "stock" && BIST_NAMES.has(b.name) ? 0 : 1;
         if (aIsBist !== bIsBist) return aIsBist - bIsBist;
+        // BIMAS always at the bottom among BIST stocks
+        if (a.name === "BIMAS" && b.name !== "BIMAS") return 1;
+        if (b.name === "BIMAS" && a.name !== "BIMAS") return -1;
       }
       if (selectedCategory === "all" || selectedCategory === "commodity") {
         const COMMODITY_ORDER = ["XAUUSD", "XAGUSD"];
@@ -638,11 +641,6 @@ const Trading = () => {
           </button>
         </div>
 
-        {/* Spread indicator overlay */}
-        <div className="absolute top-1.5 right-14 z-20 flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-md px-1.5 py-0.5 border border-border/30">
-          <span className="text-[8px] text-muted-foreground font-medium">Spread</span>
-          <span className="text-[9px] font-mono font-semibold text-foreground">{spread.toFixed(selectedSymbol.current_price < 10 ? 5 : 2)}</span>
-        </div>
 
         <div className="h-full flex">
           {/* Candle area */}
@@ -732,17 +730,6 @@ const Trading = () => {
         </div>
       </div>
 
-      {/* Bid/Ask mini strip */}
-      <div className="flex items-center border-y border-border/40 bg-card/50">
-        <div className="flex-1 flex items-center justify-center gap-1 py-1.5 border-r border-border/30">
-          <span className="text-[9px] text-muted-foreground font-medium">BID</span>
-          <span className="text-xs font-mono font-bold text-sell">{formatPrice(bid)}</span>
-        </div>
-        <div className="flex-1 flex items-center justify-center gap-1 py-1.5">
-          <span className="text-[9px] text-muted-foreground font-medium">ASK</span>
-          <span className="text-xs font-mono font-bold text-buy">{formatPrice(ask)}</span>
-        </div>
-      </div>
 
       {/* Order Panel */}
       <div className="border-t border-border bg-card p-3 space-y-3 overflow-y-auto flex-1 md:flex-none md:overflow-visible">
