@@ -12,6 +12,7 @@ import { SymbolLogo } from "@/components/SymbolLogo";
 import { resolveLogoUrl } from "@/data/symbolLogos";
 import { getMarketStatus } from "@/lib/marketHours";
 import { toast } from "sonner";
+import { getSpread as calcSpread } from "@/lib/trading";
 
 interface CandleRow {
   bucket_time: string;
