@@ -286,7 +286,7 @@ const Dashboard = () => {
 
     setOrders(prev => prev.filter(o => o.id !== order.id));
     toast.success(`${order.symbolName} ${order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} ${order.lots} lot pozisyon kapatıldı`, {
-      description: `K/Z: ${netPnl >= 0 ? '+' : ''}${netPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD (Komisyon: ${commission.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD)`,
+      description: `K/Z: ${netPnl >= 0 ? '+' : ''}${netPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD`,
     });
 
     loadData();

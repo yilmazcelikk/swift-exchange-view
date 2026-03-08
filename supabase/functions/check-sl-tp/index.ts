@@ -64,10 +64,17 @@ function calculatePnl(symbolName: string, type: string, lots: number, entryPrice
   return diff * lots * contractSize;
 }
 
-function calculateCommission(symbolName: string, lots: number, currentPrice: number): number {
+const COMMISSION_RATES: Record<string, number> = {
+  standard: 0.00004,
+  gold: 0.00002,
+  diamond: 0.00001,
+};
+
+function calculateCommission(symbolName: string, lots: number, currentPrice: number, accountType: string = "standard"): number {
   const contractSize = getContractSize(symbolName);
   const notional = lots * contractSize * currentPrice;
-  return notional * 0.00002;
+  const rate = COMMISSION_RATES[accountType] ?? COMMISSION_RATES.standard;
+  return notional * rate;
 }
 
 function calculateMargin(symbolName: string, lots: number, entryPrice: number, leverageRatio: number): number {
@@ -135,8 +142,11 @@ Deno.serve(async (req) => {
       }
 
       if (shouldClose) {
+        // Fetch profile for account_type
+        const { data: userProfile } = await supabase.from("profiles").select("account_type").eq("user_id", order.user_id).single();
+        const accountType = userProfile?.account_type || "standard";
         const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), currentPrice);
-        const commission = calculateCommission(order.symbol_name, Number(order.lots), currentPrice);
+        const commission = calculateCommission(order.symbol_name, Number(order.lots), currentPrice, accountType);
         const netPnl = pnl - commission;
 
         // Atomic: only close if still open (prevents double-close race condition)
@@ -167,7 +177,7 @@ Deno.serve(async (req) => {
         // Fetch FRESH balance from DB (not stale)
         const { data: profile } = await supabase
           .from("profiles")
-          .select("balance, credit")
+          .select("balance, credit, account_type")
           .eq("user_id", order.user_id)
           .single();
 
@@ -211,7 +221,7 @@ Deno.serve(async (req) => {
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, balance, credit")
+        .select("user_id, balance, credit, account_type")
         .in("user_id", userIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
@@ -246,7 +256,7 @@ Deno.serve(async (req) => {
           let remainingOrders = [...orderPnls];
 
           for (const item of orderPnls) {
-            const commission = calculateCommission(item.order.symbol_name, Number(item.order.lots), item.currentPrice);
+            const commission = calculateCommission(item.order.symbol_name, Number(item.order.lots), item.currentPrice, profile.account_type || "standard");
             const netPnl = item.pnl - commission;
 
             // Atomic close - only if still open

@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
+import { calculatePnl, calculateMargin, calculateCommission, ACCOUNT_TYPE_LABELS } from "@/lib/trading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,6 +47,7 @@ interface Profile {
   ban_reason: string | null;
   ban_type: string;
   referral_code: string | null;
+  account_type: string;
 }
 
 interface OrderRow {
@@ -81,6 +82,7 @@ const AdminUsers = () => {
     phone: "",
     country: "",
     birth_date: "",
+    account_type: "standard",
   });
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
   const [orderEditForm, setOrderEditForm] = useState({
@@ -185,6 +187,7 @@ const AdminUsers = () => {
       phone: profile.phone || "",
       country: profile.country || "",
       birth_date: profile.birth_date || "",
+      account_type: profile.account_type || "standard",
     });
   };
 
@@ -232,7 +235,8 @@ const AdminUsers = () => {
         phone: editForm.phone || null,
         country: editForm.country || null,
         birth_date: editForm.birth_date || null,
-      })
+        account_type: editForm.account_type,
+      } as any)
       .eq("id", editingUser.id);
 
     if (error) {
@@ -284,7 +288,7 @@ const AdminUsers = () => {
   const handleOrderClose = async () => {
     if (!editingOrder || !selectedUser) return;
     const closePnl = parseFloat(orderEditForm.pnl) || 0;
-    const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price));
+    const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price), selectedUser?.account_type || "standard");
     const netPnl = closePnl - commission;
     
     const { error } = await supabase
@@ -437,7 +441,7 @@ const AdminUsers = () => {
                 <TableHead className="w-[100px]">MTID</TableHead>
                 <TableHead>Kullanıcı</TableHead>
                 <TableHead className="hidden md:table-cell">DOĞRULAMA</TableHead>
-                <TableHead className="hidden lg:table-cell">KYC</TableHead>
+                <TableHead className="hidden lg:table-cell">Hesap Türü</TableHead>
                 <TableHead className="text-right">Bakiye</TableHead>
                 <TableHead className="w-[80px]">İşlem</TableHead>
               </TableRow>
@@ -467,7 +471,13 @@ const AdminUsers = () => {
                     {getVerificationBadge(profile.verification_status)}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    <span className="text-xs text-muted-foreground">Standart</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      profile.account_type === "diamond" ? "bg-primary/20 text-primary" :
+                      profile.account_type === "gold" ? "bg-amber-500/20 text-amber-500" :
+                      "bg-muted text-muted-foreground"
+                    }`}>
+                      {ACCOUNT_TYPE_LABELS[profile.account_type] || "Standart"}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <span className="font-mono text-sm font-semibold text-success">
@@ -895,6 +905,19 @@ const AdminUsers = () => {
                             <SelectItem value="pending">Bekliyor</SelectItem>
                             <SelectItem value="verified">Onaylı</SelectItem>
                             <SelectItem value="rejected">Reddedildi</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Hesap Türü</label>
+                        <Select value={editForm.account_type} onValueChange={(v) => setEditForm({ ...editForm, account_type: v })}>
+                          <SelectTrigger className="bg-muted/50 h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">Standart</SelectItem>
+                            <SelectItem value="gold">Altın</SelectItem>
+                            <SelectItem value="diamond">Elmas</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>

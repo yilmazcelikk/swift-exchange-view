@@ -76,9 +76,20 @@ export function calculateMargin(
 }
 
 /**
- * Commission rate: 0.04% of notional value
+ * Commission rates per account type
+ * Users should NOT see these values
  */
-export const COMMISSION_RATE = 0.00002;
+export const COMMISSION_RATES: Record<string, number> = {
+  standard: 0.00004,  // 0.004%
+  gold: 0.00002,      // 0.002%
+  diamond: 0.00001,   // 0.001%
+};
+
+export const ACCOUNT_TYPE_LABELS: Record<string, string> = {
+  standard: "Standart",
+  gold: "Altın",
+  diamond: "Elmas",
+};
 
 /**
  * Calculate commission for closing a position
@@ -87,8 +98,10 @@ export function calculateCommission(
   symbolName: string,
   lots: number,
   closePrice: number,
+  accountType: string = "standard",
 ): number {
   const contractSize = getContractSize(symbolName);
   const notionalValue = lots * contractSize * closePrice;
-  return notionalValue * COMMISSION_RATE;
+  const rate = COMMISSION_RATES[accountType] ?? COMMISSION_RATES.standard;
+  return notionalValue * rate;
 }

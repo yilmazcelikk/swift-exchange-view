@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { calculateCommission } from "@/lib/trading";
+
 
 interface ClosedOrder {
   id: string;
@@ -54,9 +54,6 @@ const History = () => {
   };
 
   const closedPnlTotal = closedOrders.reduce((sum, o) => sum + Number(o.pnl), 0);
-  const totalCommission = closedOrders.reduce((sum, o) => {
-    return sum + calculateCommission(o.symbol_name, Number(o.lots), Number(o.current_price));
-  }, 0);
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
@@ -73,10 +70,6 @@ const History = () => {
             </span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Komisyon</span>
-            <span className="font-mono font-medium text-sell">-{formatUsd(totalCommission)} USD</span>
-          </div>
-          <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Bakiye</span>
             <span className="font-mono font-medium text-foreground">{formatUsd(balance)} USD</span>
           </div>
@@ -87,7 +80,6 @@ const History = () => {
         ) : (
           <div className="divide-y divide-border">
             {closedOrders.map((order) => {
-              const commission = calculateCommission(order.symbol_name, Number(order.lots), Number(order.current_price));
               const pnl = Number(order.pnl);
               return (
               <div key={order.id} className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
@@ -118,9 +110,6 @@ const History = () => {
                       <span className={`text-sm font-mono font-bold ${pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
                         {pnl >= 0 ? '+' : ''}{formatUsd(pnl)} USD
                       </span>
-                      <p className="text-[10px] text-muted-foreground font-mono">
-                        Komisyon: -{formatUsd(commission)}
-                      </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-1">
