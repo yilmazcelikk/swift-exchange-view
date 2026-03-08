@@ -75,12 +75,8 @@ const AdminTransactions = () => {
   };
 
   const getUsdTryRate = async (): Promise<number> => {
-    const { data } = await supabase
-      .from("symbols")
-      .select("current_price")
-      .eq("name", "USDTRY")
-      .single();
-    return data?.current_price && Number(data.current_price) > 0 ? Number(data.current_price) : 32.0;
+    // Sabit kur: 1 USD = 44 TRY
+    return 44.0;
   };
 
   const updateTxStatus = async (id: string, status: string) => {
