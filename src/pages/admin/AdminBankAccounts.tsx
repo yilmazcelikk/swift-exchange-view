@@ -9,6 +9,10 @@ import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface BankAccount {
   id: string;
@@ -23,6 +27,7 @@ const AdminBankAccounts = () => {
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newAccount, setNewAccount] = useState({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
 
   useEffect(() => { load(); }, []);
@@ -61,6 +66,7 @@ const AdminBankAccounts = () => {
   const deleteAccount = async (id: string) => {
     await supabase.from("bank_accounts").delete().eq("id", id);
     toast.success("Hesap silindi");
+    setDeletingId(null);
     load();
   };
 
@@ -164,7 +170,7 @@ const AdminBankAccounts = () => {
                         <Switch checked={acc.is_active} onCheckedChange={() => toggleAccount(acc.id, acc.is_active)} />
                       </td>
                       <td className="px-4 py-3.5 text-center">
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => deleteAccount(acc.id)}>
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => setDeletingId(acc.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </td>
@@ -207,6 +213,23 @@ const AdminBankAccounts = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Hesabı Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu banka hesabını silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingId && deleteAccount(deletingId)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

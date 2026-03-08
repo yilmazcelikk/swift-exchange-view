@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, FileText, Eye, Download, RefreshCw, Clock, User } from "lucide-react";
+import { CheckCircle, XCircle, FileText, Eye, Download, RefreshCw, Clock, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -21,7 +21,7 @@ interface DocRow {
 const docTypeLabel = (t: string) => {
   if (t === "identity_front") return "Kimlik - Ön Yüz";
   if (t === "identity_back") return "Kimlik - Arka Yüz";
-  if (t === "address_proof") return "Kimlik - Arka Yüz"; // legacy compat
+  if (t === "address_proof") return "Adres Belgesi";
   return t;
 };
 
@@ -30,6 +30,8 @@ const AdminDocuments = () => {
   const [loading, setLoading] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
 
   useEffect(() => { loadDocs(); }, []);
 
@@ -118,6 +120,8 @@ const AdminDocuments = () => {
 
   const pendingCount = docs.filter(d => d.status === "pending").length;
   const approvedCount = docs.filter(d => d.status === "approved").length;
+  const totalPages = Math.ceil(docs.length / ITEMS_PER_PAGE);
+  const paginatedDocs = docs.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6">
@@ -187,7 +191,7 @@ const AdminDocuments = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {docs.map((doc) => (
+                  {paginatedDocs.map((doc) => (
                     <tr key={doc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
@@ -262,6 +266,24 @@ const AdminDocuments = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, docs.length)} / {docs.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-8 w-8" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs px-2">{currentPage} / {totalPages}</span>
+            <Button variant="outline" size="icon" className="h-8 w-8" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Preview Dialog */}
       <Dialog open={previewOpen} onOpenChange={setPreviewOpen}>

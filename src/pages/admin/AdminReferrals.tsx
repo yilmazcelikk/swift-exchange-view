@@ -9,6 +9,10 @@ import {
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { Plus, Copy, Trash2, RefreshCw, Link2 } from "lucide-react";
 
@@ -21,12 +25,13 @@ interface ReferralCode {
   created_at: string;
 }
 
-const SITE_URL = "https://e-subemarbasvarlik.online";
+const SITE_URL = window.location.origin;
 
 const AdminReferrals = () => {
   const [codes, setCodes] = useState<ReferralCode[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newCode, setNewCode] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [creating, setCreating] = useState(false);
@@ -65,7 +70,7 @@ const AdminReferrals = () => {
   const deleteCode = async (id: string) => {
     const { error } = await supabase.from("referral_codes").delete().eq("id", id);
     if (error) toast.error(error.message);
-    else { toast.success("Kod silindi"); loadCodes(); }
+    else { toast.success("Kod silindi"); setDeletingId(null); loadCodes(); }
   };
 
   const copyLink = (code: string) => {
@@ -126,7 +131,7 @@ const AdminReferrals = () => {
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleActive(c.id, c.is_active)} title={c.is_active ? "Devre Dışı Bırak" : "Aktifleştir"}>
                         <Link2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteCode(c.id)} title="Sil">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeletingId(c.id)} title="Sil">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
@@ -168,6 +173,23 @@ const AdminReferrals = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Referans Kodunu Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu referans kodunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingId && deleteCode(deletingId)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

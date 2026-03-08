@@ -293,60 +293,20 @@ const AdminUsers = () => {
     const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(editingOrder.created_at).getTime()) / 86400000));
     const swap = calculateSwap(editingOrder.symbol_name, Number(editingOrder.lots), daysHeld);
     const netPnl = closePnl - commission + swap;
-    
-    const { error } = await supabase
-      .from("orders")
-      .update({
-        status: "closed",
-        closed_at: new Date().toISOString(),
-        pnl: netPnl,
-        swap: swap,
-      } as any)
-      .eq("id", editingOrder.id);
+
+    const { data, error } = await supabase.rpc("close_position", {
+      p_order_id: editingOrder.id,
+      p_close_price: Number(editingOrder.current_price),
+      p_net_pnl: netPnl,
+      p_swap: swap,
+      p_close_reason: "admin_close",
+    });
+
     if (error) {
       toast.error("Kapatma başarısız: " + error.message);
+    } else if (data && typeof data === "object" && !(data as any).success) {
+      toast.error("Kapatma başarısız: " + ((data as any).reason || "Bilinmeyen hata"));
     } else {
-      // Update user balance
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("balance, credit")
-        .eq("user_id", selectedUser.user_id)
-        .single();
-      
-      if (profileData) {
-        const newBalance = Math.max(0, Number(profileData.balance) + netPnl);
-        
-        // Recalculate with remaining orders
-        const { data: remainingOrders } = await supabase
-          .from("orders")
-          .select("symbol_name, type, lots, entry_price, leverage, symbol_id")
-          .eq("user_id", selectedUser.user_id)
-          .eq("status", "open")
-          .neq("id", editingOrder.id);
-        
-        let remainingPnl = 0;
-        let remainingMargin = 0;
-        if (remainingOrders) {
-          const symbolIds = [...new Set(remainingOrders.map(o => (o as any).symbol_id).filter(Boolean))];
-          const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
-          const priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
-          
-          for (const o of remainingOrders) {
-            const livePrice = priceMap.get((o as any).symbol_id) || Number((o as any).entry_price);
-            remainingPnl += calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice);
-            remainingMargin += calculateMargin(o.symbol_name, Number(o.lots), Number(o.entry_price), 200);
-          }
-        }
-        
-        const newEquity = newBalance + Number(profileData.credit) + remainingPnl;
-        const newFreeMargin = newEquity - remainingMargin;
-        
-        await supabase
-          .from("profiles")
-          .update({ balance: newBalance, equity: newEquity, free_margin: newFreeMargin })
-          .eq("user_id", selectedUser.user_id);
-      }
-      
       toast.success("Pozisyon kapatıldı");
       setEditingOrder(null);
       loadUserOrders(selectedUser.user_id);

@@ -31,7 +31,7 @@ const AdminSettings = () => {
 
   const loadSessionId = async () => {
     try {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("app_settings")
         .select("value")
         .eq("key", "tv_session_id")
@@ -66,7 +66,7 @@ const AdminSettings = () => {
     }
     setSaving(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("app_settings")
         .upsert(
           { key: "tv_session_id", value: sessionId.trim(), updated_at: new Date().toISOString() },

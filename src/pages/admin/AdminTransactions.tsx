@@ -4,12 +4,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   CheckCircle, XCircle, ArrowDownToLine, ArrowUpFromLine,
-  RefreshCw, Wallet, Clock, Eye,
+  RefreshCw, Wallet, Clock, Eye, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface TransactionRow {
   id: string;
@@ -32,12 +36,16 @@ const tabs: { key: TabKey; label: string; icon: React.ElementType }[] = [
   { key: "withdrawals", label: "Çekme", icon: ArrowUpFromLine },
 ];
 
+const ITEMS_PER_PAGE = 25;
+
 const AdminTransactions = () => {
   const [transactions, setTransactions] = useState<TransactionRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<TabKey>("all");
   const [receiptPreviewUrl, setReceiptPreviewUrl] = useState<string | null>(null);
   const [receiptPreviewOpen, setReceiptPreviewOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [confirmAction, setConfirmAction] = useState<{ id: string; status: string; tx: TransactionRow } | null>(null);
 
   useEffect(() => { load(); }, []);
 
@@ -77,6 +85,29 @@ const AdminTransactions = () => {
 
   const updateTxStatus = async (id: string, status: string) => {
     const tx = transactions.find(t => t.id === id);
+    if (!tx) return;
+
+    // Withdrawal balance check
+    if (status === "approved" && tx.type === "withdrawal") {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("balance")
+        .eq("user_id", tx.user_id)
+        .single();
+
+      if (profile) {
+        let amount = Number(tx.amount);
+        if (tx.currency === "TRY") {
+          const rate = await getUsdTryRate();
+          amount = Number((amount / rate).toFixed(2));
+        }
+        if (Number(profile.balance) < amount) {
+          toast.error(`Yetersiz bakiye! Kullanıcı bakiyesi: $${Number(profile.balance).toFixed(2)}, Çekim: $${amount.toFixed(2)}`);
+          return;
+        }
+      }
+    }
+
     const { error } = await supabase.from("transactions").update({ status }).eq("id", id);
     if (error) { toast.error("Güncelleme başarısız"); return; }
 
@@ -105,6 +136,7 @@ const AdminTransactions = () => {
     }
 
     toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
+    setConfirmAction(null);
     load();
   };
 
@@ -117,6 +149,12 @@ const AdminTransactions = () => {
     if (activeTab === "withdrawals") return tx.type === "withdrawal";
     return true;
   });
+
+  const totalPages = Math.ceil(filteredTx.length / ITEMS_PER_PAGE);
+  const paginatedTx = filteredTx.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
+
+  // Reset page when tab changes
+  useEffect(() => { setCurrentPage(1); }, [activeTab]);
 
   return (
     <div className="space-y-6">
@@ -184,8 +222,7 @@ const AdminTransactions = () => {
             <tab.icon className="h-4 w-4" />
             {tab.label}
             <span className="text-xs opacity-70 ml-0.5">
-              ({activeTab === tab.key ? filteredTx.length : 
-                tab.key === "all" ? transactions.length :
+              ({tab.key === "all" ? transactions.length :
                 tab.key === "deposits" ? transactions.filter(t => t.type === "deposit").length :
                 transactions.filter(t => t.type === "withdrawal").length
               })
@@ -218,7 +255,7 @@ const AdminTransactions = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredTx.map((tx) => (
+                  {paginatedTx.map((tx) => (
                     <tr key={tx.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
                       <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2.5">
@@ -280,10 +317,10 @@ const AdminTransactions = () => {
                       <td className="px-4 py-3.5 text-center">
                         {tx.status === "pending" ? (
                           <div className="flex justify-center gap-1">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-buy hover:bg-buy/10 rounded-lg" onClick={() => updateTxStatus(tx.id, "approved")}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-buy hover:bg-buy/10 rounded-lg" onClick={() => setConfirmAction({ id: tx.id, status: "approved", tx })}>
                               <CheckCircle className="h-4 w-4" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-sell hover:bg-sell/10 rounded-lg" onClick={() => updateTxStatus(tx.id, "rejected")}>
+                            <Button size="icon" variant="ghost" className="h-8 w-8 text-sell hover:bg-sell/10 rounded-lg" onClick={() => setConfirmAction({ id: tx.id, status: "rejected", tx })}>
                               <XCircle className="h-4 w-4" />
                             </Button>
                           </div>
@@ -299,6 +336,51 @@ const AdminTransactions = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between">
+          <p className="text-xs text-muted-foreground">
+            {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredTx.length)} / {filteredTx.length}
+          </p>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="icon" className="h-8 w-8" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}>
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="text-xs px-2">{currentPage} / {totalPages}</span>
+            <Button variant="outline" size="icon" className="h-8 w-8" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Confirm Action Dialog */}
+      <AlertDialog open={!!confirmAction} onOpenChange={(open) => !open && setConfirmAction(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {confirmAction?.status === "approved" ? "Talebi Onayla" : "Talebi Reddet"}
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {confirmAction?.tx && (
+                <span>
+                  {confirmAction.tx.user_name} - {Number(confirmAction.tx.amount).toLocaleString("tr-TR")} {confirmAction.tx.currency} {confirmAction.tx.type === "deposit" ? "yatırma" : "çekme"} talebini {confirmAction.status === "approved" ? "onaylamak" : "reddetmek"} istediğinize emin misiniz?
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => confirmAction && updateTxStatus(confirmAction.id, confirmAction.status)}
+              className={confirmAction?.status === "approved" ? "bg-buy hover:bg-buy/90" : "bg-destructive hover:bg-destructive/90 text-destructive-foreground"}
+            >
+              {confirmAction?.status === "approved" ? "Onayla" : "Reddet"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Receipt Preview Dialog */}
       <Dialog open={receiptPreviewOpen} onOpenChange={setReceiptPreviewOpen}>
