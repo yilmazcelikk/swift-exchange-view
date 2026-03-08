@@ -66,6 +66,7 @@ const AdminBankAccounts = () => {
   const deleteAccount = async (id: string) => {
     await supabase.from("bank_accounts").delete().eq("id", id);
     toast.success("Hesap silindi");
+    setDeletingId(null);
     load();
   };
 
