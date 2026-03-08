@@ -8,22 +8,54 @@ const corsHeaders = {
 
 const STOP_OUT_LEVEL = 30; // %30 teminat seviyesi
 
-// Contract sizes for PnL calculation (must match frontend)
+// Contract sizes - MUST match frontend src/lib/trading.ts
 function getContractSize(symbolName: string): number {
-  if (["XAUUSD"].includes(symbolName)) return 100;
-  if (["XAGUSD"].includes(symbolName)) return 5000;
-  if (["USOIL", "UKOIL"].includes(symbolName)) return 1000;
-  if (["XPTUSD", "XPDUSD"].includes(symbolName)) return 100;
-  const forexPairs = [
-    "EURUSD","GBPUSD","USDJPY","USDCHF","AUDUSD","USDCAD","NZDUSD","USDTRY","EURTRY",
-    "EURGBP","EURJPY","GBPJPY","EURAUD","EURNZD","EURCAD","EURCHF","GBPAUD","GBPNZD",
-    "GBPCAD","GBPCHF","AUDCAD","AUDCHF","AUDJPY","AUDNZD","NZDJPY","NZDCAD","NZDCHF",
-    "CADJPY","CADCHF","CHFJPY","USDZAR","USDMXN","USDSEK","USDNOK","USDHKD","USDPLN",
-    "USDHUF","USDCNH","EURSEK","EURNOK","EURHUF","TRYJPY"
+  const name = symbolName.toUpperCase();
+
+  // Precious metals
+  if (name === "XAUUSD") return 100;
+  if (name === "XAGUSD") return 5000;
+  if (name === "XPTUSD") return 100;
+  if (name === "XPDUSD") return 100;
+
+  // Energy
+  if (name === "USOIL" || name === "UKOIL") return 1000;
+  if (name === "NATGAS") return 10000;
+
+  // Agriculture
+  if (["CORN", "WHEAT", "SOYBEAN"].includes(name)) return 50;
+  if (name === "COTTON") return 50000;
+  if (name === "SUGAR") return 112000;
+  if (name === "COFFEE") return 37500;
+  if (name === "COCOA") return 10;
+  if (name === "COPPER") return 25000;
+
+  // Crypto - 1 lot = 1 unit
+  const cryptoPairs = [
+    "BTCUSD","ETHUSD","BNBUSD","ADAUSD","DOGEUSD","SOLUSD",
+    "DOTUSD","AVAXUSD","LINKUSD","LTCUSD","BCHUSD","XRPUSD",
+    "MATICUSD","ATOMUSD","ALGOUSD","FTMUSD","MANAUSD","SANDUSD",
+    "APEUSD","APTUSD","ARBUSD","OPUSD","INJUSD","NEAUSD",
+    "FILUSD","ICPUSD","ETCUSD","TRXUSD","SHIBUSD","UNIUSD",
+    "AABORUSD","JUPUSD","PEPE1000USD","TONUSD","SUIUSD","WIFUSD",
   ];
-  if (forexPairs.includes(symbolName)) return 100000;
-  if (symbolName.length === 6 && /^[A-Z]{6}$/.test(symbolName)) return 100000;
-  return 1;
+  if (cryptoPairs.includes(name)) return 1;
+
+  // Indices
+  if (["US500","US30","USTEC","DE40","UK100","JP225","FR40","AU200","HK50"].includes(name)) return 1;
+
+  // BIST stocks - 1 lot = 1 share
+  const bistStocks = [
+    "THYAO","GARAN","AKBNK","EREGL","SISE","KCHOL","SAHOL","TUPRS","PETKM","BIMAS",
+    "YKBNK","ISCTR","ASELS","PGSUS","EKGYO","TOASO","TAVHL","FROTO","TCELL","HALKB",
+    "VAKBN","DOHOL","ENKAI","ARCLK","VESTL","MGROS","SOKM","GUBRF","SASA","OYAKC",
+    "TTKOM","TSKB","AKSA","CIMSA","AEFES","ULKER","DOAS","OTKAR","ISGYO","KRDMD",
+    "GESAN","KONTR","ODAS","BRYAT","TTRAK","EUPWR","AGHOL","MAVI","LOGO",
+  ];
+  if (bistStocks.includes(name)) return 1;
+
+  // Forex pairs - standard 100,000 units (default)
+  return 100000;
 }
 
 function calculatePnl(symbolName: string, type: string, lots: number, entryPrice: number, currentPrice: number): number {
@@ -55,7 +87,7 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get ALL open orders (not just ones with SL/TP - we need them all for stop out)
+    // Get ALL open orders
     const { data: allOpenOrders, error: ordersErr } = await supabase
       .from("orders")
       .select("*")
@@ -69,7 +101,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get current prices for all symbols involved
+    // Get current prices
     const symbolIds = [...new Set(allOpenOrders.map(o => o.symbol_id))];
     const { data: symbols } = await supabase
       .from("symbols")
@@ -107,7 +139,8 @@ Deno.serve(async (req) => {
         const commission = calculateCommission(order.symbol_name, Number(order.lots), currentPrice);
         const netPnl = pnl - commission;
 
-        const { error: closeErr } = await supabase
+        // Atomic: only close if still open (prevents double-close race condition)
+        const { data: closedRows, error: closeErr } = await supabase
           .from("orders")
           .update({
             status: "closed",
@@ -116,14 +149,22 @@ Deno.serve(async (req) => {
             pnl: netPnl,
             close_reason: closeReason,
           })
-          .eq("id", order.id);
+          .eq("id", order.id)
+          .eq("status", "open")
+          .select("id");
 
         if (closeErr) {
           console.error(`Failed to close order ${order.id}:`, closeErr.message);
           continue;
         }
 
-        // Update user balance
+        // If no rows returned, order was already closed (by frontend or another run)
+        if (!closedRows || closedRows.length === 0) {
+          console.log(`Order ${order.id} already closed, skipping balance update`);
+          continue;
+        }
+
+        // Fetch FRESH balance from DB (not stale)
         const { data: profile } = await supabase
           .from("profiles")
           .select("balance, credit")
@@ -132,7 +173,6 @@ Deno.serve(async (req) => {
 
         if (profile) {
           const newBalance = Number(profile.balance) + netPnl;
-          // Recalculate equity considering remaining open orders
           const remainingOrders = allOpenOrders.filter(o => o.user_id === order.user_id && o.id !== order.id && !closedOrderIds.has(o.id));
           let remainingPnl = 0;
           for (const ro of remainingOrders) {
@@ -159,7 +199,6 @@ Deno.serve(async (req) => {
     }
 
     // ── PHASE 2: Stop Out Check (%30) ──
-    // Group remaining open orders by user
     const userOrdersMap = new Map<string, typeof allOpenOrders>();
     for (const order of allOpenOrders) {
       if (closedOrderIds.has(order.id)) continue;
@@ -168,7 +207,6 @@ Deno.serve(async (req) => {
       userOrdersMap.set(order.user_id, list);
     }
 
-    // Get profiles for users with open positions
     const userIds = [...userOrdersMap.keys()];
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
@@ -182,7 +220,6 @@ Deno.serve(async (req) => {
         const profile = profileMap.get(userId);
         if (!profile) continue;
 
-        // Calculate total PnL, used margin
         let totalPnl = 0;
         let totalMargin = 0;
         const orderPnls: { order: typeof orders[0]; pnl: number; margin: number; currentPrice: number }[] = [];
@@ -209,20 +246,11 @@ Deno.serve(async (req) => {
           let remainingOrders = [...orderPnls];
 
           for (const item of orderPnls) {
-            // Recalculate margin level with remaining orders
-            let remPnl = 0;
-            let remMargin = 0;
-            for (const ro of remainingOrders) {
-              if (ro.order.id === item.order.id) continue;
-              remPnl += ro.pnl;
-              remMargin += ro.margin;
-            }
-
             const commission = calculateCommission(item.order.symbol_name, Number(item.order.lots), item.currentPrice);
             const netPnl = item.pnl - commission;
 
-            // Close this order
-            const { error: closeErr } = await supabase
+            // Atomic close - only if still open
+            const { data: closedRows, error: closeErr } = await supabase
               .from("orders")
               .update({
                 status: "closed",
@@ -231,10 +259,13 @@ Deno.serve(async (req) => {
                 pnl: netPnl,
                 close_reason: "stop_out",
               })
-              .eq("id", item.order.id);
+              .eq("id", item.order.id)
+              .eq("status", "open")
+              .select("id");
 
-            if (closeErr) {
-              console.error(`Stop out close failed for ${item.order.id}:`, closeErr.message);
+            if (closeErr || !closedRows || closedRows.length === 0) {
+              console.error(`Stop out close failed/skipped for ${item.order.id}`);
+              remainingOrders = remainingOrders.filter(ro => ro.order.id !== item.order.id);
               continue;
             }
 
@@ -243,12 +274,18 @@ Deno.serve(async (req) => {
             stopOutClosedCount++;
             console.log(`Stop out closed: ${item.order.symbol_name} ${item.order.type}, PnL: ${netPnl.toFixed(2)}`);
 
-            // Check if margin level is now above stop out
+            // Check if margin level recovered
+            let remPnl = 0;
+            let remMargin = 0;
+            for (const ro of remainingOrders) {
+              remPnl += ro.pnl;
+              remMargin += ro.margin;
+            }
+
             const newEquity = currentBalance + Number(profile.credit) + remPnl;
             const newMarginLevel = remMargin > 0 ? (newEquity / remMargin) * 100 : Infinity;
 
             if (newMarginLevel >= STOP_OUT_LEVEL || remainingOrders.length === 0) {
-              // Update profile with final values
               const newFreeMargin = newEquity - remMargin;
               await supabase
                 .from("profiles")
@@ -258,7 +295,7 @@ Deno.serve(async (req) => {
             }
           }
 
-          // If all orders closed, update profile
+          // If all orders closed
           if (remainingOrders.length === 0) {
             const finalEquity = currentBalance + Number(profile.credit);
             await supabase

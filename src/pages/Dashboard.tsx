@@ -230,7 +230,8 @@ const Dashboard = () => {
     const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice);
     const netPnl = liveOrder.pnl - commission;
 
-    const { error } = await supabase
+    // Atomic close: only update if still open (prevents double-close with edge function)
+    const { data: closedRows, error } = await supabase
       .from("orders")
       .update({ 
         status: "closed", 
@@ -238,14 +239,32 @@ const Dashboard = () => {
         current_price: liveOrder.currentPrice,
         pnl: netPnl,
       })
-      .eq("id", order.id);
+      .eq("id", order.id)
+      .eq("status", "open")
+      .select("id");
 
     if (error) {
       toast.error("Pozisyon kapatılamadı: " + error.message);
       return;
     }
 
-    const newBalance = profile.balance + netPnl;
+    // If no rows updated, order was already closed by edge function
+    if (!closedRows || closedRows.length === 0) {
+      toast.info("Bu pozisyon zaten kapatılmış.");
+      loadData();
+      return;
+    }
+
+    // Fetch FRESH balance from DB (not stale React state)
+    const { data: freshProfile } = await supabase
+      .from("profiles")
+      .select("balance, credit")
+      .eq("user_id", authUser!.id)
+      .single();
+
+    const freshBalance = freshProfile ? Number(freshProfile.balance) : profile.balance;
+    const freshCredit = freshProfile ? Number(freshProfile.credit) : profile.credit;
+    const newBalance = freshBalance + netPnl;
     
     // Recalculate with remaining open orders
     const remainingOrders = liveOrders.filter(o => o.id !== order.id);
@@ -253,7 +272,7 @@ const Dashboard = () => {
     const remainingMargin = remainingOrders.reduce((s, o) => {
       return s + calculateMargin(o.symbolName, o.lots, o.entryPrice, 200);
     }, 0);
-    const newEquity = newBalance + profile.credit + remainingPnl;
+    const newEquity = newBalance + freshCredit + remainingPnl;
     const newFreeMargin = newEquity - remainingMargin;
 
     await supabase
