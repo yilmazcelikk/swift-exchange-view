@@ -121,8 +121,8 @@ const History = () => {
         )}
       </div>
 
-      {/* Fixed summary at bottom - mobile only sticky, desktop normal */}
-      <div className="shrink-0 px-4 pt-3 pb-24 md:pb-4 border-t border-border bg-background space-y-1.5">
+      {/* Fixed summary pinned to bottom */}
+      <div className="shrink-0 px-4 py-2 pb-[calc(env(safe-area-inset-bottom,8px)+4.5rem)] md:pb-4 border-t border-border bg-background space-y-1">
         {summaryRows.map((row) => (
           <div key={row.label} className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{row.label}</span>
