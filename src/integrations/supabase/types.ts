@@ -412,6 +412,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      close_position: {
+        Args: {
+          p_close_price: number
+          p_close_reason?: string
+          p_net_pnl: number
+          p_order_id: string
+          p_swap: number
+        }
+        Returns: Json
+      }
       generate_random_meta_id: { Args: never; Returns: number }
       has_role: {
         Args: {
