@@ -363,7 +363,7 @@ const Trading = () => {
                     <p className="text-[11px] text-muted-foreground truncate">{symbol.display_name}</p>
                   </div>
                   <div className="text-right shrink-0">
-                    <AnimatedPrice value={symbol.current_price} live changePercent={symbol.change_percent ?? 0} className="text-sm font-mono font-semibold" />
+                    <AnimatedPrice value={symbol.current_price} live={marketStatus.isOpen} changePercent={symbol.change_percent ?? 0} className="text-sm font-mono font-semibold" />
                     <div className="flex items-center justify-end gap-1 mt-0.5">
                       {!marketStatus.isOpen && (
                         <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
@@ -436,7 +436,7 @@ const Trading = () => {
             <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
           </div>
         </div>
-        <AnimatedPrice value={price} live changePercent={selectedSymbol.change_percent ?? 0} className="text-lg font-bold font-mono" />
+        <AnimatedPrice value={price} live={currentMarketStatus.isOpen} changePercent={selectedSymbol.change_percent ?? 0} className="text-lg font-bold font-mono" />
       </div>
 
       {/* Timeframe Selector */}

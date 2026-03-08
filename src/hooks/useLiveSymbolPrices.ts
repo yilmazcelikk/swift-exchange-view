@@ -8,6 +8,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 interface SymbolPriceInput {
   price: number;
   changePercent?: number;
+  marketOpen?: boolean;
 }
 
 export function useLiveSymbolPrices(
@@ -47,8 +48,9 @@ export function useLiveSymbolPrices(
         const next: Record<string, number> = {};
         for (const [id, input] of Object.entries(realPricesRef.current)) {
           const real = input.price;
-          if (!real || real <= 0) {
-            next[id] = real;
+          // Skip ticking for closed markets - just keep current price
+          if (input.marketOpen === false || !real || real <= 0) {
+            next[id] = prev[id] ?? real;
             continue;
           }
           const cp = Math.abs(input.changePercent || 0);

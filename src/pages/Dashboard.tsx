@@ -26,11 +26,13 @@ import {
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
+import { getMarketStatus } from "@/lib/marketHours";
 
 const Dashboard = () => {
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [symbolCategories, setSymbolCategories] = useState<Record<string, string>>({});
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -135,12 +137,18 @@ const Dashboard = () => {
       const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
       const { data: symbolsData } = await supabase
         .from("symbols")
-        .select("id, current_price")
+        .select("id, current_price, name, category")
         .in("id", symbolIds);
-      const priceMap = new Map(symbolsData?.map(s => [s.id, Number(s.current_price)]) || []);
+      const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
+
+      // Store symbol categories for market hour checks
+      const catMap: Record<string, string> = {};
+      symbolsData?.forEach(s => { catMap[s.id] = s.category; });
+      setSymbolCategories(catMap);
 
       setOrders(data.map((o: any) => {
-        const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
+        const symbolInfo = priceMap.get(o.symbol_id);
+        const currentPrice = symbolInfo ? symbolInfo.price : Number(o.current_price);
 
         return {
           id: o.id,
@@ -164,16 +172,18 @@ const Dashboard = () => {
   const openOrders = orders.filter(o => o.status === 'open');
 
   const symbolPriceMap = useMemo(() => {
-    const map: Record<string, { price: number; changePercent?: number }> = {};
+    const map: Record<string, { price: number; changePercent?: number; marketOpen?: boolean }> = {};
     for (const o of openOrders) {
       if (!map[o.symbolId]) {
-        map[o.symbolId] = { price: o.currentPrice, changePercent: 0 };
+        const cat = symbolCategories[o.symbolId] || "";
+        const status = getMarketStatus(o.symbolName, cat);
+        map[o.symbolId] = { price: o.currentPrice, changePercent: 0, marketOpen: status.isOpen };
       } else {
         map[o.symbolId].price = o.currentPrice;
       }
     }
     return map;
-  }, [openOrders]);
+  }, [openOrders, symbolCategories]);
 
   const livePrices = useLiveSymbolPrices(symbolPriceMap, openOrders.length > 0);
 
