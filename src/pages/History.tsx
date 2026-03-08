@@ -67,7 +67,8 @@ const History = () => {
         <h1 className="text-lg font-bold text-foreground">İşlem Geçmişi</h1>
       </div>
 
-      <div className="flex-1 overflow-auto px-4 pb-24 md:pb-4">
+      {/* Scrollable orders area */}
+      <div className="flex-1 overflow-auto px-4">
         {closedOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
         ) : (
@@ -118,17 +119,18 @@ const History = () => {
             })}
           </div>
         )}
+      </div>
 
-        <div className="mt-4 pt-4 border-t border-border space-y-2">
-          {summaryRows.map((row) => (
-            <div key={row.label} className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{row.label}</span>
-              <span className={`text-sm font-mono font-bold ${row.color}`}>
-                {row.value < 0 ? "-" : ""}{formatNum(Math.abs(row.value))}
-              </span>
-            </div>
-          ))}
-        </div>
+      {/* Fixed summary at bottom - mobile only sticky, desktop normal */}
+      <div className="shrink-0 px-4 pt-3 pb-24 md:pb-4 border-t border-border bg-background space-y-1.5">
+        {summaryRows.map((row) => (
+          <div key={row.label} className="flex items-center justify-between">
+            <span className="text-sm text-muted-foreground">{row.label}</span>
+            <span className={`text-sm font-mono font-bold ${row.color}`}>
+              {row.value < 0 ? "-" : ""}{formatNum(Math.abs(row.value))}
+            </span>
+          </div>
+        ))}
       </div>
     </div>
   );
