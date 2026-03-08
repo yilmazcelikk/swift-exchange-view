@@ -8,6 +8,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 interface SymbolPriceInput {
   price: number;
   changePercent?: number;
+  marketOpen?: boolean;
 }
 
 export function useLiveSymbolPrices(
