@@ -265,21 +265,68 @@ const AdminUsers = () => {
   };
 
   const handleOrderClose = async () => {
-    if (!editingOrder) return;
+    if (!editingOrder || !selectedUser) return;
+    const closePnl = parseFloat(orderEditForm.pnl) || 0;
+    const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price));
+    const netPnl = closePnl - commission;
+    
     const { error } = await supabase
       .from("orders")
       .update({
         status: "closed",
         closed_at: new Date().toISOString(),
-        pnl: parseFloat(orderEditForm.pnl) || 0,
+        pnl: netPnl,
       })
       .eq("id", editingOrder.id);
     if (error) {
       toast.error("Kapatma başarısız: " + error.message);
     } else {
+      // Update user balance
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("balance, credit")
+        .eq("user_id", selectedUser.user_id)
+        .single();
+      
+      if (profileData) {
+        const newBalance = Number(profileData.balance) + netPnl;
+        
+        // Recalculate with remaining orders
+        const { data: remainingOrders } = await supabase
+          .from("orders")
+          .select("symbol_name, type, lots, entry_price, leverage, symbol_id")
+          .eq("user_id", selectedUser.user_id)
+          .eq("status", "open")
+          .neq("id", editingOrder.id);
+        
+        let remainingPnl = 0;
+        let remainingMargin = 0;
+        if (remainingOrders) {
+          const symbolIds = [...new Set(remainingOrders.map(o => (o as any).symbol_id).filter(Boolean))];
+          const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
+          const priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+          
+          for (const o of remainingOrders) {
+            const livePrice = priceMap.get((o as any).symbol_id) || Number((o as any).entry_price);
+            remainingPnl += calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice);
+            const lev = parseInt(o.leverage?.split(":")[1]) || 200;
+            remainingMargin += calculateMargin(o.symbol_name, Number(o.lots), Number(o.entry_price), lev);
+          }
+        }
+        
+        const newEquity = newBalance + Number(profileData.credit) + remainingPnl;
+        const newFreeMargin = newEquity - remainingMargin;
+        
+        await supabase
+          .from("profiles")
+          .update({ balance: newBalance, equity: newEquity, free_margin: newFreeMargin })
+          .eq("user_id", selectedUser.user_id);
+      }
+      
       toast.success("Pozisyon kapatıldı");
       setEditingOrder(null);
-      if (selectedUser) loadUserOrders(selectedUser.user_id);
+      loadUserOrders(selectedUser.user_id);
+      loadProfiles();
     }
   };
 
