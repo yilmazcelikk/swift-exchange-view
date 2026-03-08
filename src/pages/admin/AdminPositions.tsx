@@ -798,6 +798,21 @@ const AdminPositions = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Swap Field */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium mb-1.5 text-muted-foreground">
+                      <DollarSign className="h-3 w-3" /> Swap (USD)
+                    </label>
+                    <Input
+                      type="number"
+                      step="any"
+                      value={editSwap}
+                      onChange={(e) => setEditSwap(e.target.value)}
+                      className="font-mono h-9 bg-muted/50"
+                    />
+                    <p className="text-[9px] text-muted-foreground mt-1">Negatif = maliyet, pozitif = kazanç</p>
+                  </div>
                 </div>
 
                 {/* Auto-calculated preview */}
