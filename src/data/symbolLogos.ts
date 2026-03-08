@@ -84,7 +84,7 @@ export const STOCK_LOGOS: Record<string, string> = {
   LOGO: `${CB}/logo.com.tr`,
   MAVI: `${TV}/mavi-giyim--big.svg`,
   MGROS: `${TV}/migros-ticaret--big.svg`,
-  ODAS: `${TV}/odas--big.svg`,
+  ODAS: `${CB}/odasenerji.com.tr`,
   OTKAR: `${TV}/otokar--big.svg`,
   OYAKC: `${TV}/oyak-cimento--big.svg`,
   PETKM: `${TV}/petkim--big.svg`,
