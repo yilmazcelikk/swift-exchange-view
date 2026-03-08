@@ -262,14 +262,16 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
-      {/* Top PnL - only when positions open */}
-      {hasOpenOrders && (
-        <div className="flex items-center justify-center px-4 pt-2 pb-1">
-          {totalOpenPnl < 0 && <span className="text-base font-bold font-mono text-sell">-</span>}
-          <AnimatedPrice value={Math.abs(totalOpenPnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-base font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`} />
-          <span className={`text-base font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>USD</span>
-        </div>
-      )}
+      {/* Top PnL bar - always visible */}
+      <div className="flex items-center justify-center px-4 pt-2 pb-1 min-h-[32px]">
+        {hasOpenOrders && (
+          <>
+            {totalOpenPnl < 0 && <span className="text-base font-bold font-mono text-sell">-</span>}
+            <AnimatedPrice value={Math.abs(totalOpenPnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-base font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`} />
+            <span className={`text-base font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>USD</span>
+          </>
+        )}
+      </div>
 
       {/* Account Stats */}
       <div className="px-4 pt-2 pb-1.5">
