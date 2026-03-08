@@ -235,7 +235,8 @@ const AdminUsers = () => {
         phone: editForm.phone || null,
         country: editForm.country || null,
         birth_date: editForm.birth_date || null,
-      })
+        account_type: editForm.account_type,
+      } as any)
       .eq("id", editingUser.id);
 
     if (error) {
