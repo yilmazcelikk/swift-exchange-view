@@ -450,11 +450,6 @@ const AdminUsers = () => {
                   <TableCell className="font-mono text-xs">{profile.meta_id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${profile.is_banned ? "bg-destructive/10" : "bg-primary/10"}`}>
-                        <span className={`text-xs font-bold ${profile.is_banned ? "text-destructive" : "text-primary"}`}>
-                          {(profile.full_name || "?")[0]?.toUpperCase()}
-                        </span>
-                      </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <p className="text-sm font-medium truncate">{profile.full_name || "İsimsiz"}</p>
@@ -529,15 +524,10 @@ const AdminUsers = () => {
             const liveProfile = profiles.find(p => p.id === selectedUser.id) || selectedUser;
             return (
             <div className="mt-6 space-y-6">
-              {/* User Avatar & Name */}
+              {/* User Name */}
               <div className="flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                  <span className="text-2xl font-bold text-primary">
-                    {(liveProfile.full_name || "?")[0]?.toUpperCase()}
-                  </span>
-                </div>
                 <h3 className="text-lg font-bold">{liveProfile.full_name || "İsimsiz"}</h3>
-                <p className="text-xs text-muted-foreground font-mono">{liveProfile.user_id.slice(0, 16)}...</p>
+                <p className="text-xs text-muted-foreground font-mono mt-0.5">{liveProfile.user_id.slice(0, 16)}...</p>
                 <div className="mt-2">
                   {getVerificationBadge(liveProfile.verification_status)}
                 </div>
@@ -777,19 +767,12 @@ const AdminUsers = () => {
               <>
                 {/* User Header */}
                 <div className="px-5 py-4 bg-muted/30 border-b border-border">
-                  <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-lg font-bold text-primary">
-                        {(liveProfile.full_name || "?")[0]?.toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-base font-bold truncate">{liveProfile.full_name || "İsimsiz"}</h3>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] font-mono text-muted-foreground">MTID: {liveProfile.meta_id}</span>
-                        <span className="text-muted-foreground/30">•</span>
-                        <span className="text-[11px] font-mono text-muted-foreground">{liveProfile.user_id.slice(0, 12)}...</span>
-                      </div>
+                  <div>
+                    <h3 className="text-base font-bold truncate">{liveProfile.full_name || "İsimsiz"}</h3>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[11px] font-mono text-muted-foreground">MTID: {liveProfile.meta_id}</span>
+                      <span className="text-muted-foreground/30">•</span>
+                      <span className="text-[11px] font-mono text-muted-foreground">{liveProfile.user_id.slice(0, 12)}...</span>
                     </div>
                   </div>
                   {/* Live Stats */}
