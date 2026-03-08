@@ -9,8 +9,11 @@ import {
   X, RefreshCw, Search, ChevronDown, ChevronRight,
   TrendingUp, TrendingDown, Users, BarChart3, DollarSign,
   Clock, Shield, Target, ShieldAlert, Wallet, Activity,
-  ArrowUpRight, ArrowDownRight, Percent
+  ArrowUpRight, ArrowDownRight, Percent, Pencil,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import {
@@ -49,6 +52,12 @@ const AdminPositions = () => {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [profiles, setProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [closingOrder, setClosingOrder] = useState<OrderRow | null>(null);
+  const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
+  const [editEntry, setEditEntry] = useState("");
+  const [editSL, setEditSL] = useState("");
+  const [editTP, setEditTP] = useState("");
+  const [editLots, setEditLots] = useState("");
+  const [editSaving, setEditSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
@@ -193,6 +202,34 @@ const AdminPositions = () => {
       setClosingOrder(null);
       loadOrders();
     }
+  };
+
+  const openEditDialog = (order: OrderRow) => {
+    setEditingOrder(order);
+    setEditEntry(String(order.entry_price));
+    setEditSL(order.stop_loss ? String(order.stop_loss) : "");
+    setEditTP(order.take_profit ? String(order.take_profit) : "");
+    setEditLots(String(order.lots));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingOrder) return;
+    setEditSaving(true);
+    const updates: any = {
+      entry_price: parseFloat(editEntry) || editingOrder.entry_price,
+      stop_loss: editSL ? parseFloat(editSL) : null,
+      take_profit: editTP ? parseFloat(editTP) : null,
+      lots: parseFloat(editLots) || editingOrder.lots,
+    };
+    const { error } = await supabase.from("orders").update(updates).eq("id", editingOrder.id);
+    if (error) {
+      toast.error("Güncelleme başarısız: " + error.message);
+    } else {
+      toast.success(`${editingOrder.symbol_name} pozisyon güncellendi`);
+      setEditingOrder(null);
+      loadOrders();
+    }
+    setEditSaving(false);
   };
 
   const formatUsd = (v: number) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -553,6 +590,14 @@ const AdminPositions = () => {
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                className="h-7 w-7 text-primary hover:bg-primary/10"
+                                onClick={(e) => { e.stopPropagation(); openEditDialog(order); }}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
                                 className="h-7 w-7 text-sell hover:bg-sell/10"
                                 onClick={(e) => { e.stopPropagation(); setClosingOrder(order); }}
                               >
@@ -632,6 +677,161 @@ const AdminPositions = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Edit Position Dialog */}
+      <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Pencil className="h-4 w-4 text-primary" />
+              Pozisyon Düzenle
+            </DialogTitle>
+          </DialogHeader>
+
+          {editingOrder && (() => {
+            const entryVal = parseFloat(editEntry) || editingOrder.entry_price;
+            const lotsVal = parseFloat(editLots) || editingOrder.lots;
+            const slVal = editSL ? parseFloat(editSL) : null;
+            const tpVal = editTP ? parseFloat(editTP) : null;
+            const currentPnl = calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, editingOrder.current_price);
+            const leverageNum = parseInt(editingOrder.leverage.split(":")[1]) || 200;
+            const margin = calculateMargin(editingOrder.symbol_name, lotsVal, entryVal, leverageNum);
+
+            // Calculate potential PnL at SL/TP
+            const slPnl = slVal ? calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, slVal) : null;
+            const tpPnl = tpVal ? calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, tpVal) : null;
+
+            return (
+              <div className="space-y-4">
+                {/* Symbol info header */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-muted/40">
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold">{editingOrder.symbol_name}</span>
+                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${editingOrder.type === "buy" ? "bg-buy/15 text-buy" : "bg-sell/15 text-sell"}`}>
+                        {editingOrder.type === "buy" ? "ALIŞ" : "SATIŞ"}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">{editingOrder.leverage}</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Kullanıcı: <span className="text-foreground font-medium">{getUserLabel(editingOrder.user_id)}</span>
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-xs text-muted-foreground">Güncel Fiyat</p>
+                    <p className="text-sm font-mono font-bold">{formatUsd(editingOrder.current_price)}</p>
+                  </div>
+                </div>
+
+                {/* Edit fields */}
+                <div className="space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-1.5">
+                        <DollarSign className="h-3 w-3" /> Giriş Fiyatı
+                      </label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={editEntry}
+                        onChange={(e) => setEditEntry(e.target.value)}
+                        className="font-mono h-9 bg-muted/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-1.5 text-[10px] text-muted-foreground uppercase tracking-wider font-medium mb-1.5">
+                        <BarChart3 className="h-3 w-3" /> Lot
+                      </label>
+                      <Input
+                        type="number"
+                        step="any"
+                        value={editLots}
+                        onChange={(e) => setEditLots(e.target.value)}
+                        className="font-mono h-9 bg-muted/50"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium mb-1.5 text-sell">
+                        <ShieldAlert className="h-3 w-3" /> Zarar Durdur
+                      </label>
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Boş bırakılabilir"
+                        value={editSL}
+                        onChange={(e) => setEditSL(e.target.value)}
+                        className="font-mono h-9 bg-muted/50"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium mb-1.5 text-buy">
+                        <Target className="h-3 w-3" /> Kâr Al
+                      </label>
+                      <Input
+                        type="number"
+                        step="any"
+                        placeholder="Boş bırakılabilir"
+                        value={editTP}
+                        onChange={(e) => setEditTP(e.target.value)}
+                        className="font-mono h-9 bg-muted/50"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Auto-calculated preview */}
+                <div className="rounded-xl border border-border overflow-hidden">
+                  <div className="px-3 py-2 bg-muted/30 border-b border-border">
+                    <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Otomatik Hesaplama</span>
+                  </div>
+                  <div className="p-3 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Teminat</span>
+                      <span className="font-mono font-medium">{formatUsd(margin)} USD</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Güncel K/Z</span>
+                      <span className={`font-mono font-bold ${currentPnl >= 0 ? "text-buy" : "text-sell"}`}>
+                        {currentPnl >= 0 ? "+" : ""}{formatUsd(currentPnl)} USD
+                      </span>
+                    </div>
+                    {slPnl !== null && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <ShieldAlert className="h-3 w-3 text-sell" /> SL'de K/Z
+                        </span>
+                        <span className={`font-mono font-medium ${slPnl >= 0 ? "text-buy" : "text-sell"}`}>
+                          {slPnl >= 0 ? "+" : ""}{formatUsd(slPnl)} USD
+                        </span>
+                      </div>
+                    )}
+                    {tpPnl !== null && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-muted-foreground flex items-center gap-1">
+                          <Target className="h-3 w-3 text-buy" /> TP'de K/Z
+                        </span>
+                        <span className={`font-mono font-medium ${tpPnl >= 0 ? "text-buy" : "text-sell"}`}>
+                          {tpPnl >= 0 ? "+" : ""}{formatUsd(tpPnl)} USD
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <DialogFooter className="gap-2">
+                  <Button variant="outline" onClick={() => setEditingOrder(null)}>İptal</Button>
+                  <Button onClick={handleSaveEdit} disabled={editSaving}>
+                    {editSaving ? "Kaydediliyor..." : "Kaydet"}
+                  </Button>
+                </DialogFooter>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
