@@ -121,8 +121,8 @@ const History = () => {
         )}
       </div>
 
-      {/* Fixed summary pinned to bottom */}
-      <div className="shrink-0 px-4 py-2 pb-[calc(env(safe-area-inset-bottom,8px)+4.5rem)] md:pb-4 border-t border-border bg-background space-y-1">
+      {/* Fixed summary pinned to bottom nav */}
+      <div className="fixed bottom-[calc(env(safe-area-inset-bottom,8px)+3.5rem+6px)] left-0 right-0 z-40 md:static md:z-auto px-4 py-2 border-t border-border bg-background space-y-1">
         {summaryRows.map((row) => (
           <div key={row.label} className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{row.label}</span>
