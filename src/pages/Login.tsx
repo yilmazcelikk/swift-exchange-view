@@ -42,11 +42,18 @@ const Login = () => {
 
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("is_banned, ban_reason")
+        .select("is_banned, ban_reason, ban_type")
         .eq("user_id", userId)
         .single();
 
       if (profileData?.is_banned) {
+        if (profileData.ban_type === "full") {
+          // Full ban - sign out and redirect to blocked page
+          await supabase.auth.signOut();
+          navigate("/blocked", { replace: true });
+          return;
+        }
+        // Account ban - generic error
         await supabase.auth.signOut();
         toast.error("Giriş başarısız. E-posta veya şifre hatalı.");
         return;
