@@ -372,7 +372,7 @@ const TV_SLUGS: Record<string, string> = {
   YEOTK: "yesilova-holding",
   ZOREN: "zorlu-enerji",
 
-  // ── Crypto ──
+  // ── Crypto (legacy slugs kept for fallback) ──
   AAVEUSD: "aave",
   ADAUSD: "cardano",
   ALGOUSD: "algorand",
