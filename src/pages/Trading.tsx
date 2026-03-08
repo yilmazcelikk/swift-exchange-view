@@ -298,24 +298,24 @@ const Trading = () => {
 
       // SL/TP validation based on order direction
       if (type === "buy") {
-        if (slValue !== null && slValue >= price) {
-          toast.error("Alış emrinde Zarar Durdur, güncel fiyatın altında olmalıdır.");
+        if (slValue !== null && slValue >= entryPrice) {
+          toast.error("Alış emrinde Zarar Durdur, giriş fiyatının altında olmalıdır.");
           setOrderLoading(false);
           return;
         }
-        if (tpValue !== null && tpValue <= price) {
-          toast.error("Alış emrinde Kâr Al, güncel fiyatın üzerinde olmalıdır.");
+        if (tpValue !== null && tpValue <= entryPrice) {
+          toast.error("Alış emrinde Kâr Al, giriş fiyatının üzerinde olmalıdır.");
           setOrderLoading(false);
           return;
         }
       } else {
-        if (slValue !== null && slValue <= price) {
-          toast.error("Satış emrinde Zarar Durdur, güncel fiyatın üzerinde olmalıdır.");
+        if (slValue !== null && slValue <= entryPrice) {
+          toast.error("Satış emrinde Zarar Durdur, giriş fiyatının üzerinde olmalıdır.");
           setOrderLoading(false);
           return;
         }
-        if (tpValue !== null && tpValue >= price) {
-          toast.error("Satış emrinde Kâr Al, güncel fiyatın altında olmalıdır.");
+        if (tpValue !== null && tpValue >= entryPrice) {
+          toast.error("Satış emrinde Kâr Al, giriş fiyatının altında olmalıdır.");
           setOrderLoading(false);
           return;
         }
@@ -329,8 +329,8 @@ const Trading = () => {
         order_type: "market",
         lots,
         leverage,
-        entry_price: price,
-        current_price: price,
+        entry_price: entryPrice,
+        current_price: midPrice,
         stop_loss: slValue,
         take_profit: tpValue,
       });
