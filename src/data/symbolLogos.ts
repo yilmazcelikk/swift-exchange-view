@@ -90,7 +90,7 @@ export const STOCK_LOGOS: Record<string, string> = {
   PETKM: `${TV}/petkim--big.svg`,
   PGSUS: `${TV}/pegasus--big.svg`,
   SAHOL: `${TV}/sabanci-holding--big.svg`,
-  SASA: `${TV}/sasa-polyester--big.svg`,
+  SASA: `${CB}/sasapolyester.com`,
   SISE: `${TV}/sisecam--big.svg`,
   SOKM: `${TV}/sok-marketler-ticaret--big.svg`,
   TAVHL: `${TV}/tav-havalimanlari--big.svg`,
