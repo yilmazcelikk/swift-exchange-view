@@ -191,6 +191,12 @@ const Trading = () => {
         </div>
       </div>
 
+      {realCandles.length === 0 && !candlesLoading && (
+        <div className="px-3 py-1">
+          <span className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">Tahmini grafik verisi</span>
+        </div>
+      )}
+
       <CandlestickChart
         candleData={candleData}
         price={price}
