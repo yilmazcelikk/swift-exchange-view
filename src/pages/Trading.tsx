@@ -736,6 +736,44 @@ const Trading = () => {
           </div>
         )}
 
+        {/* Order Type Selector */}
+        <div className="flex gap-1 overflow-x-auto no-scrollbar">
+          {([
+            { key: "market", label: "Piyasa" },
+            { key: "buy_limit", label: "Buy Limit" },
+            { key: "sell_limit", label: "Sell Limit" },
+            { key: "buy_stop", label: "Buy Stop" },
+            { key: "sell_stop", label: "Sell Stop" },
+          ] as const).map((ot) => (
+            <button
+              key={ot.key}
+              onClick={() => setOrderType(ot.key)}
+              className={`px-2.5 py-1 rounded text-[10px] font-medium whitespace-nowrap transition-colors ${
+                orderType === ot.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {ot.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Target Price for pending orders */}
+        {orderType !== "market" && (
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Hedef Fiyat</label>
+            <Input
+              type="number"
+              step="any"
+              placeholder={`Tetikleme fiyatı`}
+              value={targetPrice}
+              onChange={(e) => setTargetPrice(e.target.value)}
+              className="bg-muted/50 h-8 text-xs font-mono"
+            />
+          </div>
+        )}
+
         {/* Lots row */}
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(Math.max(0.01, parseFloat((lots - 0.01).toFixed(2))))}>
@@ -773,6 +811,40 @@ const Trading = () => {
             <Input type="number" placeholder="Opsiyonel" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} className="bg-muted/50 h-8 text-xs font-mono" />
           </div>
         </div>
+
+        {/* Spread info */}
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
+          <span>Spread: {formatPrice(spread)}</span>
+          <span className="opacity-60">Bid / Ask</span>
+        </div>
+
+        {/* Buy / Sell buttons */}
+        {orderType === "market" ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
+              <span className="text-xs opacity-80">SAT</span>
+              <span className="text-sm font-mono">{formatPrice(bid)}</span>
+            </Button>
+            <Button onClick={() => handleOrder("buy")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-buy hover:bg-buy/90 text-buy-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
+              <span className="text-xs opacity-80">AL</span>
+              <span className="text-sm font-mono">{formatPrice(ask)}</span>
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={() => handleOrder(orderType.startsWith("buy") ? "buy" : "sell")}
+            disabled={orderLoading || !currentMarketStatus.isOpen}
+            className={`w-full h-12 font-bold disabled:opacity-50 ${
+              orderType.startsWith("buy")
+                ? "bg-buy hover:bg-buy/90 text-buy-foreground"
+                : "bg-sell hover:bg-sell/90 text-sell-foreground"
+            }`}
+          >
+            {orderType === "buy_limit" ? "BUY LIMIT" : orderType === "sell_limit" ? "SELL LIMIT" : orderType === "buy_stop" ? "BUY STOP" : "SELL STOP"}
+            {targetPrice ? ` @ ${formatPrice(parseFloat(targetPrice))}` : ""}
+          </Button>
+        )}
+      </div>
 
         {/* Buy / Sell */}
         {/* Spread info */}
