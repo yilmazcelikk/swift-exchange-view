@@ -288,7 +288,7 @@ const AdminUsers = () => {
   const handleOrderClose = async () => {
     if (!editingOrder || !selectedUser) return;
     const closePnl = parseFloat(orderEditForm.pnl) || 0;
-    const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price));
+    const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price), selectedUser?.account_type || "standard");
     const netPnl = closePnl - commission;
     
     const { error } = await supabase
