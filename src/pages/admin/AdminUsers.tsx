@@ -699,6 +699,7 @@ const AdminUsers = () => {
                     </Button>
                   </div>
                 )}
+              </div>
 
               {/* All Orders Dialog Content */}
               {showAllOrders && (
