@@ -161,6 +161,9 @@ const Trading = () => {
       return matchesCategory && matchesSearch;
     })
     .sort((a, b) => {
+      // BIMAS always at the very bottom
+      if (a.name === "BIMAS" && b.name !== "BIMAS") return 1;
+      if (b.name === "BIMAS" && a.name !== "BIMAS") return -1;
       // Always put items without logos at the bottom
       const aHasLogo = resolveLogoUrl(a.name, a.category) ? 0 : 1;
       const bHasLogo = resolveLogoUrl(b.name, b.category) ? 0 : 1;
