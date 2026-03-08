@@ -240,6 +240,7 @@ const AdminUsers = () => {
       stop_loss: order.stop_loss ? String(order.stop_loss) : "",
       take_profit: order.take_profit ? String(order.take_profit) : "",
       pnl: String(order.pnl),
+      type: order.type as "buy" | "sell",
     });
   };
 
