@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isFullBanned: boolean;
   loading: boolean;
   roleResolved: boolean;
   signOut: () => Promise<void>;
