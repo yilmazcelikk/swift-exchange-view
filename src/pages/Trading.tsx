@@ -131,6 +131,19 @@ const Trading = () => {
     setLoading(false);
   };
 
+  // Auto-select symbol from URL query param
+  useEffect(() => {
+    const symbolParam = searchParams.get("symbol");
+    if (symbolParam && symbols.length > 0 && !selectedSymbol) {
+      const found = symbols.find(s => s.name === symbolParam);
+      if (found) {
+        setSelectedSymbol(found);
+        searchParams.delete("symbol");
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [symbols, searchParams]);
+
   const filteredSymbols = symbols
     .filter((s) => {
       const matchesCategory = selectedCategory === "all" || s.category === selectedCategory;
