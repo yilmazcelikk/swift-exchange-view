@@ -366,7 +366,7 @@ const AdminRisk = () => {
                         <span className="text-[9px] text-muted-foreground w-14 shrink-0">Teminat %</span>
                         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${user.marginLevel > 200 ? "bg-buy" : user.marginLevel > 100 ? "bg-yellow-500" : "bg-sell"}`}
+                            className={`h-full rounded-full transition-all ${user.marginLevel > 100 ? "bg-buy" : user.marginLevel > 30 ? "bg-yellow-500" : "bg-sell animate-pulse"}`}
                             style={{ width: `${Math.min(100, (user.marginLevel / 500) * 100)}%` }}
                           />
                         </div>
