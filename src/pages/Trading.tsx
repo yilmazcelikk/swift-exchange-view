@@ -421,33 +421,30 @@ const Trading = () => {
   const resetZoom = () => { setChartVisibleCount(50); setChartOffset(0); };
 
   // Mouse wheel zoom on chart
-  const handleWheel = useCallback((e: React.WheelEvent) => {
+  const handleWheel = (e: React.WheelEvent) => {
     e.preventDefault();
     if (e.ctrlKey || e.metaKey) {
-      // Pinch zoom on trackpad
       if (e.deltaY > 0) zoomOut();
       else zoomIn();
     } else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      // Horizontal scroll = pan
       setChartOffset(prev => Math.max(0, Math.min(totalCandles - chartVisibleCount, prev + (e.deltaX > 0 ? -3 : 3))));
     } else {
-      // Vertical scroll = zoom
       if (e.deltaY > 0) zoomOut();
       else zoomIn();
     }
-  }, [totalCandles, chartVisibleCount]);
+  };
 
   // Touch gestures for pan
-  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+  const handleTouchStart = (e: React.TouchEvent) => {
     if (e.touches.length === 1) {
       touchStartRef.current = { x: e.touches[0].clientX, dist: 0 };
     } else if (e.touches.length === 2) {
       const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
       touchStartRef.current = { x: 0, dist };
     }
-  }, []);
+  };
 
-  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+  const handleTouchMove = (e: React.TouchEvent) => {
     if (!touchStartRef.current) return;
     if (e.touches.length === 1 && touchStartRef.current.dist === 0) {
       const dx = e.touches[0].clientX - touchStartRef.current.x;
@@ -465,7 +462,7 @@ const Trading = () => {
         touchStartRef.current.dist = dist;
       }
     }
-  }, [totalCandles, chartVisibleCount]);
+  };
 
   return (
     <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overflow-y-auto md:overflow-hidden">
