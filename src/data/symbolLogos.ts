@@ -5,6 +5,7 @@
  * For Forex & Indices we use circle-flag SVGs (same as TradingView uses).
  */
 const TV = "https://s3-symbol-logo.tradingview.com";
+const TV_CRYPTO = `${TV}/crypto`;
 
 // ─── Symbol → TradingView slug mapping ───────────────────────────────
 
