@@ -52,4 +52,4 @@ export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(funct
       </svg>
     </div>
   );
-});
+}));
