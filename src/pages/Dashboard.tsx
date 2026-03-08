@@ -283,15 +283,17 @@ const Dashboard = () => {
           const isLowMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 100;
           const isCriticalMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 30;
           const isNegativeFreeMargin = stat.label === "Serbest teminat" && stat.value < 0;
+          const isNegativeValue = stat.value < 0;
           let valueColorClass = "text-foreground";
           if (isCriticalMargin) valueColorClass = "text-sell animate-pulse";
           else if (isLowMargin) valueColorClass = "text-sell";
-          else if (isNegativeFreeMargin) valueColorClass = "text-sell";
+          else if (isNegativeFreeMargin || (stat.label === "Bakiye" && isNegativeValue)) valueColorClass = "text-sell";
 
           return (
             <div key={stat.label} className={`flex items-center justify-between h-[22px] ${isCriticalMargin ? "bg-sell/10 -mx-4 px-4 rounded" : ""}`}>
               <span className={`text-[11px] ${isCriticalMargin ? "text-sell font-medium" : "text-muted-foreground"}`}>{stat.label}:</span>
               <span className="text-[11px] font-mono font-medium text-foreground">
+                {isNegativeValue && <span className={`text-[11px] font-mono font-medium ${valueColorClass}`}>-</span>}
                 <AnimatedPrice value={Math.abs(stat.value)} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-[11px] font-mono font-medium ${valueColorClass}`} />
                 <span className="ml-0.5">{stat.label.includes('%') ? '' : ' USD'}</span>
               </span>
