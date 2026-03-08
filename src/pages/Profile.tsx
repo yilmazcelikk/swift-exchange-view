@@ -259,7 +259,7 @@ const Profile = () => {
                       Hesap No: <span className="font-semibold text-primary">{profile.metaId}</span>
                     </p>
                   )}
-                  <div className="mt-2">
+                  <div className="mt-2 flex items-center gap-1.5 flex-wrap">
                     {verificationStatus === "approved" ? (
                       <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-buy/10 text-buy">
                         <ShieldCheck className="h-3 w-3" /> Doğrulanmış
@@ -269,6 +269,16 @@ const Profile = () => {
                         <Clock className="h-3 w-3" /> Doğrulanmamış
                       </span>
                     )}
+                    <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${
+                      profile.accountType === "diamond" ? "bg-primary/10 text-primary" :
+                      profile.accountType === "gold" ? "bg-amber-500/10 text-amber-500" :
+                      "bg-muted text-muted-foreground"
+                    }`}>
+                      {profile.accountType === "diamond" ? <Gem className="h-3 w-3" /> :
+                       profile.accountType === "gold" ? <Crown className="h-3 w-3" /> :
+                       <Star className="h-3 w-3" />}
+                      {ACCOUNT_TYPE_LABELS[profile.accountType] || "Standart"} Hesap
+                    </span>
                   </div>
                 </div>
                 {!isEditing && (
