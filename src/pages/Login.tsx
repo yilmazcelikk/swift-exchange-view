@@ -122,7 +122,7 @@ const Login = () => {
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1.5 block">E-posta</label>
-              <Input type="email" placeholder="" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-muted/50" />
+              <Input type="email" placeholder="E-posta adresinizi girin" value={email} onChange={(e) => setEmail(e.target.value)} className="bg-muted/50" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre</label>
