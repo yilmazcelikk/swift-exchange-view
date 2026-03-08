@@ -49,9 +49,37 @@ const Register = () => {
       return;
     }
 
-    if (formData.referralCode.trim() && signUpData.user) {
-      await supabase.from("profiles").update({ referral_code: formData.referralCode.trim().toUpperCase() }).eq("user_id", signUpData.user.id);
-      await supabase.rpc("has_role", { _user_id: signUpData.user.id, _role: "user" });
+    if (signUpData.user) {
+      const profileUpdates: Record<string, string> = {};
+
+      // Save phone number
+      if (formData.phone.trim()) {
+        profileUpdates.phone = formData.phone.trim();
+      }
+
+      // Validate & save referral code
+      if (formData.referralCode.trim()) {
+        const code = formData.referralCode.trim().toUpperCase();
+        const { data: refData } = await supabase
+          .from("referral_codes")
+          .select("id, is_active")
+          .eq("code", code)
+          .eq("is_active", true)
+          .single();
+
+        if (refData) {
+          profileUpdates.referral_code = code;
+          // Increment usage count
+          await supabase.rpc("has_role", { _user_id: signUpData.user.id, _role: "user" }); // dummy call to keep session
+          await supabase.from("referral_codes").update({ usage_count: (refData as any).usage_count ? (refData as any).usage_count + 1 : 1 } as any).eq("id", refData.id);
+        } else {
+          toast.warning("Referans kodu geçersiz veya aktif değil, kod kaydedilmedi.");
+        }
+      }
+
+      if (Object.keys(profileUpdates).length > 0) {
+        await supabase.from("profiles").update(profileUpdates).eq("user_id", signUpData.user.id);
+      }
     }
 
     setLoading(false);

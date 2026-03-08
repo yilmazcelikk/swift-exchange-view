@@ -196,8 +196,24 @@ const AdminPositions = () => {
     } else {
       const profile = profiles.get(order.user_id);
       if (profile) {
+        // Recalculate properly: new balance = old balance + netPnl
         const newBalance = Math.max(0, profile.balance + netPnl);
-        await supabase.from("profiles").update({ balance: newBalance, equity: newBalance, free_margin: newBalance }).eq("user_id", order.user_id);
+
+        // Get remaining open orders for this user to compute equity correctly
+        const remainingOrders = orders.filter(o => o.user_id === order.user_id && o.id !== order.id);
+        const remainingPnl = remainingOrders.reduce((sum, o) => sum + o.pnl, 0);
+        const remainingMargin = remainingOrders.reduce((sum, o) => {
+          return sum + calculateMargin(o.symbol_name, o.lots, o.entry_price, 200);
+        }, 0);
+
+        const newEquity = newBalance + (profile.credit || 0) + remainingPnl;
+        const newFreeMargin = newEquity - remainingMargin;
+
+        await supabase.from("profiles").update({
+          balance: newBalance,
+          equity: newEquity,
+          free_margin: newFreeMargin,
+        }).eq("user_id", order.user_id);
       }
       toast.success(`${order.symbol_name} pozisyon kapatıldı (K/Z: ${formatUsd(netPnl)})`);
       setClosingOrder(null);

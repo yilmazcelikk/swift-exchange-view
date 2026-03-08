@@ -92,15 +92,52 @@ const Finance = () => {
 
   const handleWithdraw = async () => {
     if (!authUser || !withdrawAmount || !withdrawAccountName || !withdrawIban) return;
+
+    const amount = parseFloat(withdrawAmount);
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Geçerli bir tutar girin");
+      return;
+    }
+
+    // Balance check — fetch current profile balance and convert TRY amount to USD
     setSubmitting(true);
     try {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("balance")
+        .eq("user_id", authUser.id)
+        .single();
+
+      if (!profileData) {
+        toast.error("Hesap bilgisi alınamadı");
+        setSubmitting(false);
+        return;
+      }
+
+      // Get USDTRY rate to compare TRY withdrawal against USD balance
+      const { data: rateData } = await supabase
+        .from("symbols")
+        .select("current_price")
+        .eq("name", "USDTRY")
+        .single();
+      const usdTryRate = rateData?.current_price && Number(rateData.current_price) > 0 ? Number(rateData.current_price) : 32.0;
+      const amountInUsd = amount / usdTryRate;
+
+      if (amountInUsd > Number(profileData.balance)) {
+        toast.error(`Yetersiz bakiye. Mevcut bakiyeniz: $${Number(profileData.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}`);
+        setSubmitting(false);
+        return;
+      }
+
       const { error } = await supabase.from("transactions").insert({
         user_id: authUser.id,
         type: "withdrawal",
-        amount: parseFloat(withdrawAmount),
+        amount: amount,
         method: "bank_transfer",
         currency: "TRY",
-      });
+        account_holder: withdrawAccountName.trim(),
+        iban: withdrawIban.trim(),
+      } as any);
       if (error) throw error;
 
       toast.success("Para çekme talebi oluşturuldu");

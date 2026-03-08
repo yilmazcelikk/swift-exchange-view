@@ -155,10 +155,29 @@ const Profile = () => {
   };
 
   const handleChangePassword = async () => {
+    if (!passwords.current) {
+      toast.error("Mevcut şifrenizi girin");
+      return;
+    }
     if (passwords.new !== passwords.confirm) {
       toast.error("Yeni şifreler eşleşmiyor");
       return;
     }
+    if (passwords.new.length < 6) {
+      toast.error("Yeni şifre en az 6 karakter olmalıdır");
+      return;
+    }
+
+    // Verify current password by re-authenticating
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: authUser!.email!,
+      password: passwords.current,
+    });
+    if (signInErr) {
+      toast.error("Mevcut şifre hatalı");
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password: passwords.new });
     if (error) {
       toast.error("Şifre değiştirilemedi: " + error.message);
