@@ -117,7 +117,7 @@ const History = () => {
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      {order.close_reason && (
+                      {pnl !== 0 && (
                         <div className={`w-1.5 h-7 rounded-full ${pnl < 0 ? "bg-sell" : "bg-buy"}`} />
                       )}
                       <div>
