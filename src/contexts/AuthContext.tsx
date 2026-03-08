@@ -71,8 +71,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (nextSession?.user) {
           await checkAdmin(nextSession.user.id);
+          // Check full ban
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("is_banned, ban_type")
+            .eq("user_id", nextSession.user.id)
+            .single();
+          if (profileData?.is_banned && profileData?.ban_type === "full") {
+            setIsFullBanned(true);
+          } else {
+            setIsFullBanned(false);
+          }
         } else {
           setIsAdmin(false);
+          setIsFullBanned(false);
         }
       } catch (err) {
         console.error("resolveSession error:", err);
