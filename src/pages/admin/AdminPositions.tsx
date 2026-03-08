@@ -3,18 +3,20 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { X, RefreshCw, Search, ChevronDown, ChevronRight, TrendingUp, TrendingDown, Users, BarChart3, DollarSign, Clock } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import {
+  X, RefreshCw, Search, ChevronDown, ChevronRight,
+  TrendingUp, TrendingDown, Users, BarChart3, DollarSign,
+  Clock, Shield, Target, ShieldAlert, Wallet, Activity,
+  ArrowUpRight, ArrowDownRight, Percent
+} from "lucide-react";
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
 interface OrderRow {
@@ -39,6 +41,7 @@ interface UserProfile {
   user_id: string;
   full_name: string | null;
   balance: number;
+  credit: number;
   meta_id: number;
 }
 
@@ -75,25 +78,14 @@ const AdminPositions = () => {
         .eq("status", "open")
         .order("created_at", { ascending: false });
 
-      if (error) {
-        console.error("loadOrders error:", error);
-        return;
-      }
-
-      if (!data || data.length === 0) {
-        setOrders([]);
-        return;
-      }
+      if (error) { console.error("loadOrders error:", error); return; }
+      if (!data || data.length === 0) { setOrders([]); return; }
 
       const symbolIds = [...new Set(data.map((o) => o.symbol_id).filter(Boolean))];
-      const { data: symbolsData, error: symbolsError } = await supabase
+      const { data: symbolsData } = await supabase
         .from("symbols")
         .select("id, current_price")
         .in("id", symbolIds);
-
-      if (symbolsError) {
-        console.error("loadOrders symbols error:", symbolsError);
-      }
 
       const priceMap = new Map((symbolsData ?? []).map((s) => [s.id, Number(s.current_price)]));
 
@@ -111,14 +103,11 @@ const AdminPositions = () => {
 
   const loadProfiles = async () => {
     try {
-      const { data, error } = await supabase.from("profiles").select("user_id, full_name, balance, meta_id");
-      if (error) {
-        console.error("loadProfiles error:", error);
-        return;
-      }
+      const { data, error } = await supabase.from("profiles").select("user_id, full_name, balance, credit, meta_id");
+      if (error) { console.error("loadProfiles error:", error); return; }
       if (data) {
         const map = new Map<string, UserProfile>();
-        data.forEach((p) => map.set(p.user_id, p));
+        data.forEach((p) => map.set(p.user_id, { ...p, credit: Number(p.credit || 0) }));
         setProfiles(map);
       }
     } catch (err) {
@@ -134,7 +123,6 @@ const AdminPositions = () => {
     });
   };
 
-  // Group orders by user
   const groupedOrders = useMemo(() => {
     const groups = new Map<string, OrderRow[]>();
     orders.forEach(o => {
@@ -145,7 +133,6 @@ const AdminPositions = () => {
     return groups;
   }, [orders]);
 
-  // Filter by search
   const filteredUserIds = useMemo(() => {
     const query = searchQuery.toLowerCase().trim();
     if (!query) return [...groupedOrders.keys()];
@@ -168,6 +155,22 @@ const AdminPositions = () => {
   const uniqueUsers = new Set(orders.map(o => o.user_id)).size;
   const buyCount = orders.filter(o => o.type === "buy").length;
   const sellCount = orders.filter(o => o.type === "sell").length;
+  const profitableOrders = orders.filter(o => o.pnl > 0).length;
+  const losingOrders = orders.filter(o => o.pnl < 0).length;
+  const winRate = orders.length > 0 ? (profitableOrders / orders.length) * 100 : 0;
+  const totalVolume = orders.reduce((sum, o) => sum + (o.lots * o.entry_price), 0);
+
+  // Top symbols
+  const symbolStats = useMemo(() => {
+    const stats = new Map<string, { count: number; pnl: number }>();
+    orders.forEach(o => {
+      const existing = stats.get(o.symbol_name) || { count: 0, pnl: 0 };
+      stats.set(o.symbol_name, { count: existing.count + 1, pnl: existing.pnl + o.pnl });
+    });
+    return [...stats.entries()]
+      .sort((a, b) => b[1].count - a[1].count)
+      .slice(0, 5);
+  }, [orders]);
 
   const closePosition = async (order: OrderRow) => {
     const commission = calculateCommission(order.symbol_name, order.lots, order.current_price);
@@ -181,7 +184,6 @@ const AdminPositions = () => {
     if (error) {
       toast.error("Pozisyon kapatılamadı");
     } else {
-      // Update user balance
       const profile = profiles.get(order.user_id);
       if (profile) {
         const newBalance = profile.balance + netPnl;
@@ -195,6 +197,14 @@ const AdminPositions = () => {
 
   const formatUsd = (v: number) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const formatDate = (d: string) => new Date(d).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const formatTimeSince = (d: string) => {
+    const diff = Date.now() - new Date(d).getTime();
+    const hours = Math.floor(diff / 3600000);
+    const mins = Math.floor((diff % 3600000) / 60000);
+    if (hours > 24) return `${Math.floor(hours / 24)}g ${hours % 24}s`;
+    if (hours > 0) return `${hours}s ${mins}d`;
+    return `${mins}d`;
+  };
 
   const getUserLabel = (userId: string) => {
     const p = profiles.get(userId);
@@ -211,64 +221,131 @@ const AdminPositions = () => {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
           <h2 className="text-2xl font-bold">Açık Pozisyonlar</h2>
-          <p className="text-sm text-muted-foreground">{orders.length} pozisyon • {uniqueUsers} kullanıcı</p>
+          <p className="text-sm text-muted-foreground">{orders.length} pozisyon • {uniqueUsers} kullanıcı • Canlı güncelleme</p>
         </div>
-        <Button variant="outline" size="sm" onClick={loadAll} className="gap-1.5">
-          <RefreshCw className="h-3.5 w-3.5" />
-          Yenile
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+            <div className="h-2 w-2 rounded-full bg-buy animate-pulse" />
+            <span>Canlı</span>
+          </div>
+          <Button variant="outline" size="sm" onClick={loadAll} className="gap-1.5">
+            <RefreshCw className="h-3.5 w-3.5" />
+            Yenile
+          </Button>
+        </div>
       </div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards - Enhanced */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Card className="bg-card border-border">
-          <CardContent className="p-3">
+        <Card className="bg-card border-border relative overflow-hidden">
+          <div className={`absolute inset-0 opacity-5 ${totalPnl >= 0 ? "bg-buy" : "bg-sell"}`} />
+          <CardContent className="p-3 relative">
             <div className="flex items-center gap-2 mb-1">
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
+              <div className={`p-1 rounded ${totalPnl >= 0 ? "bg-buy/10" : "bg-sell/10"}`}>
+                <DollarSign className={`h-3.5 w-3.5 ${totalPnl >= 0 ? "text-buy" : "text-sell"}`} />
+              </div>
               <span className="text-xs text-muted-foreground">Toplam K/Z</span>
             </div>
             <p className={`text-lg font-bold font-mono ${totalPnl >= 0 ? "text-buy" : "text-sell"}`}>
               {totalPnl >= 0 ? "+" : ""}{formatUsd(totalPnl)}
             </p>
+            <div className="flex items-center gap-1 mt-1">
+              <span className="text-[10px] text-muted-foreground">
+                Kârda: <span className="text-buy font-medium">{profitableOrders}</span> • Zararda: <span className="text-sell font-medium">{losingOrders}</span>
+              </span>
+            </div>
           </CardContent>
         </Card>
+
         <Card className="bg-card border-border">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-1">
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              <div className="p-1 rounded bg-primary/10">
+                <BarChart3 className="h-3.5 w-3.5 text-primary" />
+              </div>
               <span className="text-xs text-muted-foreground">Toplam Teminat</span>
             </div>
             <p className="text-lg font-bold font-mono text-foreground">{formatUsd(totalMargin)}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Hacim: <span className="font-mono text-foreground">{formatUsd(totalVolume)}</span>
+            </p>
           </CardContent>
         </Card>
+
         <Card className="bg-card border-border">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-1">
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <div className="p-1 rounded bg-primary/10">
+                <Users className="h-3.5 w-3.5 text-primary" />
+              </div>
               <span className="text-xs text-muted-foreground">Kullanıcılar</span>
             </div>
             <p className="text-lg font-bold font-mono text-foreground">{uniqueUsers}</p>
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Ort. {uniqueUsers > 0 ? (orders.length / uniqueUsers).toFixed(1) : 0} pozisyon/kişi
+            </p>
           </CardContent>
         </Card>
+
         <Card className="bg-card border-border">
           <CardContent className="p-3">
             <div className="flex items-center gap-2 mb-1">
-              <TrendingUp className="h-4 w-4 text-buy" />
-              <TrendingDown className="h-4 w-4 text-sell" />
+              <div className="flex items-center gap-1">
+                <div className="p-1 rounded bg-buy/10">
+                  <TrendingUp className="h-3 w-3 text-buy" />
+                </div>
+                <div className="p-1 rounded bg-sell/10">
+                  <TrendingDown className="h-3 w-3 text-sell" />
+                </div>
+              </div>
+              <span className="text-xs text-muted-foreground">Alış / Satış</span>
             </div>
             <p className="text-lg font-bold font-mono text-foreground">
               <span className="text-buy">{buyCount}</span>
               <span className="text-muted-foreground mx-1">/</span>
               <span className="text-sell">{sellCount}</span>
             </p>
+            {orders.length > 0 && (
+              <div className="mt-1.5">
+                <div className="flex h-1.5 rounded-full overflow-hidden bg-muted">
+                  <div className="bg-buy transition-all" style={{ width: `${(buyCount / orders.length) * 100}%` }} />
+                  <div className="bg-sell transition-all" style={{ width: `${(sellCount / orders.length) * 100}%` }} />
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
+
+      {/* Top Symbols Bar */}
+      {symbolStats.length > 0 && (
+        <Card className="bg-card border-border">
+          <CardContent className="p-3">
+            <div className="flex items-center gap-2 mb-2.5">
+              <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-xs font-medium text-muted-foreground">En Aktif Semboller</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {symbolStats.map(([symbol, stats]) => (
+                <div key={symbol} className="flex items-center gap-2 bg-muted/40 rounded-lg px-3 py-1.5">
+                  <span className="text-xs font-semibold">{symbol}</span>
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                    {stats.count}
+                  </Badge>
+                  <span className={`text-[10px] font-mono font-medium ${stats.pnl >= 0 ? "text-buy" : "text-sell"}`}>
+                    {stats.pnl >= 0 ? "+" : ""}{formatUsd(stats.pnl)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Search */}
       <div className="relative">
@@ -298,10 +375,14 @@ const AdminPositions = () => {
           }, 0);
           const profile = profiles.get(userId);
           const isExpanded = expandedUsers.has(userId);
+          const userEquity = (profile?.balance || 0) + (profile?.credit || 0) + userPnl;
+          const marginLevel = userMargin > 0 ? (userEquity / userMargin) * 100 : 0;
+          const userBuys = userOrders.filter(o => o.type === "buy").length;
+          const userSells = userOrders.filter(o => o.type === "sell").length;
 
           return (
             <Card key={userId} className="bg-card border-border overflow-hidden">
-              {/* User header - clickable */}
+              {/* User header */}
               <button
                 onClick={() => toggleUser(userId)}
                 className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-colors"
@@ -309,10 +390,21 @@ const AdminPositions = () => {
                 <div className="flex items-center gap-3 min-w-0">
                   {isExpanded ? <ChevronDown className="h-4 w-4 text-muted-foreground shrink-0" /> : <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />}
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold truncate">{getUserLabel(userId)}</p>
-                    <p className="text-xs text-muted-foreground font-mono">
-                      Meta #{profile?.meta_id || "—"} • Bakiye: {formatUsd(profile?.balance || 0)} USD
-                    </p>
+                    <div className="flex items-center gap-2">
+                      <p className="text-sm font-semibold truncate">{getUserLabel(userId)}</p>
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0 h-4 shrink-0">
+                        #{profile?.meta_id || "—"}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 mt-0.5">
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                        Bakiye: {formatUsd(profile?.balance || 0)}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground">•</span>
+                      <span className="text-[10px] text-muted-foreground font-mono">
+                        Varlık: <span className={userEquity >= (profile?.balance || 0) ? "text-buy" : "text-sell"}>{formatUsd(userEquity)}</span>
+                      </span>
+                    </div>
                   </div>
                 </div>
                 <div className="flex items-center gap-4 shrink-0">
@@ -320,18 +412,57 @@ const AdminPositions = () => {
                     <p className={`text-sm font-bold font-mono ${userPnl >= 0 ? "text-buy" : "text-sell"}`}>
                       {userPnl >= 0 ? "+" : ""}{formatUsd(userPnl)}
                     </p>
-                    <p className="text-[10px] text-muted-foreground">{userOrders.length} pozisyon</p>
+                    <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                      <span className="text-[10px] text-muted-foreground">{userOrders.length} poz.</span>
+                      <span className="text-[9px] text-buy">{userBuys}A</span>
+                      <span className="text-[9px] text-sell">{userSells}S</span>
+                    </div>
                   </div>
                 </div>
               </button>
 
-              {/* Expanded: show positions */}
+              {/* Expanded */}
               {isExpanded && (
                 <div className="border-t border-border">
-                  {/* User summary row */}
-                  <div className="px-4 py-2 bg-muted/20 flex items-center gap-4 text-xs text-muted-foreground flex-wrap">
-                    <span>Toplam Teminat: <span className="font-mono text-foreground">{formatUsd(userMargin)} USD</span></span>
-                    <span>Toplam K/Z: <span className={`font-mono font-semibold ${userPnl >= 0 ? "text-buy" : "text-sell"}`}>{userPnl >= 0 ? "+" : ""}{formatUsd(userPnl)} USD</span></span>
+                  {/* User financial summary */}
+                  <div className="px-4 py-3 bg-muted/20 space-y-2">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">Toplam Teminat</p>
+                        <p className="text-xs font-mono font-semibold">{formatUsd(userMargin)} USD</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">Serbest Teminat</p>
+                        <p className="text-xs font-mono font-semibold">{formatUsd(Math.max(0, userEquity - userMargin))} USD</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">Teminat Seviyesi</p>
+                        <p className={`text-xs font-mono font-semibold ${marginLevel > 150 ? "text-buy" : marginLevel > 100 ? "text-yellow-500" : "text-sell"}`}>
+                          {marginLevel > 0 ? `%${marginLevel.toFixed(0)}` : "—"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-muted-foreground">Toplam K/Z</p>
+                        <p className={`text-xs font-mono font-semibold ${userPnl >= 0 ? "text-buy" : "text-sell"}`}>
+                          {userPnl >= 0 ? "+" : ""}{formatUsd(userPnl)} USD
+                        </p>
+                      </div>
+                    </div>
+                    {/* Margin level progress bar */}
+                    {userMargin > 0 && (
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] text-muted-foreground whitespace-nowrap">Teminat</span>
+                        <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-muted">
+                          <div
+                            className={`h-full rounded-full transition-all ${marginLevel > 150 ? "bg-buy" : marginLevel > 100 ? "bg-yellow-500" : "bg-sell"}`}
+                            style={{ width: `${Math.min(100, (marginLevel / 300) * 100)}%` }}
+                          />
+                        </div>
+                        <span className={`text-[9px] font-mono font-medium ${marginLevel > 150 ? "text-buy" : marginLevel > 100 ? "text-yellow-500" : "text-sell"}`}>
+                          %{marginLevel.toFixed(0)}
+                        </span>
+                      </div>
+                    )}
                   </div>
 
                   {/* Individual positions */}
@@ -340,36 +471,72 @@ const AdminPositions = () => {
                       const leverageNum = parseInt(order.leverage.split(":")[1]) || 200;
                       const margin = calculateMargin(order.symbol_name, order.lots, order.entry_price, leverageNum);
                       const pnlPercent = margin > 0 ? (order.pnl / margin) * 100 : 0;
+                      const priceDiff = order.current_price - order.entry_price;
+                      const priceDiffPercent = order.entry_price > 0 ? (priceDiff / order.entry_price) * 100 : 0;
+                      const timeSince = formatTimeSince(order.created_at);
 
                       return (
                         <div key={order.id} className="px-4 py-3 hover:bg-muted/10 transition-colors">
                           <div className="flex items-start justify-between gap-2">
-                            <div className="space-y-1 min-w-0 flex-1">
-                              {/* Symbol + type + lot */}
+                            <div className="space-y-1.5 min-w-0 flex-1">
+                              {/* Symbol + type + lot + leverage */}
                               <div className="flex items-center gap-2 flex-wrap">
-                                <span className="text-sm font-semibold">{order.symbol_name}</span>
-                                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${order.type === "buy" ? "bg-buy/15 text-buy" : "bg-sell/15 text-sell"}`}>
-                                  {order.type === "buy" ? "ALIŞ" : "SATIŞ"}
+                                <span className="text-sm font-bold">{order.symbol_name}</span>
+                                <Badge
+                                  className={`text-[10px] px-1.5 py-0 h-4 border-0 ${
+                                    order.type === "buy"
+                                      ? "bg-buy/15 text-buy hover:bg-buy/20"
+                                      : "bg-sell/15 text-sell hover:bg-sell/20"
+                                  }`}
+                                >
+                                  {order.type === "buy" ? (
+                                    <><ArrowUpRight className="h-2.5 w-2.5 mr-0.5" /> ALIŞ</>
+                                  ) : (
+                                    <><ArrowDownRight className="h-2.5 w-2.5 mr-0.5" /> SATIŞ</>
+                                  )}
+                                </Badge>
+                                <span className="text-xs text-foreground font-mono font-medium">{order.lots} lot</span>
+                                <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{order.leverage}</span>
+                              </div>
+
+                              {/* Price comparison */}
+                              <div className="flex items-center gap-2 text-xs font-mono">
+                                <span className="text-muted-foreground">
+                                  {formatUsd(order.entry_price)}
                                 </span>
-                                <span className="text-xs text-muted-foreground font-mono">{order.lots} lot</span>
-                                <span className="text-xs text-muted-foreground">• {order.leverage}</span>
+                                <span className="text-muted-foreground">→</span>
+                                <span className="text-foreground font-medium">{formatUsd(order.current_price)}</span>
+                                <span className={`text-[10px] ${priceDiffPercent >= 0 ? "text-buy" : "text-sell"}`}>
+                                  ({priceDiffPercent >= 0 ? "+" : ""}{priceDiffPercent.toFixed(2)}%)
+                                </span>
                               </div>
 
-                              {/* Prices */}
-                              <div className="flex items-center gap-3 text-xs font-mono">
-                                <span className="text-muted-foreground">Giriş: <span className="text-foreground">{formatUsd(order.entry_price)}</span></span>
-                                <span className="text-muted-foreground">Güncel: <span className="text-foreground">{formatUsd(order.current_price)}</span></span>
-                              </div>
-
-                              {/* SL/TP + Margin + Date */}
+                              {/* Details row */}
                               <div className="flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
                                 <span className="flex items-center gap-1">
                                   <Clock className="h-3 w-3" />
                                   {formatDate(order.created_at)}
+                                  <span className="text-foreground/60">({timeSince})</span>
                                 </span>
-                                <span>Teminat: <span className="font-mono text-foreground">{formatUsd(margin)}</span></span>
-                                {order.stop_loss && <span>SL: <span className="font-mono text-sell">{formatUsd(order.stop_loss)}</span></span>}
-                                {order.take_profit && <span>TP: <span className="font-mono text-buy">{formatUsd(order.take_profit)}</span></span>}
+                                <span className="flex items-center gap-1">
+                                  <Wallet className="h-3 w-3" />
+                                  <span className="font-mono text-foreground">{formatUsd(margin)}</span>
+                                </span>
+                                {order.stop_loss && (
+                                  <span className="flex items-center gap-1">
+                                    <ShieldAlert className="h-3 w-3 text-sell" />
+                                    <span className="font-mono text-sell">{formatUsd(order.stop_loss)}</span>
+                                  </span>
+                                )}
+                                {order.take_profit && (
+                                  <span className="flex items-center gap-1">
+                                    <Target className="h-3 w-3 text-buy" />
+                                    <span className="font-mono text-buy">{formatUsd(order.take_profit)}</span>
+                                  </span>
+                                )}
+                                {!order.stop_loss && !order.take_profit && (
+                                  <span className="text-yellow-500/80 italic">SL/TP yok</span>
+                                )}
                               </div>
                             </div>
 
@@ -412,34 +579,48 @@ const AdminPositions = () => {
             <AlertDialogDescription asChild>
               <div className="space-y-2">
                 <p>Bu pozisyonu kapatmak istediğinize emin misiniz?</p>
-                {closingOrder && (
-                  <div className="bg-muted/50 rounded-lg p-3 space-y-1 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Kullanıcı</span>
-                      <span className="font-semibold">{getUserLabel(closingOrder.user_id)}</span>
+                {closingOrder && (() => {
+                  const commission = calculateCommission(closingOrder.symbol_name, closingOrder.lots, closingOrder.current_price);
+                  const netPnl = closingOrder.pnl - commission;
+                  return (
+                    <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Kullanıcı</span>
+                        <span className="font-semibold">{getUserLabel(closingOrder.user_id)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Sembol</span>
+                        <span className="font-semibold">{closingOrder.symbol_name}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Yön / Lot</span>
+                        <span className={`font-medium ${closingOrder.type === "buy" ? "text-buy" : "text-sell"}`}>
+                          {closingOrder.type === "buy" ? "ALIŞ" : "SATIŞ"} {closingOrder.lots}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Giriş → Güncel</span>
+                        <span className="font-mono">{formatUsd(closingOrder.entry_price)} → {formatUsd(closingOrder.current_price)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Brüt K/Z</span>
+                        <span className={`font-mono ${closingOrder.pnl >= 0 ? "text-buy" : "text-sell"}`}>
+                          {closingOrder.pnl >= 0 ? "+" : ""}{formatUsd(closingOrder.pnl)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-muted-foreground">Komisyon</span>
+                        <span className="font-mono text-sell">-{formatUsd(commission)}</span>
+                      </div>
+                      <div className="flex justify-between border-t border-border pt-1.5 mt-1">
+                        <span className="text-muted-foreground font-semibold">Net K/Z</span>
+                        <span className={`font-mono font-bold ${netPnl >= 0 ? "text-buy" : "text-sell"}`}>
+                          {netPnl >= 0 ? "+" : ""}{formatUsd(netPnl)} USD
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Sembol</span>
-                      <span className="font-semibold">{closingOrder.symbol_name}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Yön / Lot</span>
-                      <span className={`font-medium ${closingOrder.type === "buy" ? "text-buy" : "text-sell"}`}>
-                        {closingOrder.type === "buy" ? "ALIŞ" : "SATIŞ"} {closingOrder.lots}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">Giriş → Güncel</span>
-                      <span className="font-mono">{formatUsd(closingOrder.entry_price)} → {formatUsd(closingOrder.current_price)}</span>
-                    </div>
-                    <div className="flex justify-between border-t border-border pt-1 mt-1">
-                      <span className="text-muted-foreground font-medium">K/Z</span>
-                      <span className={`font-mono font-bold ${closingOrder.pnl >= 0 ? "text-buy" : "text-sell"}`}>
-                        {closingOrder.pnl >= 0 ? "+" : ""}{formatUsd(closingOrder.pnl)} USD
-                      </span>
-                    </div>
-                  </div>
-                )}
+                  );
+                })()}
               </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
