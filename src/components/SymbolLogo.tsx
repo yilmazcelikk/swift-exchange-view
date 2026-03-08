@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useState, useEffect, forwardRef } from "react";
 import { resolveLogoUrl } from "@/data/symbolLogos";
 
 interface SymbolLogoProps {
@@ -19,9 +19,14 @@ const imgSizeClasses = {
   lg: "h-8 w-8",
 };
 
-export const SymbolLogo = memo(function SymbolLogo({ symbol, category, size = "md" }: SymbolLogoProps) {
+export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(function SymbolLogo({ symbol, category, size = "md" }, ref) {
   const [imgError, setImgError] = useState(false);
   const logoUrl = resolveLogoUrl(symbol, category);
+
+  // Reset error state when symbol changes
+  useEffect(() => {
+    setImgError(false);
+  }, [symbol]);
 
   // Image logo (stock, crypto, commodity icon, flag)
   if (logoUrl && !imgError) {
