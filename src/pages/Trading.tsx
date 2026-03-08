@@ -260,11 +260,7 @@ const Trading = () => {
 
   const quickLots = [0.01, 0.05, 0.1, 0.5, 1.0, 5.0];
 
-  const getSpread = (price: number) => {
-    if (price > 1000) return price * 0.0001;
-    if (price > 10) return price * 0.0005;
-    return price * 0.001;
-  };
+  // Spread is now calculated via trading.ts based on account type
 
   const [orderLoading, setOrderLoading] = useState(false);
 
