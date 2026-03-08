@@ -9,8 +9,11 @@ import {
   X, RefreshCw, Search, ChevronDown, ChevronRight,
   TrendingUp, TrendingDown, Users, BarChart3, DollarSign,
   Clock, Shield, Target, ShieldAlert, Wallet, Activity,
-  ArrowUpRight, ArrowDownRight, Percent
+  ArrowUpRight, ArrowDownRight, Percent, Pencil,
 } from "lucide-react";
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
 import {
