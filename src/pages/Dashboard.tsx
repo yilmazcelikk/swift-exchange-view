@@ -175,7 +175,8 @@ const Dashboard = () => {
     const map: Record<string, { price: number; changePercent?: number; marketOpen?: boolean }> = {};
     for (const o of openOrders) {
       if (!map[o.symbolId]) {
-        const status = getMarketStatus(o.symbolName, "");
+        const cat = symbolCategories[o.symbolId] || "";
+        const status = getMarketStatus(o.symbolName, cat);
         map[o.symbolId] = { price: o.currentPrice, changePercent: 0, marketOpen: status.isOpen };
       } else {
         map[o.symbolId].price = o.currentPrice;
