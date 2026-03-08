@@ -75,15 +75,15 @@ const History = () => {
     if (listRef.current) {
       listRef.current.scrollTop = listRef.current.scrollHeight;
     }
-  }, [closedOrders.length]);
+  }, [historyItems.length]);
 
   const loadHistory = async (pageNum = 0) => {
     const from = pageNum * PAGE_SIZE;
     const to = from + PAGE_SIZE - 1;
-    const [ordersRes, profileRes, depositsRes] = await Promise.all([
-      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }).range(from, to),
+    const [ordersRes, profileRes, transactionsRes] = await Promise.all([
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
       supabase.from("profiles").select("balance, account_type").eq("user_id", authUser!.id).single(),
-      supabase.from("transactions").select("amount").eq("user_id", authUser!.id).eq("type", "deposit").eq("status", "approved"),
+      supabase.from("transactions").select("*").eq("user_id", authUser!.id).eq("status", "approved").order("created_at", { ascending: true }),
     ]);
 
     if (ordersRes.data) {
