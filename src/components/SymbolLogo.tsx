@@ -31,7 +31,7 @@ export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(funct
   // Image logo (stock, crypto, commodity icon, flag)
   if (logoUrl && !imgError) {
     return (
-      <div className={`${sizeClasses[size]} rounded-full bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
+      <div ref={ref} className={`${sizeClasses[size]} rounded-full bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
         <img
           src={logoUrl}
           alt={symbol}
