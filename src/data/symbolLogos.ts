@@ -5,6 +5,7 @@
  * For Forex & Indices we use circle-flag SVGs (same as TradingView uses).
  */
 const TV = "https://s3-symbol-logo.tradingview.com";
+const TV_CRYPTO = `${TV}/crypto`;
 
 // ─── Symbol → TradingView slug mapping ───────────────────────────────
 
@@ -371,7 +372,7 @@ const TV_SLUGS: Record<string, string> = {
   YEOTK: "yesilova-holding",
   ZOREN: "zorlu-enerji",
 
-  // ── Crypto ──
+  // ── Crypto (legacy slugs kept for fallback) ──
   AAVEUSD: "aave",
   ADAUSD: "cardano",
   ALGOUSD: "algorand",
@@ -515,6 +516,32 @@ const LOCAL_FALLBACKS: Record<string, string> = {
   TSKB: "/logos/TSKB.png",
 };
 
+// Crypto base tickers for new TradingView S3 path: crypto/XTVC{TICKER}--big.svg
+const CRYPTO_TICKERS: Record<string, string> = {
+  AAVEUSD: "AAVE", ADAUSD: "ADA", ALGOUSD: "ALGO", ANKRUSD: "ANKR",
+  APEUSD: "APE", APTUSD: "APT", ARBUSD: "ARB", ATOMUSD: "ATOM",
+  AVAXUSD: "AVAX", AXSUSD: "AXS", BANDUSD: "BAND", BATUSD: "BAT",
+  BCHUSD: "BCH", BLURUSD: "BLUR", BNBUSD: "BNB", BONKUSD: "BONK",
+  BTCUSD: "BTC", CHZUSD: "CHZ", COMPUSD: "COMP", CRVUSD: "CRV",
+  DASHUSD: "DASH", DOGEUSD: "DOGE", DOTUSD: "DOT", EIGENUSDT: "EIGEN",
+  ENSUSD: "ENS", EOSUSD: "EOS", ETCUSD: "ETC", ETHUSD: "ETH",
+  FETCUSD: "FET", FILUSD: "FIL", FLOKIUSD: "FLOKI", FLOWUSD: "FLOW",
+  FTMUSD: "FTM", GRTUSD: "GRT", HNTUSD: "HNT", ICPUSD: "ICP",
+  IMXUSD: "IMX", INJUSD: "INJ", IOTAUSD: "IOTA", JASMYUSD: "JASMY",
+  JUPUSD: "JUP", KAVAUSD: "KAVA", KSMUSD: "KSM", LDOUSD: "LDO",
+  LINKUSD: "LINK", LTCUSD: "LTC", MANAUSD: "MANA", MASKUSD: "MASK",
+  MATICUSD: "MATIC", MINAUSD: "MINA", NEARUSD: "NEAR", OCEANUSD: "OCEAN",
+  ONDOUSD: "ONDO", OPUSD: "OP", PENDLEUSD: "PENDLE", PEPEUSD: "PEPE",
+  "PEPE1000USD": "PEPE", POLUSD: "POL", QNTUSD: "QNT", RAREUSD: "RARE",
+  RENDERUSD: "RNDR", ROSEUSD: "ROSE", RPLUSD: "RPL", SANDUSD: "SAND",
+  SEIUSD: "SEI", SHIBUSD: "SHIB", SKLUSD: "SKL", SNXUSD: "SNX",
+  SOLUSD: "SOL", STORJUSD: "STORJ", STXUSD: "STX", SUIUSD: "SUI",
+  SUPERUSD: "SUPER", THETAUSD: "THETA", TIAUSD: "TIA", TONUSD: "TON",
+  TRXUSD: "TRX", UNIUSD: "UNI", VETUSD: "VET", WIFUSD: "WIF",
+  WLDUSD: "WLD", XLMUSD: "XLM", XRPUSD: "XRP", XTZUSD: "XTZ",
+  ZECUSD: "ZEC",
+};
+
 /**
  * Returns an ordered list of logo URLs to try for a symbol.
  * The component will try each URL in order, falling back on error.
@@ -523,26 +550,38 @@ export function resolveLogoUrls(symbol: string, category?: string): string[] {
   const normalized = symbol.replace(/[^A-Z0-9_]/gi, "").toUpperCase();
   const urls: string[] = [];
 
-  // 1. TradingView slug mapping
+  // 1. Crypto: try new TradingView crypto path FIRST
+  const cryptoTicker = CRYPTO_TICKERS[normalized];
+  if (cryptoTicker) {
+    urls.push(`${TV_CRYPTO}/XTVC${cryptoTicker}--big.svg`);
+  }
+
+  // 2. TradingView slug mapping (legacy, still works for stocks/commodities)
   const slug = TV_SLUGS[normalized];
   if (slug) urls.push(`${TV}/${slug}--big.svg`);
 
-  // 2. Local fallback (for known BIST stocks with local PNGs)
+  // 3. Local fallback (for known BIST stocks with local PNGs)
   if (LOCAL_FALLBACKS[normalized]) urls.push(LOCAL_FALLBACKS[normalized]);
 
-  // 3. Index flags
+  // 4. Index flags
   if (INDEX_FLAGS[normalized]) {
     urls.push(`${FLAG_BASE}/${INDEX_FLAGS[normalized]}.svg`);
   }
 
-  // 4. Forex flags
+  // 5. Forex flags
   if (urls.length === 0 && (category === "forex" || normalized.length === 6)) {
     const base = normalized.slice(0, 3);
     const flagCode = CURRENCY_FLAGS[base];
     if (flagCode) urls.push(`${FLAG_BASE}/${flagCode}.svg`);
   }
 
-  // 5. Speculative TradingView attempt (lowercase symbol as slug)
+  // 6. Speculative: try crypto path for unknown USD-ending symbols
+  if (urls.length === 0 && normalized.endsWith("USD")) {
+    const base = normalized.replace(/USD[T]?$/, "");
+    urls.push(`${TV_CRYPTO}/XTVC${base}--big.svg`);
+  }
+
+  // 7. Speculative TradingView attempt (lowercase symbol as slug)
   if (urls.length === 0) {
     const guess = normalized.toLowerCase();
     urls.push(`${TV}/${guess}--big.svg`);
