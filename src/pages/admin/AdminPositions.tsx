@@ -495,7 +495,7 @@ const AdminPositions = () => {
                         <span className="text-[9px] text-muted-foreground whitespace-nowrap">Teminat</span>
                         <div className="flex-1 h-1.5 rounded-full overflow-hidden bg-muted">
                           <div
-                            className={`h-full rounded-full transition-all ${marginLevel > 150 ? "bg-buy" : marginLevel > 100 ? "bg-yellow-500" : "bg-sell"}`}
+                            className={`h-full rounded-full transition-all ${marginLevel > 100 ? "bg-buy" : marginLevel > 30 ? "bg-yellow-500" : "bg-sell animate-pulse"}`}
                             style={{ width: `${Math.min(100, (marginLevel / 300) * 100)}%` }}
                           />
                         </div>
