@@ -25,6 +25,7 @@ import AdminSettings from "./AdminSettings";
 import AdminProducts from "./AdminProducts";
 import AdminReferrals from "./AdminReferrals";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { AdminNotifications } from "@/components/admin/AdminNotifications";
 
 const navSections = [
   {
