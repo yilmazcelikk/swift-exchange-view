@@ -441,7 +441,7 @@ const AdminUsers = () => {
                 <TableHead className="w-[100px]">MTID</TableHead>
                 <TableHead>Kullanıcı</TableHead>
                 <TableHead className="hidden md:table-cell">DOĞRULAMA</TableHead>
-                <TableHead className="hidden lg:table-cell">KYC</TableHead>
+                <TableHead className="hidden lg:table-cell">Hesap Türü</TableHead>
                 <TableHead className="text-right">Bakiye</TableHead>
                 <TableHead className="w-[80px]">İşlem</TableHead>
               </TableRow>
