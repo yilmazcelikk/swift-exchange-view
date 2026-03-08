@@ -346,9 +346,11 @@ export type Database = {
       }
       transactions: {
         Row: {
+          account_holder: string | null
           amount: number
           created_at: string
           currency: string
+          iban: string | null
           id: string
           method: string | null
           receipt_url: string | null
@@ -357,9 +359,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_holder?: string | null
           amount: number
           created_at?: string
           currency?: string
+          iban?: string | null
           id?: string
           method?: string | null
           receipt_url?: string | null
@@ -368,9 +372,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_holder?: string | null
           amount?: number
           created_at?: string
           currency?: string
+          iban?: string | null
           id?: string
           method?: string | null
           receipt_url?: string | null
