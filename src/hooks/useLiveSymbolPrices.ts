@@ -1,10 +1,5 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState } from "react";
 
-/**
- * Manages live tick prices for multiple symbols simultaneously.
- * Takes a map of symbolId -> { price, changePercent } and returns
- * a ticking version that updates every second.
- */
 interface SymbolPriceInput {
   price: number;
   changePercent?: number;
@@ -18,21 +13,29 @@ export function useLiveSymbolPrices(
 ): Record<string, number> {
   const [livePrices, setLivePrices] = useState<Record<string, number>>({});
   const realPricesRef = useRef<Record<string, SymbolPriceInput>>({});
+  const prevKeysRef = useRef<string>("");
 
-  // Update real prices ref when input changes
+  // Update real prices ref — only trigger state update when symbols actually change
   useEffect(() => {
     realPricesRef.current = symbolPrices;
-    // Seed live prices with real prices for any new symbols
+
+    // Build a stable key from symbol IDs + prices to detect real changes
+    const keys = Object.entries(symbolPrices)
+      .map(([id, v]) => `${id}:${v.price.toFixed(4)}`)
+      .sort()
+      .join("|");
+
+    if (keys === prevKeysRef.current) return;
+    prevKeysRef.current = keys;
+
     setLivePrices((prev) => {
       const next = { ...prev };
       for (const [id, { price }] of Object.entries(symbolPrices)) {
         if (!(id in next)) next[id] = price;
-        // Also snap to real price when it changes from server
         if (Math.abs((prev[id] || 0) - price) / (price || 1) > 0.005) {
           next[id] = price;
         }
       }
-      // Remove symbols no longer in input
       for (const id of Object.keys(next)) {
         if (!(id in symbolPrices)) delete next[id];
       }
@@ -48,7 +51,6 @@ export function useLiveSymbolPrices(
         const next: Record<string, number> = {};
         for (const [id, input] of Object.entries(realPricesRef.current)) {
           const real = input.price;
-          // Skip ticking for closed markets - just keep current price
           if (input.marketOpen === false || !real || real <= 0) {
             next[id] = prev[id] ?? real;
             continue;
