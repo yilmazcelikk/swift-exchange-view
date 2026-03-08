@@ -140,7 +140,6 @@ const Dashboard = () => {
         .in("id", symbolIds);
       const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
 
-      const symbolInfoMap = new Map(symbolsData?.map(s => [s.id, { name: s.name, category: s.category }]) || []);
 
       setOrders(data.map((o: any) => {
         const symbolInfo = priceMap.get(o.symbol_id);
