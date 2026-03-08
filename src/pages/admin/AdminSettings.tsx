@@ -31,7 +31,7 @@ const AdminSettings = () => {
 
   const loadSessionId = async () => {
     try {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("app_settings")
         .select("value")
         .eq("key", "tv_session_id")
