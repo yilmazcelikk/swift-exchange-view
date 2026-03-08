@@ -104,7 +104,7 @@ const AdminPositions = () => {
         data.map((o) => {
           const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
           const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), currentPrice);
-          return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl };
+          return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl, swap: Number(o.swap || 0) };
         })
       );
     } catch (err) {
