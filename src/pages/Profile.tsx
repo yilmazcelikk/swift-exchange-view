@@ -247,10 +247,7 @@ const Profile = () => {
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/10 p-5">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-20 h-20 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-            <div className="relative flex items-center gap-4">
-              <div className="h-16 w-16 rounded-2xl bg-primary/20 border-2 border-primary/30 flex items-center justify-center shrink-0">
-                <span className="text-xl font-bold text-primary">{initials}</span>
-              </div>
+            <div className="relative flex-1 min-w-0">
               <div className="flex-1 min-w-0">
                 <h2 className="text-lg font-bold text-foreground truncate">
                   {profile.fullName || "İsim belirtilmemiş"}
