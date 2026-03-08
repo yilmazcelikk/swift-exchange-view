@@ -141,6 +141,10 @@ const Dashboard = () => {
         .in("id", symbolIds);
       const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
 
+      // Store symbol categories for market hour checks
+      const catMap: Record<string, string> = {};
+      symbolsData?.forEach(s => { catMap[s.id] = s.category; });
+      setSymbolCategories(catMap);
 
       setOrders(data.map((o: any) => {
         const symbolInfo = priceMap.get(o.symbol_id);
