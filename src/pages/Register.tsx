@@ -105,7 +105,7 @@ const Register = () => {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Ad</label>
-                <Input placeholder="Ad" value={formData.firstName} onChange={(e) => update("firstName", e.target.value)} className="bg-muted/50" />
+                <Input placeholder="Adınızı girin" value={formData.firstName} onChange={(e) => update("firstName", e.target.value)} className="bg-muted/50" />
               </div>
               <div>
                 <label className="text-sm font-medium mb-1.5 block">Soyad</label>
