@@ -776,24 +776,25 @@ const AdminUsers = () => {
           {editingOrder && (() => {
             const entryVal = parseFloat(orderEditForm.entry_price) || editingOrder.entry_price;
             const lotsVal = parseFloat(orderEditForm.lots) || editingOrder.lots;
-            const currentPnl = calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, editingOrder.current_price);
+            const orderType = orderEditForm.type;
+            const currentPnl = calculatePnl(editingOrder.symbol_name, orderType, lotsVal, entryVal, editingOrder.current_price);
             const margin = calculateMargin(editingOrder.symbol_name, lotsVal, entryVal, 200);
             const commission = calculateCommission(editingOrder.symbol_name, lotsVal, editingOrder.current_price);
             const netPnl = currentPnl - commission;
             const pnlPercent = margin > 0 ? (currentPnl / margin) * 100 : 0;
             const slVal = orderEditForm.stop_loss ? parseFloat(orderEditForm.stop_loss) : null;
             const tpVal = orderEditForm.take_profit ? parseFloat(orderEditForm.take_profit) : null;
-            const slPnl = slVal ? calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, slVal) : null;
-            const tpPnl = tpVal ? calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, tpVal) : null;
+            const slPnl = slVal ? calculatePnl(editingOrder.symbol_name, orderType, lotsVal, entryVal, slVal) : null;
+            const tpPnl = tpVal ? calculatePnl(editingOrder.symbol_name, orderType, lotsVal, entryVal, tpVal) : null;
 
             return (
               <>
                 {/* Header Banner */}
-                <div className={`px-5 py-4 ${editingOrder.type === "buy" ? "bg-buy/10" : "bg-sell/10"}`}>
+                <div className={`px-5 py-4 ${orderType === "buy" ? "bg-buy/10" : "bg-sell/10"}`}>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${editingOrder.type === "buy" ? "bg-buy/20" : "bg-sell/20"}`}>
-                        {editingOrder.type === "buy" ? (
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${orderType === "buy" ? "bg-buy/20" : "bg-sell/20"}`}>
+                        {orderType === "buy" ? (
                           <TrendingUp className="h-5 w-5 text-buy" />
                         ) : (
                           <TrendingDown className="h-5 w-5 text-sell" />
@@ -802,9 +803,13 @@ const AdminUsers = () => {
                       <div>
                         <h3 className="text-lg font-bold text-foreground">{editingOrder.symbol_name}</h3>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${editingOrder.type === "buy" ? "bg-buy/20 text-buy" : "bg-sell/20 text-sell"}`}>
-                            {editingOrder.type === "buy" ? "ALIŞ" : "SATIŞ"}
-                          </span>
+                          {/* Direction Toggle */}
+                          <button
+                            onClick={() => setOrderEditForm(prev => ({ ...prev, type: prev.type === "buy" ? "sell" : "buy" }))}
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full cursor-pointer transition-colors ${orderType === "buy" ? "bg-buy/20 text-buy hover:bg-buy/30" : "bg-sell/20 text-sell hover:bg-sell/30"}`}
+                          >
+                            {orderType === "buy" ? "ALIŞ ↔" : "SATIŞ ↔"}
+                          </button>
                           <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">1:200</span>
                         </div>
                       </div>
