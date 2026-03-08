@@ -64,10 +64,17 @@ function calculatePnl(symbolName: string, type: string, lots: number, entryPrice
   return diff * lots * contractSize;
 }
 
-function calculateCommission(symbolName: string, lots: number, currentPrice: number): number {
+const COMMISSION_RATES: Record<string, number> = {
+  standard: 0.00004,
+  gold: 0.00002,
+  diamond: 0.00001,
+};
+
+function calculateCommission(symbolName: string, lots: number, currentPrice: number, accountType: string = "standard"): number {
   const contractSize = getContractSize(symbolName);
   const notional = lots * contractSize * currentPrice;
-  return notional * 0.00002;
+  const rate = COMMISSION_RATES[accountType] ?? COMMISSION_RATES.standard;
+  return notional * rate;
 }
 
 function calculateMargin(symbolName: string, lots: number, entryPrice: number, leverageRatio: number): number {
