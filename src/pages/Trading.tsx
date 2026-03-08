@@ -638,11 +638,6 @@ const Trading = () => {
           </button>
         </div>
 
-        {/* Spread indicator overlay */}
-        <div className="absolute top-1.5 right-14 z-20 flex items-center gap-1 bg-card/80 backdrop-blur-sm rounded-md px-1.5 py-0.5 border border-border/30">
-          <span className="text-[8px] text-muted-foreground font-medium">Spread</span>
-          <span className="text-[9px] font-mono font-semibold text-foreground">{spread.toFixed(selectedSymbol.current_price < 10 ? 5 : 2)}</span>
-        </div>
 
         <div className="h-full flex">
           {/* Candle area */}
