@@ -232,12 +232,9 @@ const AdminTransactions = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2">
-                          <div>
-                            <p className="text-sm font-medium leading-tight">{tx.user_name}</p>
-                            <p className="text-[10px] font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</p>
-                          </div>
-                          </div>
+                        <div>
+                          <p className="text-sm font-medium leading-tight">{tx.user_name}</p>
+                          <p className="text-[10px] font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</p>
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
