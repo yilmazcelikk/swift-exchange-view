@@ -89,7 +89,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
 
     const currentUsedMargin = (openOrders || []).reduce((sum, o: any) => {
       const oLev = parseInt((o.leverage || "1:200").split(":")[1] || "200", 10);
-      const cs = getContractSizeForMargin(o.symbol_name);
+      const cs = getContractSize(o.symbol_name);
       return sum + (Number(o.lots) * cs * Number(o.entry_price)) / oLev;
     }, 0);
 
