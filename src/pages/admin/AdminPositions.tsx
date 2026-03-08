@@ -15,7 +15,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
+import { calculatePnl, calculateMargin, calculateCommission, calculateSwap } from "@/lib/trading";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
