@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, ChevronDown } from "lucide-react";
-import { getSpread as calcSpread, calculateMargin, calculatePnl, getContractSize } from "@/lib/trading";
+import { getSpread as calcSpread, calculateMargin, getContractSize } from "@/lib/trading";
 import { getMarketStatus } from "@/lib/marketHours";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -33,7 +33,6 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
   const [orderLoading, setOrderLoading] = useState(false);
-  const [freeMarginInfo, setFreeMarginInfo] = useState<{ freeMargin: number; equity: number } | null>(null);
 
   const quickLots = [0.01, 0.05, 0.1, 0.5, 1.0, 5.0];
   const price = symbol.current_price || 0;
@@ -44,51 +43,6 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
 
   // Parse leverage ratio
   const leverageRatio = parseInt(leverage.split(":")[1] || "200", 10);
-
-  // Load real-time free margin
-  useEffect(() => {
-    if (!userId) return;
-    const loadFreeMargin = async () => {
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("balance, credit")
-        .eq("user_id", userId)
-        .single();
-      if (!profileData) return;
-
-      const { data: openOrders } = await supabase
-        .from("orders")
-        .select("symbol_name, lots, entry_price, leverage, type, symbol_id")
-        .eq("user_id", userId)
-        .eq("status", "open");
-
-      const symIds = [...new Set((openOrders || []).map((o: any) => o.symbol_id))];
-      let livePrices: Record<string, number> = {};
-      if (symIds.length > 0) {
-        const { data: symData } = await supabase.from("symbols").select("id, current_price").in("id", symIds);
-        if (symData) symData.forEach((s: any) => { livePrices[s.id] = Number(s.current_price); });
-      }
-
-      let usedMargin = 0;
-      let unrealizedPnl = 0;
-      for (const o of (openOrders || []) as any[]) {
-        const oLev = parseInt((o.leverage || "1:200").split(":")[1] || "200", 10);
-        const cs = getContractSize(o.symbol_name);
-        usedMargin += (Number(o.lots) * cs * Number(o.entry_price)) / oLev;
-        const liveP = livePrices[o.symbol_id] || Number(o.entry_price);
-        const diff = o.type === "buy" ? liveP - Number(o.entry_price) : Number(o.entry_price) - liveP;
-        unrealizedPnl += diff * Number(o.lots) * cs;
-      }
-
-      const equity = Number(profileData.balance) + Number(profileData.credit) + unrealizedPnl;
-      const freeMargin = equity - usedMargin;
-      setFreeMarginInfo({ freeMargin, equity });
-    };
-
-    loadFreeMargin();
-    const interval = setInterval(loadFreeMargin, 5000);
-    return () => clearInterval(interval);
-  }, [userId]);
 
   const handleOrder = async (type: "buy" | "sell") => {
     if (!symbol || !userId) return;
@@ -309,26 +263,6 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
           <Input type="number" placeholder="Opsiyonel" value={takeProfit} onChange={(e) => setTakeProfit(e.target.value)} className="bg-muted/50 h-8 text-xs font-mono" />
         </div>
       </div>
-
-      {/* Margin Info */}
-      {freeMarginInfo && (
-        <div className="flex items-center justify-between text-[11px] bg-muted/40 rounded-lg px-2.5 py-1.5">
-          <div className="flex items-center gap-3">
-            <div>
-              <span className="text-muted-foreground">Serbest: </span>
-              <span className={`font-mono font-semibold ${freeMarginInfo.freeMargin < 0 ? 'text-sell' : 'text-foreground'}`}>
-                ${freeMarginInfo.freeMargin.toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-            <div>
-              <span className="text-muted-foreground">Gerekli: </span>
-              <span className="font-mono font-semibold text-foreground">
-                ${calculateMargin(symbol.name, lots, price, leverageRatio).toLocaleString('tr-TR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-              </span>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Action Buttons */}
       {orderType === "market" ? (
