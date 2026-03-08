@@ -108,7 +108,7 @@ const AdminUsers = () => {
       // Fetch open orders
       const { data: ordersData } = await supabase
         .from("orders")
-        .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage, symbol_id, stop_loss, take_profit")
+        .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage, symbol_id, stop_loss, take_profit, created_at")
         .eq("user_id", userId)
         .eq("status", "open");
 
