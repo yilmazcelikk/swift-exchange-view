@@ -262,42 +262,44 @@ const Dashboard = () => {
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
-      {/* Top PnL */}
-      {liveOrders.length > 0 && (
-        <div className="flex items-center justify-center px-4 pt-4 pb-2">
-          {totalOpenPnl < 0 && <span className="text-lg md:text-xl font-bold font-mono text-sell">-</span>}
-          <AnimatedPrice value={Math.abs(totalOpenPnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`} />
-          <span className={`text-lg md:text-xl font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>USD</span>
+      {/* Terminal-style PnL & Stats Bar */}
+      <div className="bg-card border-b border-border">
+        {liveOrders.length > 0 && (
+          <div className="flex items-center justify-center px-3 pt-3 pb-1">
+            {totalOpenPnl < 0 && <span className={`text-lg font-bold font-mono text-sell glow-sell`}>-</span>}
+            <AnimatedPrice value={Math.abs(totalOpenPnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-lg font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy glow-buy' : 'text-sell glow-sell'}`} />
+            <span className={`text-lg font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>USD</span>
+          </div>
+        )}
+
+        {/* Account Stats - compact grid */}
+        <div className="px-3 pb-2 grid grid-cols-2 gap-x-4 gap-y-0.5">
+          {accountStats.map((stat) => {
+            const isMarginLevel = stat.label === "Teminat seviyesi (%)";
+            const isLowMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 100;
+            const isCriticalMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 30;
+            const isNegativeFreeMargin = stat.label === "Serbest teminat" && stat.value < 0;
+            let valueColorClass = "text-foreground";
+            if (isCriticalMargin) valueColorClass = "text-sell animate-pulse glow-sell";
+            else if (isLowMargin) valueColorClass = "text-sell";
+            else if (isNegativeFreeMargin) valueColorClass = "text-sell glow-sell";
+
+            return (
+              <div key={stat.label} className={`flex items-center justify-between py-0.5 ${isCriticalMargin ? "bg-sell/10 -mx-1 px-1 rounded" : ""}`}>
+                <span className={`text-[10px] font-mono uppercase tracking-wider ${isCriticalMargin ? "text-sell" : "text-muted-foreground"}`}>{stat.label}</span>
+                <span className="text-[11px] font-mono font-semibold tabular-nums">
+                  <AnimatedPrice value={Math.abs(stat.value)} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-[11px] font-mono font-semibold tabular-nums ${valueColorClass}`} />
+                  <span className="ml-0.5 text-muted-foreground">{stat.label.includes('%') ? '' : 'USD'}</span>
+                </span>
+              </div>
+            );
+          })}
         </div>
-      )}
-
-      {/* Account Stats */}
-      <div className="px-4 pb-3 space-y-1">
-        {accountStats.map((stat) => {
-          const isMarginLevel = stat.label === "Teminat seviyesi (%)";
-          const isLowMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 100;
-          const isCriticalMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 30;
-          const isNegativeFreeMargin = stat.label === "Serbest teminat" && stat.value < 0;
-          let valueColorClass = "text-foreground";
-          if (isCriticalMargin) valueColorClass = "text-sell animate-pulse";
-          else if (isLowMargin) valueColorClass = "text-sell";
-          else if (isNegativeFreeMargin) valueColorClass = "text-sell";
-
-          return (
-            <div key={stat.label} className={`flex items-center justify-between ${isCriticalMargin ? "bg-sell/10 -mx-4 px-4 py-0.5 rounded-lg" : ""}`}>
-              <span className={`text-xs ${isCriticalMargin ? "text-sell font-medium" : "text-muted-foreground"}`}>{stat.label}:</span>
-              <span className="text-xs font-mono font-medium text-foreground">
-                <AnimatedPrice value={Math.abs(stat.value)} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-xs font-mono font-medium ${valueColorClass}`} />
-                <span className="ml-0.5">{stat.label.includes('%') ? '' : ' USD'}</span>
-              </span>
-            </div>
-          );
-        })}
       </div>
 
       {/* Positions Header */}
-      <div className="px-4 pb-2">
-        <h2 className="text-sm font-semibold text-foreground">Pozisyonlar ({liveOrders.length})</h2>
+      <div className="px-3 py-2 border-b border-border/50 flex items-center justify-between">
+        <h2 className="text-[11px] font-mono font-semibold uppercase tracking-wider text-muted-foreground">Pozisyonlar <span className="text-foreground">({liveOrders.length})</span></h2>
       </div>
 
       {/* Positions List */}
