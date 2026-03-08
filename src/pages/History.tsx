@@ -71,20 +71,7 @@ const History = () => {
       </div>
 
       <div className="flex-1 overflow-auto px-4 pb-24 md:pb-4">
-        {/* Summary section at top */}
-        <div className="pb-3 mb-3 border-b border-border space-y-2">
-          {summaryRows.map((row) => (
-            <div key={row.label} className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">{row.label}</span>
-              <span className={`text-sm font-mono font-bold ${row.color}`}>
-                {row.value < 0 ? "-" : ""}
-                {formatNum(Math.abs(row.value))}
-              </span>
-            </div>
-          ))}
-        </div>
-
-        {/* Order list below */}
+        {/* Order list */}
         {closedOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
         ) : (
@@ -136,6 +123,19 @@ const History = () => {
             })}
           </div>
         )}
+
+        {/* Summary section at bottom */}
+        <div className="mt-4 pt-4 border-t border-border space-y-2">
+          {summaryRows.map((row) => (
+            <div key={row.label} className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">{row.label}</span>
+              <span className={`text-sm font-mono font-bold ${row.color}`}>
+                {row.value < 0 ? "-" : ""}
+                {formatNum(Math.abs(row.value))}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
