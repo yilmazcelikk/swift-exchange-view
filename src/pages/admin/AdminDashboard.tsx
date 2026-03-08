@@ -75,13 +75,7 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
     { label: "Ayarlar", icon: Settings, tab: "settings" },
   ];
 
-  const systemStatus = [
-    { label: "İşlem Sunucusu (Socket)", status: "Çevrimiçi" },
-    { label: "Ana Sunucu", status: "Çevrimiçi" },
-    { label: "Veritabanı", status: "Çevrimiçi" },
-    { label: "E-Posta Servisleri", status: "Çevrimiçi" },
-    { label: "Yedekleme Servisleri", status: "Çevrimiçi" },
-  ];
+  const dbOnline = stats.totalUsers >= 0; // if query succeeded, DB is online
 
   return (
     <div className="space-y-6">
