@@ -468,7 +468,7 @@ const Dashboard = () => {
 
       {/* Close Confirm */}
       <AlertDialog open={!!closingOrder} onOpenChange={(open) => !open && setClosingOrder(null)}>
-        <AlertDialogContent className="max-w-sm">
+        <AlertDialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-sm mx-auto">
           <AlertDialogHeader>
             <AlertDialogTitle>Pozisyonu Kapat</AlertDialogTitle>
             <AlertDialogDescription asChild>
