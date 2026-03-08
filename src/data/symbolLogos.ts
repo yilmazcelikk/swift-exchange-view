@@ -68,7 +68,7 @@ export const STOCK_LOGOS: Record<string, string> = {
   EKGYO: `${TV}/emlak-konut-gmyo--big.svg`,
   ENKAI: `${TV}/enka-insaat--big.svg`,
   EREGL: `${CB}/erdemir.com.tr`,           // Clearbit (no TV logo)
-  EUPWR: `${TV}/europower-enerji--big.svg`,
+  EUPWR: `${CB}/europowerenerji.com.tr`,
   FROTO: `${TV}/ford-otosan--big.svg`,
   GARAN: `${CB}/garantibbva.com.tr`,       // Clearbit (no TV logo)
   GESAN: `${TV}/girisim-elektrik--big.svg`,
