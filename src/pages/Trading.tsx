@@ -68,6 +68,8 @@ const Trading = () => {
   const [lots, setLots] = useState(0.1);
   const [leverage, setLeverage] = useState("1:200");
   const [accountType, setAccountType] = useState("standard");
+  const [orderType, setOrderType] = useState<"market" | "buy_limit" | "sell_limit" | "buy_stop" | "sell_stop">("market");
+  const [targetPrice, setTargetPrice] = useState("");
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
   const [timeframe, setTimeframe] = useState<Timeframe>("15m");
@@ -267,6 +269,34 @@ const Trading = () => {
   const handleOrder = async (type: "buy" | "sell") => {
     if (!selectedSymbol || !authUser) return;
 
+    const isPending = orderType !== "market";
+    const pendingTargetPrice = isPending ? parseFloat(targetPrice) : null;
+
+    // Validate target price for pending orders
+    if (isPending) {
+      if (!pendingTargetPrice || isNaN(pendingTargetPrice) || pendingTargetPrice <= 0) {
+        toast.error("Bekleyen emir için geçerli bir hedef fiyat girin.");
+        return;
+      }
+      const midPrice = selectedSymbol.current_price || 0;
+      if (orderType === "buy_limit" && pendingTargetPrice >= midPrice) {
+        toast.error("Buy Limit fiyatı güncel fiyatın altında olmalıdır.");
+        return;
+      }
+      if (orderType === "sell_limit" && pendingTargetPrice <= midPrice) {
+        toast.error("Sell Limit fiyatı güncel fiyatın üzerinde olmalıdır.");
+        return;
+      }
+      if (orderType === "buy_stop" && pendingTargetPrice <= midPrice) {
+        toast.error("Buy Stop fiyatı güncel fiyatın üzerinde olmalıdır.");
+        return;
+      }
+      if (orderType === "sell_stop" && pendingTargetPrice >= midPrice) {
+        toast.error("Sell Stop fiyatı güncel fiyatın altında olmalıdır.");
+        return;
+      }
+    }
+
     // Check market hours
     const status = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
     if (!status.isOpen) {
@@ -291,55 +321,78 @@ const Trading = () => {
     setOrderLoading(true);
     try {
       const midPrice = selectedSymbol.current_price || 0;
-      const currentSpread = calcSpread(selectedSymbol.name, midPrice, accountType);
-      const entryPrice = type === "buy" ? midPrice + currentSpread / 2 : midPrice - currentSpread / 2;
       const slValue = stopLoss ? parseFloat(stopLoss) : null;
       const tpValue = takeProfit ? parseFloat(takeProfit) : null;
 
-      // SL/TP validation based on order direction
+      let entryPrice: number;
+      if (isPending) {
+        // For pending orders, entry_price is 0 (set when triggered), target_price is the desired price
+        entryPrice = 0;
+      } else {
+        const currentSpread = calcSpread(selectedSymbol.name, midPrice, accountType);
+        entryPrice = type === "buy" ? midPrice + currentSpread / 2 : midPrice - currentSpread / 2;
+      }
+
+      // SL/TP validation (use target price for pending, entry price for market)
+      const refPrice = isPending ? pendingTargetPrice! : entryPrice;
       if (type === "buy") {
-        if (slValue !== null && slValue >= entryPrice) {
-          toast.error("Alış emrinde Zarar Durdur, giriş fiyatının altında olmalıdır.");
+        if (slValue !== null && slValue >= refPrice) {
+          toast.error("Alış emrinde Zarar Durdur, fiyatın altında olmalıdır.");
           setOrderLoading(false);
           return;
         }
-        if (tpValue !== null && tpValue <= entryPrice) {
-          toast.error("Alış emrinde Kâr Al, giriş fiyatının üzerinde olmalıdır.");
+        if (tpValue !== null && tpValue <= refPrice) {
+          toast.error("Alış emrinde Kâr Al, fiyatın üzerinde olmalıdır.");
           setOrderLoading(false);
           return;
         }
       } else {
-        if (slValue !== null && slValue <= entryPrice) {
-          toast.error("Satış emrinde Zarar Durdur, giriş fiyatının üzerinde olmalıdır.");
+        if (slValue !== null && slValue <= refPrice) {
+          toast.error("Satış emrinde Zarar Durdur, fiyatın üzerinde olmalıdır.");
           setOrderLoading(false);
           return;
         }
-        if (tpValue !== null && tpValue >= entryPrice) {
-          toast.error("Satış emrinde Kâr Al, giriş fiyatının altında olmalıdır.");
+        if (tpValue !== null && tpValue >= refPrice) {
+          toast.error("Satış emrinde Kâr Al, fiyatın altında olmalıdır.");
           setOrderLoading(false);
           return;
         }
       }
 
-      const { error } = await supabase.from("orders").insert({
+      const insertData: any = {
         user_id: authUser.id,
         symbol_id: selectedSymbol.id,
         symbol_name: selectedSymbol.name,
         type,
-        order_type: "market",
+        order_type: orderType,
         lots,
         leverage,
         entry_price: entryPrice,
         current_price: midPrice,
         stop_loss: slValue,
         take_profit: tpValue,
-      });
+        status: isPending ? "pending" : "open",
+        target_price: pendingTargetPrice,
+      };
+
+      const { error } = await supabase.from("orders").insert(insertData);
       if (error) throw error;
-      toast.success(`${selectedSymbol.name} ${type === "buy" ? "ALIŞ" : "SATIŞ"} emri verildi`, {
-        description: `${lots} lot`,
+
+      const orderTypeLabels: Record<string, string> = {
+        market: type === "buy" ? "ALIŞ" : "SATIŞ",
+        buy_limit: "BUY LIMIT",
+        sell_limit: "SELL LIMIT",
+        buy_stop: "BUY STOP",
+        sell_stop: "SELL STOP",
+      };
+
+      toast.success(`${selectedSymbol.name} ${orderTypeLabels[orderType]} emri verildi`, {
+        description: isPending ? `${lots} lot @ ${formatPrice(pendingTargetPrice!)}` : `${lots} lot`,
       });
       setStopLoss("");
       setTakeProfit("");
+      setTargetPrice("");
+      setOrderType("market");
       navigate("/dashboard");
     } catch (err: any) {
       toast.error("Emir başarısız: " + err.message);
@@ -683,6 +736,44 @@ const Trading = () => {
           </div>
         )}
 
+        {/* Order Type Selector */}
+        <div className="flex gap-1 overflow-x-auto no-scrollbar">
+          {([
+            { key: "market", label: "Piyasa" },
+            { key: "buy_limit", label: "Buy Limit" },
+            { key: "sell_limit", label: "Sell Limit" },
+            { key: "buy_stop", label: "Buy Stop" },
+            { key: "sell_stop", label: "Sell Stop" },
+          ] as const).map((ot) => (
+            <button
+              key={ot.key}
+              onClick={() => setOrderType(ot.key)}
+              className={`px-2.5 py-1 rounded text-[10px] font-medium whitespace-nowrap transition-colors ${
+                orderType === ot.key
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {ot.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Target Price for pending orders */}
+        {orderType !== "market" && (
+          <div>
+            <label className="text-[10px] text-muted-foreground mb-0.5 block">Hedef Fiyat</label>
+            <Input
+              type="number"
+              step="any"
+              placeholder={`Tetikleme fiyatı`}
+              value={targetPrice}
+              onChange={(e) => setTargetPrice(e.target.value)}
+              className="bg-muted/50 h-8 text-xs font-mono"
+            />
+          </div>
+        )}
+
         {/* Lots row */}
         <div className="flex items-center gap-2">
           <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => setLots(Math.max(0.01, parseFloat((lots - 0.01).toFixed(2))))}>
@@ -721,25 +812,40 @@ const Trading = () => {
           </div>
         </div>
 
-        {/* Buy / Sell */}
         {/* Spread info */}
         <div className="flex items-center justify-between text-[10px] text-muted-foreground font-mono">
           <span>Spread: {formatPrice(spread)}</span>
           <span className="opacity-60">Bid / Ask</span>
         </div>
 
-        {/* Buy / Sell with bid/ask prices */}
-        <div className="grid grid-cols-2 gap-2">
-          <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
-            <span className="text-xs opacity-80">SAT</span>
-            <span className="text-sm font-mono">{formatPrice(bid)}</span>
+        {/* Buy / Sell buttons */}
+        {orderType === "market" ? (
+          <div className="grid grid-cols-2 gap-2">
+            <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
+              <span className="text-xs opacity-80">SAT</span>
+              <span className="text-sm font-mono">{formatPrice(bid)}</span>
+            </Button>
+            <Button onClick={() => handleOrder("buy")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-buy hover:bg-buy/90 text-buy-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
+              <span className="text-xs opacity-80">AL</span>
+              <span className="text-sm font-mono">{formatPrice(ask)}</span>
+            </Button>
+          </div>
+        ) : (
+          <Button
+            onClick={() => handleOrder(orderType.startsWith("buy") ? "buy" : "sell")}
+            disabled={orderLoading || !currentMarketStatus.isOpen}
+            className={`w-full h-12 font-bold disabled:opacity-50 ${
+              orderType.startsWith("buy")
+                ? "bg-buy hover:bg-buy/90 text-buy-foreground"
+                : "bg-sell hover:bg-sell/90 text-sell-foreground"
+            }`}
+          >
+            {orderType === "buy_limit" ? "BUY LIMIT" : orderType === "sell_limit" ? "SELL LIMIT" : orderType === "buy_stop" ? "BUY STOP" : "SELL STOP"}
+            {targetPrice ? ` @ ${formatPrice(parseFloat(targetPrice))}` : ""}
           </Button>
-          <Button onClick={() => handleOrder("buy")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-buy hover:bg-buy/90 text-buy-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
-            <span className="text-xs opacity-80">AL</span>
-            <span className="text-sm font-mono">{formatPrice(ask)}</span>
-          </Button>
-        </div>
+        )}
       </div>
+
     </div>
   );
 };

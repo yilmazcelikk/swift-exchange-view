@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
-import { X, ChevronRight, ShieldAlert, Target, BarChart3 } from "lucide-react";
+import { X, ChevronRight, ShieldAlert, Target, BarChart3, Clock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,6 +32,7 @@ const Dashboard = () => {
   const { user: authUser } = useAuth();
   const navigate = useNavigate();
   const [orders, setOrders] = useState<Order[]>([]);
+  const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [symbolCategories, setSymbolCategories] = useState<Record<string, string>>({});
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
@@ -131,6 +132,7 @@ const Dashboard = () => {
   };
 
   const loadOrders = async () => {
+    // Load open orders
     const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
 
     if (data) {
@@ -141,10 +143,9 @@ const Dashboard = () => {
         .in("id", symbolIds);
       const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
 
-      // Store symbol categories for market hour checks
       const catMap: Record<string, string> = {};
       symbolsData?.forEach(s => { catMap[s.id] = s.category; });
-      setSymbolCategories(catMap);
+      setSymbolCategories(prev => ({ ...prev, ...catMap }));
 
       setOrders(data.map((o: any) => {
         const symbolInfo = priceMap.get(o.symbol_id);
@@ -167,6 +168,22 @@ const Dashboard = () => {
           createdAt: o.created_at,
         };
       }));
+    }
+
+    // Load pending orders
+    const { data: pendData } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "pending");
+    if (pendData) {
+      // Also fetch symbol categories for pending orders
+      const pendSymbolIds = [...new Set(pendData.map((o: any) => o.symbol_id))];
+      if (pendSymbolIds.length > 0) {
+        const { data: pendSymbolsData } = await supabase.from("symbols").select("id, current_price, category").in("id", pendSymbolIds);
+        const catMap: Record<string, string> = {};
+        pendSymbolsData?.forEach(s => { catMap[s.id] = s.category; });
+        setSymbolCategories(prev => ({ ...prev, ...catMap }));
+      }
+      setPendingOrders(pendData);
+    } else {
+      setPendingOrders([]);
     }
   };
 
@@ -478,6 +495,80 @@ const Dashboard = () => {
               </button>
             ))}
           </div>
+        )}
+
+        {/* Pending Orders Section */}
+        {pendingOrders.length > 0 && (
+          <>
+            <div className="pt-4 pb-2">
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                <Clock className="h-3.5 w-3.5 text-muted-foreground" />
+                Bekleyen Emirler ({pendingOrders.length})
+              </h2>
+            </div>
+            <div className="divide-y divide-border">
+              {pendingOrders.map((order: any) => {
+                const orderTypeLabels: Record<string, string> = {
+                  buy_limit: "BUY LIMIT",
+                  sell_limit: "SELL LIMIT",
+                  buy_stop: "BUY STOP",
+                  sell_stop: "SELL STOP",
+                };
+                const isBuy = order.type === "buy";
+                return (
+                  <div key={order.id} className="py-3 px-2 -mx-2 flex items-center gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isBuy ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'}`}>
+                          {orderTypeLabels[order.order_type] || order.order_type}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-[11px] text-muted-foreground font-mono">
+                          {Number(order.lots)} lot @ {formatUsd(Number(order.target_price))}
+                        </span>
+                      </div>
+                      {(order.stop_loss || order.take_profit) && (
+                        <div className="flex items-center gap-2 mt-0.5">
+                          {order.stop_loss && (
+                            <span className="text-[10px] text-sell font-mono flex items-center gap-0.5">
+                              <ShieldAlert className="h-2.5 w-2.5" /> {formatUsd(Number(order.stop_loss))}
+                            </span>
+                          )}
+                          {order.take_profit && (
+                            <span className="text-[10px] text-buy font-mono flex items-center gap-0.5">
+                              <Target className="h-2.5 w-2.5" /> {formatUsd(Number(order.take_profit))}
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 shrink-0 text-sell hover:bg-sell/10"
+                      onClick={async () => {
+                        const { error } = await supabase
+                          .from("orders")
+                          .update({ status: "closed", closed_at: new Date().toISOString(), close_reason: "cancelled", pnl: 0 } as any)
+                          .eq("id", order.id)
+                          .eq("status", "pending");
+                        if (error) {
+                          toast.error("İptal başarısız: " + error.message);
+                        } else {
+                          toast.success(`${order.symbol_name} bekleyen emir iptal edildi`);
+                          loadData();
+                        }
+                      }}
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          </>
         )}
       </div>
 

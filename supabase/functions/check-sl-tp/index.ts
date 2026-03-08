@@ -11,26 +11,18 @@ const STOP_OUT_LEVEL = 30; // %30 teminat seviyesi
 // Contract sizes - MUST match frontend src/lib/trading.ts
 function getContractSize(symbolName: string): number {
   const name = symbolName.toUpperCase();
-
-  // Precious metals
   if (name === "XAUUSD") return 100;
   if (name === "XAGUSD") return 5000;
   if (name === "XPTUSD") return 100;
   if (name === "XPDUSD") return 100;
-
-  // Energy
   if (name === "USOIL" || name === "UKOIL") return 1000;
   if (name === "NATGAS") return 10000;
-
-  // Agriculture
   if (["CORN", "WHEAT", "SOYBEAN"].includes(name)) return 50;
   if (name === "COTTON") return 50000;
   if (name === "SUGAR") return 112000;
   if (name === "COFFEE") return 37500;
   if (name === "COCOA") return 10;
   if (name === "COPPER") return 25000;
-
-  // Crypto - 1 lot = 1 unit
   const cryptoPairs = [
     "BTCUSD","ETHUSD","BNBUSD","ADAUSD","DOGEUSD","SOLUSD",
     "DOTUSD","AVAXUSD","LINKUSD","LTCUSD","BCHUSD","XRPUSD",
@@ -40,11 +32,7 @@ function getContractSize(symbolName: string): number {
     "AABORUSD","JUPUSD","PEPE1000USD","TONUSD","SUIUSD","WIFUSD",
   ];
   if (cryptoPairs.includes(name)) return 1;
-
-  // Indices
   if (["US500","US30","USTEC","DE40","UK100","JP225","FR40","AU200","HK50"].includes(name)) return 1;
-
-  // BIST stocks - 1 lot = 1 share
   const bistStocks = [
     "THYAO","GARAN","AKBNK","EREGL","SISE","KCHOL","SAHOL","TUPRS","PETKM","BIMAS",
     "YKBNK","ISCTR","ASELS","PGSUS","EKGYO","TOASO","TAVHL","FROTO","TCELL","HALKB",
@@ -53,8 +41,6 @@ function getContractSize(symbolName: string): number {
     "GESAN","KONTR","ODAS","BRYAT","TTRAK","EUPWR","AGHOL","MAVI","LOGO",
   ];
   if (bistStocks.includes(name)) return 1;
-
-  // Forex pairs - standard 100,000 units (default)
   return 100000;
 }
 
@@ -69,6 +55,37 @@ const COMMISSION_RATES: Record<string, number> = {
   gold: 0.00002,
   diamond: 0.00001,
 };
+
+// Spread calculation (must match frontend)
+const SPREAD_MULTIPLIERS: Record<string, number> = {
+  standard: 1.0,
+  gold: 0.7,
+  diamond: 0.4,
+};
+
+function getBaseSpread(symbolName: string, price: number): number {
+  const name = symbolName.toUpperCase();
+  if (['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'NZDUSD', 'USDCAD'].includes(name)) return price * 0.00008;
+  if (name.length === 6 && !name.endsWith('USD')) return price * 0.00015;
+  if (name === 'XAUUSD') return 0.30;
+  if (name === 'XAGUSD') return 0.02;
+  if (name === 'USOIL' || name === 'UKOIL') return 0.03;
+  if (name === 'NATGAS') return 0.005;
+  if (['US500', 'US30', 'USTEC'].includes(name)) return price * 0.00015;
+  if (['DE40', 'UK100', 'JP225', 'FR40'].includes(name)) return price * 0.0002;
+  if (name === 'BTCUSD') return price * 0.0003;
+  if (['ETHUSD', 'BNBUSD', 'SOLUSD'].includes(name)) return price * 0.0004;
+  if (name.endsWith('USD')) return price * 0.0006;
+  if (price > 100) return price * 0.001;
+  if (price > 10) return price * 0.002;
+  return price * 0.003;
+}
+
+function getSpread(symbolName: string, price: number, accountType: string = 'standard'): number {
+  const base = getBaseSpread(symbolName, price);
+  const multiplier = SPREAD_MULTIPLIERS[accountType] ?? SPREAD_MULTIPLIERS.standard;
+  return base * multiplier;
+}
 
 function calculateCommission(symbolName: string, lots: number, currentPrice: number, accountType: string = "standard"): number {
   const contractSize = getContractSize(symbolName);
@@ -104,7 +121,85 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get ALL open orders
+    // Get current prices
+    const { data: symbols } = await supabase
+      .from("symbols")
+      .select("id, current_price, name");
+    const priceMap = new Map(symbols?.map(s => [s.id, Number(s.current_price)]) || []);
+    const nameMap = new Map(symbols?.map(s => [s.id, s.name]) || []);
+
+    let closedCount = 0;
+    let stopOutClosedCount = 0;
+    let pendingTriggered = 0;
+    const closedOrderIds = new Set<string>();
+
+    // ── PHASE 0: Pending Orders Check ──
+    const { data: pendingOrders } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("status", "pending");
+
+    if (pendingOrders && pendingOrders.length > 0) {
+      for (const order of pendingOrders) {
+        const currentPrice = priceMap.get(order.symbol_id);
+        if (!currentPrice || currentPrice === 0) continue;
+
+        const targetPrice = order.target_price ? Number(order.target_price) : null;
+        if (!targetPrice) continue;
+
+        const orderType = order.order_type;
+        let shouldTrigger = false;
+
+        // Buy Limit: triggers when price drops to or below target
+        if (orderType === "buy_limit" && currentPrice <= targetPrice) shouldTrigger = true;
+        // Sell Limit: triggers when price rises to or above target
+        if (orderType === "sell_limit" && currentPrice >= targetPrice) shouldTrigger = true;
+        // Buy Stop: triggers when price rises to or above target
+        if (orderType === "buy_stop" && currentPrice >= targetPrice) shouldTrigger = true;
+        // Sell Stop: triggers when price drops to or below target
+        if (orderType === "sell_stop" && currentPrice <= targetPrice) shouldTrigger = true;
+
+        if (shouldTrigger) {
+          // Get user's account type for spread calculation
+          const { data: userProfile } = await supabase.from("profiles").select("account_type, balance").eq("user_id", order.user_id).single();
+          const accountType = userProfile?.account_type || "standard";
+          
+          // Check balance
+          if (!userProfile || Number(userProfile.balance) <= 0) {
+            console.log(`Pending order ${order.id} skipped: insufficient balance`);
+            continue;
+          }
+
+          // Calculate spread-adjusted entry price
+          const spread = getSpread(order.symbol_name, currentPrice, accountType);
+          const entryPrice = order.type === "buy"
+            ? currentPrice + spread / 2
+            : currentPrice - spread / 2;
+
+          // Activate the pending order -> open
+          const { data: activatedRows, error: actErr } = await supabase
+            .from("orders")
+            .update({
+              status: "open",
+              entry_price: entryPrice,
+              current_price: currentPrice,
+            })
+            .eq("id", order.id)
+            .eq("status", "pending")
+            .select("id");
+
+          if (actErr || !activatedRows || activatedRows.length === 0) {
+            console.error(`Failed to activate pending order ${order.id}`);
+            continue;
+          }
+
+          pendingTriggered++;
+          console.log(`Pending order ${order.id} triggered: ${order.order_type} ${order.symbol_name} @ ${entryPrice}`);
+        }
+      }
+    }
+
+    // ── PHASE 1: SL/TP Check ──
     const { data: allOpenOrders, error: ordersErr } = await supabase
       .from("orders")
       .select("*")
@@ -113,25 +208,11 @@ Deno.serve(async (req) => {
     if (ordersErr) throw ordersErr;
     if (!allOpenOrders || allOpenOrders.length === 0) {
       return new Response(
-        JSON.stringify({ success: true, checked: 0, closed: 0, stopOutClosed: 0 }),
+        JSON.stringify({ success: true, checked: 0, closed: 0, stopOutClosed: 0, pendingTriggered }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Get current prices
-    const symbolIds = [...new Set(allOpenOrders.map(o => o.symbol_id))];
-    const { data: symbols } = await supabase
-      .from("symbols")
-      .select("id, current_price")
-      .in("id", symbolIds);
-
-    const priceMap = new Map(symbols?.map(s => [s.id, Number(s.current_price)]) || []);
-
-    let closedCount = 0;
-    let stopOutClosedCount = 0;
-    const closedOrderIds = new Set<string>();
-
-    // ── PHASE 1: SL/TP Check ──
     for (const order of allOpenOrders) {
       const currentPrice = priceMap.get(order.symbol_id);
       if (!currentPrice || currentPrice === 0) continue;
@@ -152,7 +233,6 @@ Deno.serve(async (req) => {
       }
 
       if (shouldClose) {
-        // Fetch profile for account_type
         const { data: userProfile } = await supabase.from("profiles").select("account_type").eq("user_id", order.user_id).single();
         const accountType = userProfile?.account_type || "standard";
         const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), currentPrice);
@@ -161,7 +241,6 @@ Deno.serve(async (req) => {
         const swap = calculateSwap(order.symbol_name, Number(order.lots), daysHeld);
         const netPnl = pnl - commission + swap;
 
-        // Atomic: only close if still open (prevents double-close race condition)
         const { data: closedRows, error: closeErr } = await supabase
           .from("orders")
           .update({
@@ -176,18 +255,9 @@ Deno.serve(async (req) => {
           .eq("status", "open")
           .select("id");
 
-        if (closeErr) {
-          console.error(`Failed to close order ${order.id}:`, closeErr.message);
-          continue;
-        }
+        if (closeErr) { console.error(`Failed to close order ${order.id}:`, closeErr.message); continue; }
+        if (!closedRows || closedRows.length === 0) { console.log(`Order ${order.id} already closed, skipping`); continue; }
 
-        // If no rows returned, order was already closed (by frontend or another run)
-        if (!closedRows || closedRows.length === 0) {
-          console.log(`Order ${order.id} already closed, skipping balance update`);
-          continue;
-        }
-
-        // Fetch FRESH balance from DB (not stale)
         const { data: profile } = await supabase
           .from("profiles")
           .select("balance, credit, account_type")
@@ -208,11 +278,7 @@ Deno.serve(async (req) => {
             remainingMargin += calculateMargin(ro.symbol_name, Number(ro.lots), Number(ro.entry_price), 200);
           }
           const newFreeMargin = newEquity - remainingMargin;
-
-          await supabase
-            .from("profiles")
-            .update({ balance: newBalance, equity: newEquity, free_margin: newFreeMargin })
-            .eq("user_id", order.user_id);
+          await supabase.from("profiles").update({ balance: newBalance, equity: newEquity, free_margin: newFreeMargin }).eq("user_id", order.user_id);
         }
 
         closedOrderIds.add(order.id);
@@ -261,10 +327,7 @@ Deno.serve(async (req) => {
 
         if (marginLevel < STOP_OUT_LEVEL && totalMargin > 0) {
           console.log(`STOP OUT triggered for user ${userId}: margin level ${marginLevel.toFixed(2)}%`);
-
-          // Sort by PnL ascending (most losing first)
           orderPnls.sort((a, b) => a.pnl - b.pnl);
-
           let currentBalance = Number(profile.balance);
           let remainingOrders = [...orderPnls];
 
@@ -274,7 +337,6 @@ Deno.serve(async (req) => {
             const swap = calculateSwap(item.order.symbol_name, Number(item.order.lots), daysHeld);
             const netPnl = item.pnl - commission + swap;
 
-            // Atomic close - only if still open
             const { data: closedRows, error: closeErr } = await supabase
               .from("orders")
               .update({
@@ -290,7 +352,6 @@ Deno.serve(async (req) => {
               .select("id");
 
             if (closeErr || !closedRows || closedRows.length === 0) {
-              console.error(`Stop out close failed/skipped for ${item.order.id}`);
               remainingOrders = remainingOrders.filter(ro => ro.order.id !== item.order.id);
               continue;
             }
@@ -298,9 +359,7 @@ Deno.serve(async (req) => {
             currentBalance = currentBalance + netPnl;
             remainingOrders = remainingOrders.filter(ro => ro.order.id !== item.order.id);
             stopOutClosedCount++;
-            console.log(`Stop out closed: ${item.order.symbol_name} ${item.order.type}, PnL: ${netPnl.toFixed(2)}`);
 
-            // Check if margin level recovered
             let remPnl = 0;
             let remMargin = 0;
             for (const ro of remainingOrders) {
@@ -313,28 +372,21 @@ Deno.serve(async (req) => {
 
             if (newMarginLevel >= STOP_OUT_LEVEL || remainingOrders.length === 0) {
               const newFreeMargin = newEquity - remMargin;
-              await supabase
-                .from("profiles")
-                .update({ balance: currentBalance, equity: newEquity, free_margin: newFreeMargin })
-                .eq("user_id", userId);
+              await supabase.from("profiles").update({ balance: currentBalance, equity: newEquity, free_margin: newFreeMargin }).eq("user_id", userId);
               break;
             }
           }
 
-          // If all orders closed
           if (remainingOrders.length === 0) {
             const finalEquity = currentBalance + Number(profile.credit);
-            await supabase
-              .from("profiles")
-              .update({ balance: currentBalance, equity: finalEquity, free_margin: finalEquity })
-              .eq("user_id", userId);
+            await supabase.from("profiles").update({ balance: currentBalance, equity: finalEquity, free_margin: finalEquity }).eq("user_id", userId);
           }
         }
       }
     }
 
     return new Response(
-      JSON.stringify({ success: true, checked: allOpenOrders.length, closed: closedCount, stopOutClosed: stopOutClosedCount }),
+      JSON.stringify({ success: true, checked: allOpenOrders.length, closed: closedCount, stopOutClosed: stopOutClosedCount, pendingTriggered }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {

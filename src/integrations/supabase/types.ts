@@ -149,6 +149,7 @@ export type Database = {
           symbol_id: string
           symbol_name: string
           take_profit: number | null
+          target_price: number | null
           type: string
           user_id: string
         }
@@ -169,6 +170,7 @@ export type Database = {
           symbol_id: string
           symbol_name: string
           take_profit?: number | null
+          target_price?: number | null
           type: string
           user_id: string
         }
@@ -189,6 +191,7 @@ export type Database = {
           symbol_id?: string
           symbol_name?: string
           take_profit?: number | null
+          target_price?: number | null
           type?: string
           user_id?: string
         }
