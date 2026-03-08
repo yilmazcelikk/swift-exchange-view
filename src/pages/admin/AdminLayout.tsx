@@ -94,6 +94,7 @@ const AdminLayout = () => {
       case "dashboard": return <AdminDashboard onNavigate={setActiveTab} />;
       case "users": return <AdminUsers />;
       case "positions": return <AdminPositions />;
+      case "risk": return <AdminRisk />;
       case "finance":
         return <AdminTransactions />;
       case "documents": return <AdminDocuments />;
