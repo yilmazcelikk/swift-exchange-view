@@ -193,6 +193,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_type: string
           balance: number
           ban_reason: string | null
           ban_type: string
@@ -214,6 +215,7 @@ export type Database = {
           verification_status: string
         }
         Insert: {
+          account_type?: string
           balance?: number
           ban_reason?: string | null
           ban_type?: string
@@ -235,6 +237,7 @@ export type Database = {
           verification_status?: string
         }
         Update: {
+          account_type?: string
           balance?: number
           ban_reason?: string | null
           ban_type?: string
