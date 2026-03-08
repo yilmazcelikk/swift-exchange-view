@@ -535,14 +535,7 @@ const Trading = () => {
               })}
             </div>
 
-            {/* Market closed overlay */}
-            {!currentMarketStatus.isOpen && (
-              <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-20">
-                <span className="text-sm font-medium text-muted-foreground bg-muted/80 px-4 py-2 rounded-lg border border-border/50">
-                  Piyasa Kapalı
-                </span>
-              </div>
-            )}
+            {/* Market closed overlay removed - chart always visible */}
           </div>
 
           {/* Y-axis price labels */}
