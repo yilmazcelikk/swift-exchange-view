@@ -66,7 +66,7 @@ const AdminSettings = () => {
     }
     setSaving(true);
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from("app_settings")
         .upsert(
           { key: "tv_session_id", value: sessionId.trim(), updated_at: new Date().toISOString() },

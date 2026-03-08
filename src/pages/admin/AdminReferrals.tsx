@@ -21,7 +21,7 @@ interface ReferralCode {
   created_at: string;
 }
 
-const SITE_URL = "https://e-subemarbasvarlik.online";
+const SITE_URL = window.location.origin;
 
 const AdminReferrals = () => {
   const [codes, setCodes] = useState<ReferralCode[]>([]);
