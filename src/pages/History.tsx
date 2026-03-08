@@ -83,8 +83,8 @@ const History = () => {
         <h1 className="text-lg font-bold text-foreground">İşlem Geçmişi</h1>
       </div>
 
-      {/* Scrollable orders area */}
-      <div ref={listRef} className="flex-1 overflow-auto px-4 pb-[calc(env(safe-area-inset-bottom,8px)+3.5rem+6px+9rem)] md:pb-4">
+      {/* Scrollable orders area - takes remaining space above summary */}
+      <div ref={listRef} className="flex-1 min-h-0 overflow-auto px-4">
         {closedOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
         ) : (
@@ -141,8 +141,8 @@ const History = () => {
         )}
       </div>
 
-      {/* Fixed summary pinned to bottom nav */}
-      <div className="fixed bottom-[calc(env(safe-area-inset-bottom,8px)+3.5rem+6px)] left-0 right-0 z-40 md:static md:z-auto px-4 py-2 border-t border-border bg-background space-y-1">
+      {/* Summary - static at bottom, NOT fixed */}
+      <div className="shrink-0 px-4 py-2 border-t border-border bg-background space-y-1">
         {summaryRows.map((row) => (
           <div key={row.label} className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{row.label}</span>
