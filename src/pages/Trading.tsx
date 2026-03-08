@@ -427,11 +427,16 @@ const Trading = () => {
                 {(selectedSymbol.change_percent ?? 0) >= 0 ? "+" : ""}
                 {(selectedSymbol.change_percent ?? 0).toFixed(2)}%
               </span>
-              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${
-                currentMarketStatus.isOpen ? "bg-buy/10 text-buy" : "bg-muted text-muted-foreground"
-              }`}>
-                {currentMarketStatus.label}
-              </span>
+              {!currentMarketStatus.isOpen && (
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-sell/10 text-sell animate-pulse">
+                  PİYASA KAPALI
+                </span>
+              )}
+              {currentMarketStatus.isOpen && (
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-buy/10 text-buy">
+                  {currentMarketStatus.label}
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
           </div>
@@ -535,14 +540,7 @@ const Trading = () => {
               })}
             </div>
 
-            {/* Market closed overlay */}
-            {!currentMarketStatus.isOpen && (
-              <div className="absolute inset-0 bg-background/40 backdrop-blur-[1px] flex items-center justify-center z-20">
-                <span className="text-sm font-medium text-muted-foreground bg-muted/80 px-4 py-2 rounded-lg border border-border/50">
-                  Piyasa Kapalı
-                </span>
-              </div>
-            )}
+            {/* Market closed overlay removed - chart always visible */}
           </div>
 
           {/* Y-axis price labels */}
