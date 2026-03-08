@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
           .single();
 
         if (profile) {
-          const newBalance = Math.max(0, Number(profile.balance) + netPnl);
+          const newBalance = Number(profile.balance) + netPnl;
           const remainingOrders = allOpenOrders.filter(o => o.user_id === order.user_id && o.id !== order.id && !closedOrderIds.has(o.id));
           let remainingPnl = 0;
           for (const ro of remainingOrders) {
