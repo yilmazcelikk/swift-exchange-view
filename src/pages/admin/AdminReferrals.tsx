@@ -131,7 +131,7 @@ const AdminReferrals = () => {
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => toggleActive(c.id, c.is_active)} title={c.is_active ? "Devre Dışı Bırak" : "Aktifleştir"}>
                         <Link2 className="h-3.5 w-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => deleteCode(c.id)} title="Sil">
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeletingId(c.id)} title="Sil">
                         <Trash2 className="h-3.5 w-3.5" />
                       </Button>
                     </div>
