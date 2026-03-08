@@ -62,7 +62,7 @@ export const STOCK_LOGOS: Record<string, string> = {
   ASELS: `${TV}/aselsan--big.svg`,
   BIMAS: `${TV}/magazalar--big.svg`,
   BRYAT: `${TV}/borusan-yat-paz--big.svg`,
-  CIMSA: `${TV}/cimsa-cimento--big.svg`,
+  CIMSA: `${CB}/cimsa.com.tr`,
   DOAS: `${TV}/dogus-otomotiv--big.svg`,
   DOHOL: `${TV}/dogan-holding--big.svg`,
   EKGYO: `${TV}/emlak-konut-gmyo--big.svg`,
