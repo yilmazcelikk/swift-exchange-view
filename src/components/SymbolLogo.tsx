@@ -48,36 +48,96 @@ function getInitials(s: string): string {
   return s.replace(/(USD[T]?|EUR|GBP|JPY|TRY)$/i, "").slice(0, 2).toUpperCase();
 }
 
-export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(function SymbolLogo({ symbol, category, size = "md" }, ref) {
-  const [urlIdx, setUrlIdx] = useState(0);
-  const [allFailed, setAllFailed] = useState(false);
+// Global cache: symbol -> resolved URL or null (failed all)
+const logoCache = new Map<string, string | null>();
+// Global in-flight preloads
+const preloadPromises = new Map<string, Promise<string | null>>();
 
-  const urls = useMemo(() => resolveLogoUrls(symbol, category), [symbol, category]);
+function preloadLogo(symbol: string, category?: string): Promise<string | null> {
+  const key = `${symbol}|${category || ""}`;
+  
+  const cached = logoCache.get(key);
+  if (cached !== undefined) return Promise.resolve(cached);
+  
+  const existing = preloadPromises.get(key);
+  if (existing) return existing;
+  
+  const urls = resolveLogoUrls(symbol, category);
+  if (urls.length === 0) {
+    logoCache.set(key, null);
+    return Promise.resolve(null);
+  }
+  
+  const promise = tryLoadUrls(urls).then(url => {
+    logoCache.set(key, url);
+    preloadPromises.delete(key);
+    return url;
+  });
+  
+  preloadPromises.set(key, promise);
+  return promise;
+}
+
+function tryLoadUrls(urls: string[]): Promise<string | null> {
+  return new Promise(resolve => {
+    let idx = 0;
+    
+    function tryNext() {
+      if (idx >= urls.length) {
+        resolve(null);
+        return;
+      }
+      const url = urls[idx];
+      const img = new Image();
+      img.referrerPolicy = "no-referrer";
+      img.onload = () => resolve(url);
+      img.onerror = () => {
+        idx++;
+        tryNext();
+      };
+      img.src = url;
+    }
+    
+    tryNext();
+  });
+}
+
+export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(function SymbolLogo({ symbol, category, size = "md" }, ref) {
+  const cacheKey = `${symbol}|${category || ""}`;
+  const cachedUrl = logoCache.get(cacheKey);
+  
+  // Start with cached value if available
+  const [resolvedUrl, setResolvedUrl] = useState<string | null | undefined>(
+    cachedUrl !== undefined ? cachedUrl : undefined
+  );
 
   useEffect(() => {
-    setUrlIdx(0);
-    setAllFailed(false);
-  }, [symbol]);
-
-  const handleError = useCallback(() => {
-    setUrlIdx(prev => {
-      const next = prev + 1;
-      if (next >= urls.length) {
-        setAllFailed(true);
-        return prev;
-      }
-      return next;
+    const key = `${symbol}|${category || ""}`;
+    const cached = logoCache.get(key);
+    if (cached !== undefined) {
+      setResolvedUrl(cached);
+      return;
+    }
+    
+    // Reset to loading
+    setResolvedUrl(undefined);
+    
+    let cancelled = false;
+    preloadLogo(symbol, category).then(url => {
+      if (!cancelled) setResolvedUrl(url);
     });
-  }, [urls.length]);
+    
+    return () => { cancelled = true; };
+  }, [symbol, category]);
 
-  if (!allFailed && urls.length > 0 && urlIdx < urls.length) {
+  // Show loaded image
+  if (resolvedUrl) {
     return (
       <div ref={ref} className={`${sizeClasses[size]} rounded-full bg-card border border-border/50 flex items-center justify-center shrink-0 overflow-hidden`}>
         <img
-          src={urls[urlIdx]}
+          src={resolvedUrl}
           alt={symbol}
           className={`${imgSizeClasses[size]} object-contain`}
-          onError={handleError}
           loading="lazy"
           referrerPolicy="no-referrer"
         />
@@ -85,7 +145,7 @@ export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(funct
     );
   }
 
-  // Last resort text avatar
+  // Show text avatar (both during loading and after all URLs failed)
   return (
     <div ref={ref} className={`${sizeClasses[size]} rounded-full bg-gradient-to-br ${getAvatarColor(symbol)} flex items-center justify-center shrink-0 border border-border/30 overflow-hidden`}>
       <span className={`${textSizeClasses[size]} font-bold text-white leading-none select-none`}>
