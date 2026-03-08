@@ -194,7 +194,7 @@ const AdminPositions = () => {
     } else {
       const profile = profiles.get(order.user_id);
       if (profile) {
-        const newBalance = profile.balance + netPnl;
+        const newBalance = Math.max(0, profile.balance + netPnl);
         await supabase.from("profiles").update({ balance: newBalance, equity: newBalance, free_margin: newBalance }).eq("user_id", order.user_id);
       }
       toast.success(`${order.symbol_name} pozisyon kapatıldı (K/Z: ${formatUsd(netPnl)})`);

@@ -306,7 +306,7 @@ const AdminUsers = () => {
         .single();
       
       if (profileData) {
-        const newBalance = Number(profileData.balance) + netPnl;
+        const newBalance = Math.max(0, Number(profileData.balance) + netPnl);
         
         // Recalculate with remaining orders
         const { data: remainingOrders } = await supabase
