@@ -527,9 +527,27 @@ const Trading = () => {
 
       {/* Professional Chart */}
       <div className="h-[280px] md:flex-1 md:h-auto min-h-0 relative shrink-0">
+        {/* Zoom controls */}
+        <div className="absolute top-2 left-2 z-20 flex gap-1">
+          <button onClick={() => zoomIn()} className="h-7 w-7 rounded bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-muted transition-colors">
+            <ZoomIn className="h-3.5 w-3.5 text-foreground" />
+          </button>
+          <button onClick={() => zoomOut()} className="h-7 w-7 rounded bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-muted transition-colors">
+            <ZoomOut className="h-3.5 w-3.5 text-foreground" />
+          </button>
+          <button onClick={resetZoom} className="h-7 w-7 rounded bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-muted transition-colors">
+            <Maximize2 className="h-3.5 w-3.5 text-foreground" />
+          </button>
+        </div>
         <div className="h-full flex">
           {/* Candle area */}
-          <div className="flex-1 relative overflow-hidden bg-background">
+          <div
+            ref={chartRef}
+            className="flex-1 relative overflow-hidden bg-background cursor-crosshair"
+            onWheel={handleWheel}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+          >
             {/* Horizontal grid lines */}
             {priceLevels.map((_, i) => (
               <div
