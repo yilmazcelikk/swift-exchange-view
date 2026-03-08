@@ -247,34 +247,36 @@ const Profile = () => {
           <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/10 p-5">
             <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
             <div className="absolute bottom-0 left-0 w-20 h-20 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
-            <div className="relative flex-1 min-w-0">
-              <div className="flex-1 min-w-0">
-                <h2 className="text-lg font-bold text-foreground truncate">
-                  {profile.fullName || "İsim belirtilmemiş"}
-                </h2>
-                <p className="text-xs text-muted-foreground truncate mt-0.5">{profile.email}</p>
-                {profile.metaId > 0 && (
-                  <p className="text-[11px] font-mono text-primary/80 mt-0.5">
-                    Hesap No: <span className="font-semibold text-primary">{profile.metaId}</span>
-                  </p>
-                )}
-                <div className="mt-2">
-                  {verificationStatus === "approved" ? (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-buy/10 text-buy">
-                      <ShieldCheck className="h-3 w-3" /> Doğrulanmış
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning/10 text-warning">
-                      <Clock className="h-3 w-3" /> Doğrulanmamış
-                    </span>
+            <div className="relative">
+              <div className="flex items-center justify-between">
+                <div className="min-w-0">
+                  <h2 className="text-lg font-bold text-foreground truncate">
+                    {profile.fullName || "İsim belirtilmemiş"}
+                  </h2>
+                  <p className="text-xs text-muted-foreground truncate mt-0.5">{profile.email}</p>
+                  {profile.metaId > 0 && (
+                    <p className="text-[11px] font-mono text-primary/80 mt-0.5">
+                      Hesap No: <span className="font-semibold text-primary">{profile.metaId}</span>
+                    </p>
                   )}
+                  <div className="mt-2">
+                    {verificationStatus === "approved" ? (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-buy/10 text-buy">
+                        <ShieldCheck className="h-3 w-3" /> Doğrulanmış
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning/10 text-warning">
+                        <Clock className="h-3 w-3" /> Doğrulanmamış
+                      </span>
+                    )}
+                  </div>
                 </div>
+                {!isEditing && (
+                  <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl" onClick={() => setIsEditing(true)}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
-              {!isEditing && (
-                <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl" onClick={() => setIsEditing(true)}>
-                  <Pencil className="h-4 w-4" />
-                </Button>
-              )}
             </div>
           </div>
 
