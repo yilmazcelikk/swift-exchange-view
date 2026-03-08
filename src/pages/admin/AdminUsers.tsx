@@ -254,6 +254,7 @@ const AdminUsers = () => {
         stop_loss: orderEditForm.stop_loss ? parseFloat(orderEditForm.stop_loss) : null,
         take_profit: orderEditForm.take_profit ? parseFloat(orderEditForm.take_profit) : null,
         pnl: parseFloat(orderEditForm.pnl) || 0,
+        type: orderEditForm.type,
       })
       .eq("id", editingOrder.id);
     if (error) {
