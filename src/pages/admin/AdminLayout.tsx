@@ -40,6 +40,7 @@ const navSections = [
     title: "İŞLEM YÖNETİMİ",
     items: [
       { key: "positions", label: "Pozisyonlar", icon: TrendingUp },
+      { key: "risk", label: "Risk Yönetimi", icon: ShieldAlert },
       { key: "products", label: "Ürünler", icon: ShoppingBag },
     ],
   },
