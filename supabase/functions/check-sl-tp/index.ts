@@ -275,7 +275,8 @@ Deno.serve(async (req) => {
           const newEquity = newBalance + Number(profile.credit) + remainingPnl;
           let remainingMargin = 0;
           for (const ro of remainingOrders) {
-            remainingMargin += calculateMargin(ro.symbol_name, Number(ro.lots), Number(ro.entry_price), 200);
+            const roLev = parseInt((ro.leverage || "1:200").split(":")[1] || "200", 10);
+            remainingMargin += calculateMargin(ro.symbol_name, Number(ro.lots), Number(ro.entry_price), roLev);
           }
           const newFreeMargin = newEquity - remainingMargin;
           await supabase.from("profiles").update({ balance: newBalance, equity: newEquity, free_margin: newFreeMargin }).eq("user_id", order.user_id);
