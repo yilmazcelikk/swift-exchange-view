@@ -68,6 +68,10 @@ const Trading = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>("15m");
   const [realCandles, setRealCandles] = useState<CandleRow[]>([]);
   const [candlesLoading, setCandlesLoading] = useState(false);
+  const [chartVisibleCount, setChartVisibleCount] = useState(50);
+  const [chartOffset, setChartOffset] = useState(0); // 0 = latest candles
+  const chartRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; dist: number } | null>(null);
 
   // Load user leverage from profile
   useEffect(() => {
