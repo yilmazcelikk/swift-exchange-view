@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { generateCandleData } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
+import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
 import { resolveLogoUrl } from "@/data/symbolLogos";
@@ -68,6 +68,10 @@ const Trading = () => {
   const [timeframe, setTimeframe] = useState<Timeframe>("15m");
   const [realCandles, setRealCandles] = useState<CandleRow[]>([]);
   const [candlesLoading, setCandlesLoading] = useState(false);
+  const [chartVisibleCount, setChartVisibleCount] = useState(50);
+  const [chartOffset, setChartOffset] = useState(0); // 0 = latest candles
+  const chartRef = useRef<HTMLDivElement>(null);
+  const touchStartRef = useRef<{ x: number; dist: number } | null>(null);
 
   // Load user leverage from profile
   useEffect(() => {
@@ -396,8 +400,12 @@ const Trading = () => {
   const ask = price + spread / 2;
   const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
 
-  // Chart calculations
-  const displayCandles = candleData.slice(-70);
+  // Chart calculations with zoom
+  const totalCandles = candleData.length;
+  const clampedOffset = Math.min(chartOffset, Math.max(0, totalCandles - chartVisibleCount));
+  const startIdx = Math.max(0, totalCandles - chartVisibleCount - clampedOffset);
+  const endIdx = startIdx + chartVisibleCount;
+  const displayCandles = candleData.slice(startIdx, endIdx);
   const chartHigh = Math.max(...displayCandles.map(c => c.high));
   const chartLow = Math.min(...displayCandles.map(c => c.low));
   const chartRange = chartHigh - chartLow || 1;
@@ -407,6 +415,54 @@ const Trading = () => {
   const priceLevels = Array.from({ length: priceSteps + 1 }, (_, i) =>
     chartLow + (chartRange * i) / priceSteps
   );
+
+  const zoomIn = () => setChartVisibleCount(prev => Math.max(15, prev - 10));
+  const zoomOut = () => setChartVisibleCount(prev => Math.min(totalCandles, prev + 10));
+  const resetZoom = () => { setChartVisibleCount(50); setChartOffset(0); };
+
+  // Mouse wheel zoom on chart
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    if (e.ctrlKey || e.metaKey) {
+      if (e.deltaY > 0) zoomOut();
+      else zoomIn();
+    } else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      setChartOffset(prev => Math.max(0, Math.min(totalCandles - chartVisibleCount, prev + (e.deltaX > 0 ? -3 : 3))));
+    } else {
+      if (e.deltaY > 0) zoomOut();
+      else zoomIn();
+    }
+  };
+
+  // Touch gestures for pan
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      touchStartRef.current = { x: e.touches[0].clientX, dist: 0 };
+    } else if (e.touches.length === 2) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      touchStartRef.current = { x: 0, dist };
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartRef.current) return;
+    if (e.touches.length === 1 && touchStartRef.current.dist === 0) {
+      const dx = e.touches[0].clientX - touchStartRef.current.x;
+      if (Math.abs(dx) > 10) {
+        const candlesMoved = Math.round(dx / 8);
+        setChartOffset(prev => Math.max(0, Math.min(totalCandles - chartVisibleCount, prev + candlesMoved)));
+        touchStartRef.current.x = e.touches[0].clientX;
+      }
+    } else if (e.touches.length === 2 && touchStartRef.current.dist > 0) {
+      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      const diff = dist - touchStartRef.current.dist;
+      if (Math.abs(diff) > 15) {
+        if (diff > 0) setChartVisibleCount(prev => Math.max(15, prev - 5));
+        else setChartVisibleCount(prev => Math.min(totalCandles, prev + 5));
+        touchStartRef.current.dist = dist;
+      }
+    }
+  };
 
   return (
     <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overflow-y-auto md:overflow-hidden">
@@ -468,9 +524,27 @@ const Trading = () => {
 
       {/* Professional Chart */}
       <div className="h-[280px] md:flex-1 md:h-auto min-h-0 relative shrink-0">
+        {/* Zoom controls */}
+        <div className="absolute top-2 left-2 z-20 flex gap-1">
+          <button onClick={() => zoomIn()} className="h-7 w-7 rounded bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-muted transition-colors">
+            <ZoomIn className="h-3.5 w-3.5 text-foreground" />
+          </button>
+          <button onClick={() => zoomOut()} className="h-7 w-7 rounded bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-muted transition-colors">
+            <ZoomOut className="h-3.5 w-3.5 text-foreground" />
+          </button>
+          <button onClick={resetZoom} className="h-7 w-7 rounded bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-muted transition-colors">
+            <Maximize2 className="h-3.5 w-3.5 text-foreground" />
+          </button>
+        </div>
         <div className="h-full flex">
           {/* Candle area */}
-          <div className="flex-1 relative overflow-hidden bg-background">
+          <div
+            ref={chartRef}
+            className="flex-1 relative overflow-hidden bg-background cursor-crosshair"
+            onWheel={handleWheel}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+          >
             {/* Horizontal grid lines */}
             {priceLevels.map((_, i) => (
               <div
