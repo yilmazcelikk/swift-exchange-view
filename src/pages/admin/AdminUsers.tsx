@@ -524,15 +524,10 @@ const AdminUsers = () => {
             const liveProfile = profiles.find(p => p.id === selectedUser.id) || selectedUser;
             return (
             <div className="mt-6 space-y-6">
-              {/* User Avatar & Name */}
+              {/* User Name */}
               <div className="flex flex-col items-center text-center">
-                <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-3">
-                  <span className="text-2xl font-bold text-primary">
-                    {(liveProfile.full_name || "?")[0]?.toUpperCase()}
-                  </span>
-                </div>
                 <h3 className="text-lg font-bold">{liveProfile.full_name || "İsimsiz"}</h3>
-                <p className="text-xs text-muted-foreground font-mono">{liveProfile.user_id.slice(0, 16)}...</p>
+                <p className="text-xs text-muted-foreground font-mono mt-0.5">{liveProfile.user_id.slice(0, 16)}...</p>
                 <div className="mt-2">
                   {getVerificationBadge(liveProfile.verification_status)}
                 </div>
