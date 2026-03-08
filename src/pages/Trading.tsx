@@ -290,7 +290,9 @@ const Trading = () => {
 
     setOrderLoading(true);
     try {
-      const price = selectedSymbol.current_price || 0;
+      const midPrice = selectedSymbol.current_price || 0;
+      const currentSpread = calcSpread(selectedSymbol.name, midPrice, accountType);
+      const entryPrice = type === "buy" ? midPrice + currentSpread / 2 : midPrice - currentSpread / 2;
       const slValue = stopLoss ? parseFloat(stopLoss) : null;
       const tpValue = takeProfit ? parseFloat(takeProfit) : null;
 
