@@ -96,7 +96,7 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
         </div>
       </div>
 
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((s) => (
           <Card key={s.label} className="bg-card border-border">
             <CardContent className="p-4">
