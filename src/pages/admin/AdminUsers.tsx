@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { calculatePnl, calculateMargin, calculateCommission, ACCOUNT_TYPE_LABELS } from "@/lib/trading";
+import { calculatePnl, calculateMargin, calculateCommission, calculateSwap, ACCOUNT_TYPE_LABELS } from "@/lib/trading";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,6 +61,7 @@ interface OrderRow {
   leverage: string;
   stop_loss: number | null;
   take_profit: number | null;
+  created_at: string;
 }
 
 const AdminUsers = () => {
@@ -107,7 +108,7 @@ const AdminUsers = () => {
       // Fetch open orders
       const { data: ordersData } = await supabase
         .from("orders")
-        .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage, symbol_id, stop_loss, take_profit")
+        .select("id, symbol_name, type, lots, entry_price, current_price, pnl, leverage, symbol_id, stop_loss, take_profit, created_at")
         .eq("user_id", userId)
         .eq("status", "open");
 
@@ -289,7 +290,9 @@ const AdminUsers = () => {
     if (!editingOrder || !selectedUser) return;
     const closePnl = parseFloat(orderEditForm.pnl) || 0;
     const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price), selectedUser?.account_type || "standard");
-    const netPnl = closePnl - commission;
+    const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(editingOrder.created_at).getTime()) / 86400000));
+    const swap = calculateSwap(editingOrder.symbol_name, Number(editingOrder.lots), daysHeld);
+    const netPnl = closePnl - commission + swap;
     
     const { error } = await supabase
       .from("orders")
@@ -297,7 +300,8 @@ const AdminUsers = () => {
         status: "closed",
         closed_at: new Date().toISOString(),
         pnl: netPnl,
-      })
+        swap: swap,
+      } as any)
       .eq("id", editingOrder.id);
     if (error) {
       toast.error("Kapatma başarısız: " + error.message);

@@ -24,7 +24,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { calculatePnl, calculateMargin, calculateCommission } from "@/lib/trading";
+import { calculatePnl, calculateMargin, calculateCommission, calculateSwap } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
 import { getMarketStatus } from "@/lib/marketHours";
 
@@ -228,7 +228,9 @@ const Dashboard = () => {
     
     const liveOrder = liveOrders.find(o => o.id === order.id) || order;
     const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice);
-    const netPnl = liveOrder.pnl - commission;
+    const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 86400000));
+    const swap = calculateSwap(liveOrder.symbolName, liveOrder.lots, daysHeld);
+    const netPnl = liveOrder.pnl - commission + swap;
 
     // Atomic close: only update if still open (prevents double-close with edge function)
     const { data: closedRows, error } = await supabase
@@ -238,7 +240,8 @@ const Dashboard = () => {
         closed_at: new Date().toISOString(),
         current_price: liveOrder.currentPrice,
         pnl: netPnl,
-      })
+        swap: swap,
+      } as any)
       .eq("id", order.id)
       .eq("status", "open")
       .select("id");

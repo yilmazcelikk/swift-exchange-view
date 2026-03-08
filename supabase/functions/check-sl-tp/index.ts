@@ -82,6 +82,16 @@ function calculateMargin(symbolName: string, lots: number, entryPrice: number, l
   return (lots * contractSize * entryPrice) / leverageRatio;
 }
 
+function calculateSwap(symbolName: string, lots: number, daysHeld: number): number {
+  const name = symbolName.toUpperCase();
+  let rate = -0.5;
+  if (["XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD"].includes(name)) rate = -1.2;
+  else if (["USOIL", "UKOIL", "NATGAS"].includes(name)) rate = -0.8;
+  else if (["BTCUSD", "ETHUSD", "BNBUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "ADAUSD"].includes(name)) rate = -2.0;
+  else if (["US500", "US30", "USTEC", "DE40", "UK100", "JP225"].includes(name)) rate = -0.6;
+  return rate * lots * daysHeld;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -147,7 +157,9 @@ Deno.serve(async (req) => {
         const accountType = userProfile?.account_type || "standard";
         const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), currentPrice);
         const commission = calculateCommission(order.symbol_name, Number(order.lots), currentPrice, accountType);
-        const netPnl = pnl - commission;
+        const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
+        const swap = calculateSwap(order.symbol_name, Number(order.lots), daysHeld);
+        const netPnl = pnl - commission + swap;
 
         // Atomic: only close if still open (prevents double-close race condition)
         const { data: closedRows, error: closeErr } = await supabase
@@ -157,6 +169,7 @@ Deno.serve(async (req) => {
             closed_at: new Date().toISOString(),
             current_price: currentPrice,
             pnl: netPnl,
+            swap: swap,
             close_reason: closeReason,
           })
           .eq("id", order.id)
@@ -257,7 +270,9 @@ Deno.serve(async (req) => {
 
           for (const item of orderPnls) {
             const commission = calculateCommission(item.order.symbol_name, Number(item.order.lots), item.currentPrice, profile.account_type || "standard");
-            const netPnl = item.pnl - commission;
+            const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(item.order.created_at).getTime()) / 86400000));
+            const swap = calculateSwap(item.order.symbol_name, Number(item.order.lots), daysHeld);
+            const netPnl = item.pnl - commission + swap;
 
             // Atomic close - only if still open
             const { data: closedRows, error: closeErr } = await supabase
@@ -267,6 +282,7 @@ Deno.serve(async (req) => {
                 closed_at: new Date().toISOString(),
                 current_price: item.currentPrice,
                 pnl: netPnl,
+                swap: swap,
                 close_reason: "stop_out",
               })
               .eq("id", item.order.id)

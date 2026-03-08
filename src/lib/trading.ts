@@ -92,6 +92,31 @@ export const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 };
 
 /**
+ * Swap rate per lot per day (in USD) - small overnight fee
+ * Negative = cost to hold position overnight
+ */
+export function calculateSwap(
+  symbolName: string,
+  lots: number,
+  daysHeld: number,
+): number {
+  const name = symbolName.toUpperCase();
+  let ratePerLotPerDay = -0.5; // default forex
+
+  // Precious metals
+  if (['XAUUSD', 'XAGUSD', 'XPTUSD', 'XPDUSD'].some(s => name === s)) ratePerLotPerDay = -1.2;
+  // Energy
+  else if (['USOIL', 'UKOIL', 'NATGAS'].some(s => name === s)) ratePerLotPerDay = -0.8;
+  // Crypto - higher swap
+  else if (['BTCUSD', 'ETHUSD', 'BNBUSD', 'SOLUSD', 'XRPUSD', 'DOGEUSD', 'ADAUSD'].some(s => name === s)) ratePerLotPerDay = -2.0;
+  else if (name.endsWith('USD') && !name.includes('/')) ratePerLotPerDay = -0.3;
+  // Indices
+  else if (['US500', 'US30', 'USTEC', 'DE40', 'UK100', 'JP225'].some(s => name === s)) ratePerLotPerDay = -0.6;
+
+  return ratePerLotPerDay * lots * daysHeld;
+}
+
+/**
  * Calculate commission for closing a position
  */
 export function calculateCommission(

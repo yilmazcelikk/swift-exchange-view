@@ -1,0 +1,1 @@
+ALTER TABLE public.orders ADD COLUMN swap numeric NOT NULL DEFAULT 0;
