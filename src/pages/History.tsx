@@ -108,17 +108,17 @@ const History = () => {
                 <div
                   key={order.id}
                   className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
-                    order.close_reason === "stop_loss"
+                    pnl < 0
                       ? "bg-gradient-to-r from-sell/10 via-sell/5 to-transparent border border-sell/20 shadow-[0_0_12px_-4px] shadow-sell/20"
-                      : order.close_reason === "take_profit"
+                      : pnl > 0
                       ? "bg-gradient-to-r from-buy/10 via-buy/5 to-transparent border border-buy/20 shadow-[0_0_12px_-4px] shadow-buy/20"
                       : "bg-card/50"
                   }`}
                 >
                   <div className="flex items-start justify-between">
                     <div className="flex items-center gap-2">
-                      {order.close_reason && (
-                        <div className={`w-1.5 h-7 rounded-full ${order.close_reason === "stop_loss" ? "bg-sell" : "bg-buy"}`} />
+                      {pnl !== 0 && (
+                        <div className={`w-1.5 h-7 rounded-full ${pnl < 0 ? "bg-sell" : "bg-buy"}`} />
                       )}
                       <div>
                         <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>{" "}
