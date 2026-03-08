@@ -451,8 +451,6 @@ const AdminUsers = () => {
                   <TableCell>
                     <div className="flex items-center gap-2">
                       <div className="min-w-0">
-                      </div>
-                      <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
                           <p className="text-sm font-medium truncate">{profile.full_name || "İsimsiz"}</p>
                           {profile.is_banned && (
