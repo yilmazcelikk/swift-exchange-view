@@ -84,7 +84,7 @@ const History = () => {
       </div>
 
       {/* Scrollable orders area */}
-      <div ref={listRef} className="flex-1 overflow-auto px-4 pb-[calc(env(safe-area-inset-bottom,8px)+3.5rem+6px+10rem)] md:pb-4">
+      <div ref={listRef} className="flex-1 overflow-auto px-4 pb-48 md:pb-4">
         {closedOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
         ) : (
