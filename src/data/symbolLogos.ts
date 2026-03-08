@@ -360,7 +360,6 @@ const TV_SLUGS: Record<string, string> = {
   SMRTG: "smart-gida",
   SNGYO: "sinpas-gyo",
   TBORG: "tuborg",
-  TKFEN: "tekfen-holding",
   TMSN: "tumosan",
   TOASO: "tofas",
   TRILC: "turk-ilac",
