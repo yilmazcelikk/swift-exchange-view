@@ -57,7 +57,7 @@ export const STOCK_LOGOS: Record<string, string> = {
   AEFES: `${TV}/anadolu-efes--big.svg`,
   AGHOL: `${TV}/anadolu-grubu-holding--big.svg`,
   AKBNK: `${TV}/akbank--big.svg`,
-  AKSA: `${TV}/aksa--big.svg`,
+  AKSA: `${CB}/aksaenerji.com.tr`,
   ARCLK: `${TV}/arcelik--big.svg`,
   ASELS: `${TV}/aselsan--big.svg`,
   BIMAS: `${TV}/magazalar--big.svg`,
