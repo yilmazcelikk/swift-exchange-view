@@ -65,7 +65,6 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
     { label: "Açık İşlem", value: stats.openPositions, icon: TrendingUp, color: "text-primary" },
     { label: "Bekleyen Çekim", value: stats.pendingWithdrawals, icon: ArrowUpFromLine, color: "text-warning" },
     { label: "Bekleyen Yatırım", value: stats.pendingDeposits, icon: ArrowDownToLine, color: "text-success" },
-    { label: "Online Kullanıcı", value: stats.onlineUsers, icon: Wifi, color: "text-primary" },
   ];
 
   const quickActions = [
