@@ -427,11 +427,16 @@ const Trading = () => {
                 {(selectedSymbol.change_percent ?? 0) >= 0 ? "+" : ""}
                 {(selectedSymbol.change_percent ?? 0).toFixed(2)}%
               </span>
-              <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded ${
-                currentMarketStatus.isOpen ? "bg-buy/10 text-buy" : "bg-muted text-muted-foreground"
-              }`}>
-                {currentMarketStatus.label}
-              </span>
+              {!currentMarketStatus.isOpen && (
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-sell/10 text-sell animate-pulse">
+                  PİYASA KAPALI
+                </span>
+              )}
+              {currentMarketStatus.isOpen && (
+                <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-buy/10 text-buy">
+                  {currentMarketStatus.label}
+                </span>
+              )}
             </div>
             <p className="text-xs text-muted-foreground">{selectedSymbol.display_name}</p>
           </div>
