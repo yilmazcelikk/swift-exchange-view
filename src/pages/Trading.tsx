@@ -70,6 +70,7 @@ const Trading = () => {
   const [accountType, setAccountType] = useState("standard");
   const [orderType, setOrderType] = useState<"market" | "buy_limit" | "sell_limit" | "buy_stop" | "sell_stop">("market");
   const [targetPrice, setTargetPrice] = useState("");
+  const [orderTypeOpen, setOrderTypeOpen] = useState(false);
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
   const [timeframe, setTimeframe] = useState<Timeframe>("15m");
