@@ -33,6 +33,11 @@ type HistoryItem =
 const formatNum = (v: number) =>
   v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
+const generateRefNumber = (id: string) => {
+  const hash = id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+  return `REF-${String(hash).slice(0, 6).padStart(6, '0')}`;
+};
+
 const History = () => {
   const { user: authUser } = useAuth();
   const [closedOrders, setClosedOrders] = useState<ClosedOrder[]>([]);
