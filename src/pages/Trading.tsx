@@ -565,7 +565,7 @@ const Trading = () => {
   };
 
   return (
-    <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overflow-y-auto md:overflow-hidden">
+    <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overflow-y-auto md:overflow-hidden overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <div className="p-3 border-b border-border flex items-center gap-3">
         <button onClick={() => setSelectedSymbol(null)} className="p-1 hover:bg-muted rounded">
@@ -741,7 +741,7 @@ const Trading = () => {
         <div className="relative">
           <button
             onClick={() => setOrderTypeOpen(!orderTypeOpen)}
-            className="w-full flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted/70"
+            className="w-full flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted/70 active:bg-muted"
           >
             <span className={
               orderType === "market" ? "text-foreground" :
@@ -753,36 +753,39 @@ const Trading = () => {
           </button>
 
           {orderTypeOpen && (
-            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
-              {([
-                { key: "market" as const, label: "Piyasa", desc: "Anlık piyasa fiyatından" },
-                { key: "buy_limit" as const, label: "Buy Limit", desc: "Fiyat düşünce al" },
-                { key: "sell_limit" as const, label: "Sell Limit", desc: "Fiyat yükselince sat" },
-                { key: "buy_stop" as const, label: "Buy Stop", desc: "Fiyat yükselince al" },
-                { key: "sell_stop" as const, label: "Sell Stop", desc: "Fiyat düşünce sat" },
-              ]).map((ot) => {
-                const isActive = orderType === ot.key;
-                const isBuy = ot.key.startsWith("buy");
-                const isSell = ot.key.startsWith("sell");
-                return (
-                  <button
-                    key={ot.key}
-                    onClick={() => { setOrderType(ot.key); setOrderTypeOpen(false); }}
-                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors ${
-                      isActive ? "bg-muted/60" : "hover:bg-muted/30"
-                    }`}
-                  >
-                    <div>
-                      <span className={`text-xs font-semibold ${
-                        ot.key === "market" ? "text-foreground" : isBuy ? "text-buy" : "text-sell"
-                      }`}>{ot.label}</span>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{ot.desc}</p>
-                    </div>
-                    {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
-                  </button>
-                );
-              })}
-            </div>
+            <>
+              {/* Backdrop to close on outside tap */}
+              <div className="fixed inset-0 z-40" onClick={() => setOrderTypeOpen(false)} />
+              <div className="absolute z-50 bottom-full left-0 right-0 mb-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-150">
+                {([
+                  { key: "market" as const, label: "Piyasa", desc: "Anlık piyasa fiyatından" },
+                  { key: "buy_limit" as const, label: "Buy Limit", desc: "Fiyat düşünce al" },
+                  { key: "sell_limit" as const, label: "Sell Limit", desc: "Fiyat yükselince sat" },
+                  { key: "buy_stop" as const, label: "Buy Stop", desc: "Fiyat yükselince al" },
+                  { key: "sell_stop" as const, label: "Sell Stop", desc: "Fiyat düşünce sat" },
+                ]).map((ot) => {
+                  const isActive = orderType === ot.key;
+                  const isBuy = ot.key.startsWith("buy");
+                  return (
+                    <button
+                      key={ot.key}
+                      onClick={() => { setOrderType(ot.key); setOrderTypeOpen(false); }}
+                      className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors active:bg-muted/80 ${
+                        isActive ? "bg-muted/60" : "hover:bg-muted/30"
+                      }`}
+                    >
+                      <div>
+                        <span className={`text-xs font-semibold ${
+                          ot.key === "market" ? "text-foreground" : isBuy ? "text-buy" : "text-sell"
+                        }`}>{ot.label}</span>
+                        <p className="text-[10px] text-muted-foreground mt-0.5">{ot.desc}</p>
+                      </div>
+                      {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
 
