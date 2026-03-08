@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
         // Fetch FRESH balance from DB (not stale)
         const { data: profile } = await supabase
           .from("profiles")
-          .select("balance, credit")
+          .select("balance, credit, account_type")
           .eq("user_id", order.user_id)
           .single();
 
