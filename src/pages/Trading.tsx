@@ -439,7 +439,7 @@ const Trading = () => {
 
   // Symbol detail + chart + order panel
   const price = selectedSymbol.current_price || 0;
-  const spread = getSpread(price);
+  const spread = calcSpread(selectedSymbol.name, price, accountType);
   const bid = price - spread / 2;
   const ask = price + spread / 2;
   const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
