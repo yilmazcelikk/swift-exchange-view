@@ -47,13 +47,6 @@ const Login = () => {
         .single();
 
       if (profileData?.is_banned) {
-        if (profileData.ban_type === "full") {
-          // Full ban - sign out and redirect to blocked page
-          await supabase.auth.signOut();
-          navigate("/blocked", { replace: true });
-          return;
-        }
-        // Account ban - generic error
         await supabase.auth.signOut();
         toast.error("Giriş başarısız. E-posta veya şifre hatalı.");
         return;
