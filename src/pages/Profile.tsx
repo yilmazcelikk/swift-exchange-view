@@ -256,7 +256,11 @@ const Profile = () => {
                   {profile.fullName || "İsim belirtilmemiş"}
                 </h2>
                 <p className="text-xs text-muted-foreground truncate mt-0.5">{profile.email}</p>
-                <div className="mt-2">
+                {profile.metaId > 0 && (
+                  <p className="text-[11px] font-mono text-primary/80 mt-0.5">
+                    Hesap No: <span className="font-semibold text-primary">{profile.metaId}</span>
+                  </p>
+                )}
                   {verificationStatus === "approved" ? (
                     <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-buy/10 text-buy">
                       <ShieldCheck className="h-3 w-3" /> Doğrulanmış
