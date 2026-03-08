@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  XCircle, Pencil, Sun, Moon, LogOut, Mail, Phone, MapPin, Calendar, User,
+  XCircle, Pencil, Sun, Moon, LogOut, Mail, Phone, MapPin, Calendar, User, Lock, KeyRound,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
