@@ -97,9 +97,9 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
     { label: "Kullanıcılar", icon: UserPlus, tab: "users" },
     { label: "KYC İncele", icon: FileText, tab: "documents" },
     { label: "Pozisyonlar", icon: BarChart3, tab: "positions" },
-    { label: "Banka İşlemleri", icon: Landmark, tab: "bank" },
-    { label: "İşlem Logları", icon: ClipboardList, tab: "bank" },
-    { label: "Ayarlar", icon: Settings, tab: "dashboard" },
+    { label: "Finans Talepleri", icon: Landmark, tab: "finance" },
+    { label: "Ürünler", icon: ClipboardList, tab: "products" },
+    { label: "Ayarlar", icon: Settings, tab: "settings" },
   ];
 
   const systemStatus = [
