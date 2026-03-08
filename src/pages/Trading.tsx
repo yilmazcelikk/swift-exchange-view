@@ -178,6 +178,9 @@ const Trading = () => {
         const aIsBist = a.category === "stock" && BIST_NAMES.has(a.name) ? 0 : 1;
         const bIsBist = b.category === "stock" && BIST_NAMES.has(b.name) ? 0 : 1;
         if (aIsBist !== bIsBist) return aIsBist - bIsBist;
+        // BIMAS always at the bottom among BIST stocks
+        if (a.name === "BIMAS" && b.name !== "BIMAS") return 1;
+        if (b.name === "BIMAS" && a.name !== "BIMAS") return -1;
       }
       if (selectedCategory === "all" || selectedCategory === "commodity") {
         const COMMODITY_ORDER = ["XAUUSD", "XAGUSD"];
