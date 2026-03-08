@@ -727,17 +727,6 @@ const Trading = () => {
         </div>
       </div>
 
-      {/* Bid/Ask mini strip */}
-      <div className="flex items-center border-y border-border/40 bg-card/50">
-        <div className="flex-1 flex items-center justify-center gap-1 py-1.5 border-r border-border/30">
-          <span className="text-[9px] text-muted-foreground font-medium">BID</span>
-          <span className="text-xs font-mono font-bold text-sell">{formatPrice(bid)}</span>
-        </div>
-        <div className="flex-1 flex items-center justify-center gap-1 py-1.5">
-          <span className="text-[9px] text-muted-foreground font-medium">ASK</span>
-          <span className="text-xs font-mono font-bold text-buy">{formatPrice(ask)}</span>
-        </div>
-      </div>
 
       {/* Order Panel */}
       <div className="border-t border-border bg-card p-3 space-y-3 overflow-y-auto flex-1 md:flex-none md:overflow-visible">
