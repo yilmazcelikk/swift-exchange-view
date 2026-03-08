@@ -173,6 +173,23 @@ const AdminReferrals = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingId} onOpenChange={(open) => !open && setDeletingId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Referans Kodunu Sil</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bu referans kodunu silmek istediğinize emin misiniz? Bu işlem geri alınamaz.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogAction onClick={() => deletingId && deleteCode(deletingId)} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              Sil
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
