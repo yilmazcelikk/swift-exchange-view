@@ -311,6 +311,7 @@ const Trading = () => {
       });
       setStopLoss("");
       setTakeProfit("");
+      navigate("/dashboard");
     } catch (err: any) {
       toast.error("Emir başarısız: " + err.message);
     }
