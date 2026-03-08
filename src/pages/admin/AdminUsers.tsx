@@ -450,10 +450,7 @@ const AdminUsers = () => {
                   <TableCell className="font-mono text-xs">{profile.meta_id}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <div className={`h-8 w-8 rounded-full flex items-center justify-center shrink-0 ${profile.is_banned ? "bg-destructive/10" : "bg-primary/10"}`}>
-                        <span className={`text-xs font-bold ${profile.is_banned ? "text-destructive" : "text-primary"}`}>
-                          {(profile.full_name || "?")[0]?.toUpperCase()}
-                        </span>
+                      <div className="min-w-0">
                       </div>
                       <div className="min-w-0">
                         <div className="flex items-center gap-1.5">
