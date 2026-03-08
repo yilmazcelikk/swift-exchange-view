@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Landmark, FileText, Trash2, RefreshCw } from "lucide-react";
+import { Plus, Landmark, Trash2, RefreshCw, CheckCircle, XCircle, Building2 } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -64,8 +64,11 @@ const AdminBankAccounts = () => {
     load();
   };
 
+  const activeCount = accounts.filter(a => a.is_active).length;
+
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold">Banka Hesapları</h2>
@@ -73,54 +76,95 @@ const AdminBankAccounts = () => {
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>
-            <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>
-          <Button size="sm" onClick={() => setShowAddDialog(true)} className="gap-1">
+          <Button size="sm" onClick={() => setShowAddDialog(true)} className="gap-1.5">
             <Plus className="h-4 w-4" /> Hesap Ekle
           </Button>
         </div>
       </div>
 
-      <Card className="border-border">
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <Card className="border-border bg-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-primary/10">
+              <Building2 className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{accounts.length}</p>
+              <p className="text-xs text-muted-foreground">Toplam Hesap</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-buy/10">
+              <CheckCircle className="h-5 w-5 text-buy" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{activeCount}</p>
+              <p className="text-xs text-muted-foreground">Aktif Hesap</p>
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-border bg-card">
+          <CardContent className="p-4 flex items-center gap-3">
+            <div className="p-2.5 rounded-xl bg-sell/10">
+              <XCircle className="h-5 w-5 text-sell" />
+            </div>
+            <div>
+              <p className="text-2xl font-bold">{accounts.length - activeCount}</p>
+              <p className="text-xs text-muted-foreground">Pasif Hesap</p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Table */}
+      <Card className="border-border overflow-hidden">
         <CardContent className="p-0">
           {accounts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <FileText className="h-10 w-10 mb-3 opacity-40" />
-              <p className="text-sm">Henüz tanımlı banka hesabı bulunmuyor.</p>
+            <div className="flex flex-col items-center justify-center py-20 text-muted-foreground">
+              <Landmark className="h-12 w-12 mb-3 opacity-30" />
+              <p className="text-sm font-medium">Henüz banka hesabı yok</p>
+              <p className="text-xs opacity-60 mt-1">Yeni bir hesap ekleyerek başlayın</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-border">
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Banka</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Hesap Sahibi</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">IBAN</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Birim</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
+                  <tr className="border-b border-border bg-muted/30">
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Banka</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Hesap Sahibi</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">IBAN</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Birim</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Durum</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">İşlem</th>
                   </tr>
                 </thead>
                 <tbody>
                   {accounts.map((acc) => (
-                    <tr key={acc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
+                    <tr key={acc.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
+                      <td className="px-4 py-3.5">
+                        <div className="flex items-center gap-2.5">
                           <div className="p-1.5 rounded-lg bg-primary/10">
                             <Landmark className="h-4 w-4 text-primary" />
                           </div>
                           <span className="text-sm font-semibold">{acc.bank_name}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm">{acc.account_holder}</td>
-                      <td className="px-4 py-3 text-xs font-mono text-muted-foreground">{acc.iban}</td>
-                      <td className="px-4 py-3 text-center text-xs font-medium">{acc.currency}</td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-4 py-3.5 text-sm">{acc.account_holder}</td>
+                      <td className="px-4 py-3.5 text-xs font-mono text-muted-foreground">{acc.iban}</td>
+                      <td className="px-4 py-3.5 text-center">
+                        <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-md">{acc.currency}</span>
+                      </td>
+                      <td className="px-4 py-3.5 text-center">
                         <Switch checked={acc.is_active} onCheckedChange={() => toggleAccount(acc.id, acc.is_active)} />
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <Button size="icon" variant="ghost" className="h-7 w-7 text-muted-foreground hover:text-destructive" onClick={() => deleteAccount(acc.id)}>
+                      <td className="px-4 py-3.5 text-center">
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg" onClick={() => deleteAccount(acc.id)}>
                           <Trash2 className="h-3.5 w-3.5" />
                         </Button>
                       </td>
@@ -135,15 +179,27 @@ const AdminBankAccounts = () => {
 
       {/* Add Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Yeni Banka Hesabı</DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
-            <Input placeholder="Banka Adı" value={newAccount.bank_name} onChange={(e) => setNewAccount({ ...newAccount, bank_name: e.target.value })} />
-            <Input placeholder="Hesap Sahibi" value={newAccount.account_holder} onChange={(e) => setNewAccount({ ...newAccount, account_holder: e.target.value })} />
-            <Input placeholder="IBAN" value={newAccount.iban} onChange={(e) => setNewAccount({ ...newAccount, iban: e.target.value })} />
-            <Input placeholder="Birim (TRY)" value={newAccount.currency} onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value })} />
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Banka Adı</label>
+              <Input placeholder="Örn: Ziraat Bankası" value={newAccount.bank_name} onChange={(e) => setNewAccount({ ...newAccount, bank_name: e.target.value })} className="bg-muted/50" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Hesap Sahibi</label>
+              <Input placeholder="Ad Soyad" value={newAccount.account_holder} onChange={(e) => setNewAccount({ ...newAccount, account_holder: e.target.value })} className="bg-muted/50" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">IBAN</label>
+              <Input placeholder="TR00 0000 0000 0000 0000 0000 00" value={newAccount.iban} onChange={(e) => setNewAccount({ ...newAccount, iban: e.target.value })} className="bg-muted/50 font-mono" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Para Birimi</label>
+              <Input placeholder="TRY" value={newAccount.currency} onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value.toUpperCase() })} className="bg-muted/50" />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>İptal</Button>
