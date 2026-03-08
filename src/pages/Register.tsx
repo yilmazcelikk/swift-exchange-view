@@ -148,7 +148,7 @@ const Register = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre Tekrar</label>
-              <Input type="password" placeholder="••••••••" value={formData.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)} className="bg-muted/50" />
+              <Input type="password" placeholder="Şifrenizi tekrar girin" value={formData.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)} className="bg-muted/50" />
             </div>
             <label className="flex items-start gap-2 text-sm">
               <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => update("acceptTerms", e.target.checked)} className="rounded border-border mt-0.5" />
