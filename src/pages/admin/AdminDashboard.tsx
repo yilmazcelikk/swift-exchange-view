@@ -4,7 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
   Users, UserCheck, TrendingUp, ArrowDownToLine, ArrowUpFromLine,
-  RefreshCw,
+  UserPlus, FileText, BarChart3, Landmark, ShoppingBag, Settings,
+  RefreshCw, CheckCircle,
 } from "lucide-react";
 
 const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
