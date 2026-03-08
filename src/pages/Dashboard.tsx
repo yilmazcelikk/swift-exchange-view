@@ -167,10 +167,11 @@ const Dashboard = () => {
   const openOrders = orders.filter(o => o.status === 'open');
 
   const symbolPriceMap = useMemo(() => {
-    const map: Record<string, { price: number; changePercent?: number }> = {};
+    const map: Record<string, { price: number; changePercent?: number; marketOpen?: boolean }> = {};
     for (const o of openOrders) {
       if (!map[o.symbolId]) {
-        map[o.symbolId] = { price: o.currentPrice, changePercent: 0 };
+        const status = getMarketStatus(o.symbolName, "");
+        map[o.symbolId] = { price: o.currentPrice, changePercent: 0, marketOpen: status.isOpen };
       } else {
         map[o.symbolId].price = o.currentPrice;
       }
