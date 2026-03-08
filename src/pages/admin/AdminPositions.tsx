@@ -158,8 +158,7 @@ const AdminPositions = () => {
   // Summary stats
   const totalPnl = orders.reduce((sum, o) => sum + o.pnl, 0);
   const totalMargin = orders.reduce((sum, o) => {
-    const leverageNum = parseInt(o.leverage.split(":")[1]) || 200;
-    return sum + calculateMargin(o.symbol_name, o.lots, o.entry_price, leverageNum);
+    return sum + calculateMargin(o.symbol_name, o.lots, o.entry_price, 200);
   }, 0);
   const uniqueUsers = new Set(orders.map(o => o.user_id)).size;
   const buyCount = orders.filter(o => o.type === "buy").length;
@@ -407,8 +406,7 @@ const AdminPositions = () => {
           const userOrders = groupedOrders.get(userId) || [];
           const userPnl = userOrders.reduce((s, o) => s + o.pnl, 0);
           const userMargin = userOrders.reduce((s, o) => {
-            const lev = parseInt(o.leverage.split(":")[1]) || 200;
-            return s + calculateMargin(o.symbol_name, o.lots, o.entry_price, lev);
+            return s + calculateMargin(o.symbol_name, o.lots, o.entry_price, 200);
           }, 0);
           const profile = profiles.get(userId);
           const isExpanded = expandedUsers.has(userId);
@@ -505,8 +503,7 @@ const AdminPositions = () => {
                   {/* Individual positions */}
                   <div className="divide-y divide-border">
                     {userOrders.map(order => {
-                      const leverageNum = parseInt(order.leverage.split(":")[1]) || 200;
-                      const margin = calculateMargin(order.symbol_name, order.lots, order.entry_price, leverageNum);
+                      const margin = calculateMargin(order.symbol_name, order.lots, order.entry_price, 200);
                       const pnlPercent = margin > 0 ? (order.pnl / margin) * 100 : 0;
                       const priceDiff = order.current_price - order.entry_price;
                       const priceDiffPercent = order.entry_price > 0 ? (priceDiff / order.entry_price) * 100 : 0;
@@ -694,8 +691,7 @@ const AdminPositions = () => {
             const slVal = editSL ? parseFloat(editSL) : null;
             const tpVal = editTP ? parseFloat(editTP) : null;
             const currentPnl = calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, editingOrder.current_price);
-            const leverageNum = parseInt(editingOrder.leverage.split(":")[1]) || 200;
-            const margin = calculateMargin(editingOrder.symbol_name, lotsVal, entryVal, leverageNum);
+            const margin = calculateMargin(editingOrder.symbol_name, lotsVal, entryVal, 200);
 
             // Calculate potential PnL at SL/TP
             const slPnl = slVal ? calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, slVal) : null;

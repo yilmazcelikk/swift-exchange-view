@@ -202,8 +202,7 @@ const AdminUsers = () => {
     let usedMargin = 0;
     if (marginOrders) {
       for (const o of marginOrders) {
-        const lev = parseFloat(o.leverage?.replace("1:", "") || "200");
-        usedMargin += calculateMargin((o as any).symbol_name || "", Number(o.lots), Number(o.entry_price), lev);
+        usedMargin += calculateMargin((o as any).symbol_name || "", Number(o.lots), Number(o.entry_price), 200);
       }
     }
     const newFreeMargin = newEquity - usedMargin;
@@ -309,8 +308,7 @@ const AdminUsers = () => {
           for (const o of remainingOrders) {
             const livePrice = priceMap.get((o as any).symbol_id) || Number((o as any).entry_price);
             remainingPnl += calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice);
-            const lev = parseInt(o.leverage?.split(":")[1]) || 200;
-            remainingMargin += calculateMargin(o.symbol_name, Number(o.lots), Number(o.entry_price), lev);
+            remainingMargin += calculateMargin(o.symbol_name, Number(o.lots), Number(o.entry_price), 200);
           }
         }
         
