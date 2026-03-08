@@ -155,10 +155,29 @@ const Profile = () => {
   };
 
   const handleChangePassword = async () => {
+    if (!passwords.current) {
+      toast.error("Mevcut şifrenizi girin");
+      return;
+    }
     if (passwords.new !== passwords.confirm) {
       toast.error("Yeni şifreler eşleşmiyor");
       return;
     }
+    if (passwords.new.length < 6) {
+      toast.error("Yeni şifre en az 6 karakter olmalıdır");
+      return;
+    }
+
+    // Verify current password by re-authenticating
+    const { error: signInErr } = await supabase.auth.signInWithPassword({
+      email: authUser!.email!,
+      password: passwords.current,
+    });
+    if (signInErr) {
+      toast.error("Mevcut şifre hatalı");
+      return;
+    }
+
     const { error } = await supabase.auth.updateUser({ password: passwords.new });
     if (error) {
       toast.error("Şifre değiştirilemedi: " + error.message);
@@ -343,6 +362,15 @@ const Profile = () => {
               </div>
               <div className="h-px bg-border mx-4" />
               <div className="px-4 py-3.5 space-y-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                    <Lock className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">Mevcut Şifre</p>
+                    <Input type="password" placeholder="••••••••" value={passwords.current} onChange={(e) => setPasswords({ ...passwords, current: e.target.value })} className="mt-1 h-8 text-sm bg-muted/50 border-border" />
+                  </div>
+                </div>
                 <div className="flex items-center gap-3">
                   <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
                     <KeyRound className="h-4 w-4 text-muted-foreground" />
