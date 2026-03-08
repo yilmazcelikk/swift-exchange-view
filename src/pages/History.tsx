@@ -24,6 +24,9 @@ interface Transaction {
   created_at: string;
   status: string;
   method: string | null;
+  original_amount?: number | null;
+  original_currency?: string | null;
+  exchange_rate?: number | null;
 }
 
 type HistoryItem = 
@@ -193,9 +196,20 @@ const History = () => {
                         </div>
                       </div>
                       <div className="text-right">
-                        <span className={`text-sm font-mono font-bold ${isDeposit ? "text-buy" : "text-sell"}`}>
-                          {isDeposit ? "+" : "-"}{formatNum(Number(txn.amount))} USD
-                        </span>
+                        {txn.original_currency === 'TRY' && txn.original_amount ? (
+                          <div>
+                            <span className={`text-xs font-mono text-muted-foreground block`}>
+                              {formatNum(Number(txn.original_amount))} TL
+                            </span>
+                            <span className={`text-sm font-mono font-bold ${isDeposit ? "text-buy" : "text-sell"}`}>
+                              {isDeposit ? "+" : "-"}{formatNum(Number(txn.amount))} USD
+                            </span>
+                          </div>
+                        ) : (
+                          <span className={`text-sm font-mono font-bold ${isDeposit ? "text-buy" : "text-sell"}`}>
+                            {isDeposit ? "+" : "-"}{formatNum(Number(txn.amount))} USD
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-center justify-between mt-1">
