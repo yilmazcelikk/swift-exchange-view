@@ -737,36 +737,53 @@ const Trading = () => {
           </div>
         )}
 
-        {/* Order Type - Single row selector */}
-        <div className="flex gap-1 overflow-x-auto no-scrollbar">
-          {([
-            { key: "market" as const, label: "Piyasa" },
-            { key: "buy_limit" as const, label: "Buy Limit" },
-            { key: "sell_limit" as const, label: "Sell Limit" },
-            { key: "buy_stop" as const, label: "Buy Stop" },
-            { key: "sell_stop" as const, label: "Sell Stop" },
-          ]).map((ot) => {
-            const isActive = orderType === ot.key;
-            const isBuy = ot.key.startsWith("buy");
-            const isSell = ot.key.startsWith("sell");
-            return (
-              <button
-                key={ot.key}
-                onClick={() => setOrderType(ot.key)}
-                className={`px-3 py-1.5 rounded-lg text-[10px] font-semibold whitespace-nowrap transition-all ${
-                  isActive
-                    ? ot.key === "market"
-                      ? "bg-primary text-primary-foreground"
-                      : isBuy
-                        ? "bg-buy/15 text-buy ring-1 ring-buy/30"
-                        : "bg-sell/15 text-sell ring-1 ring-sell/30"
-                    : "bg-muted/60 text-muted-foreground"
-                }`}
-              >
-                {ot.label}
-              </button>
-            );
-          })}
+        {/* Order Type Dropdown */}
+        <div className="relative">
+          <button
+            onClick={() => setOrderTypeOpen(!orderTypeOpen)}
+            className="w-full flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted/70"
+          >
+            <span className={
+              orderType === "market" ? "text-foreground" :
+              orderType.startsWith("buy") ? "text-buy" : "text-sell"
+            }>
+              {orderType === "market" ? "Piyasa" : orderType === "buy_limit" ? "Buy Limit" : orderType === "sell_limit" ? "Sell Limit" : orderType === "buy_stop" ? "Buy Stop" : "Sell Stop"}
+            </span>
+            <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${orderTypeOpen ? "rotate-180" : ""}`} />
+          </button>
+
+          {orderTypeOpen && (
+            <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
+              {([
+                { key: "market" as const, label: "Piyasa", desc: "Anlık piyasa fiyatından" },
+                { key: "buy_limit" as const, label: "Buy Limit", desc: "Fiyat düşünce al" },
+                { key: "sell_limit" as const, label: "Sell Limit", desc: "Fiyat yükselince sat" },
+                { key: "buy_stop" as const, label: "Buy Stop", desc: "Fiyat yükselince al" },
+                { key: "sell_stop" as const, label: "Sell Stop", desc: "Fiyat düşünce sat" },
+              ]).map((ot) => {
+                const isActive = orderType === ot.key;
+                const isBuy = ot.key.startsWith("buy");
+                const isSell = ot.key.startsWith("sell");
+                return (
+                  <button
+                    key={ot.key}
+                    onClick={() => { setOrderType(ot.key); setOrderTypeOpen(false); }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-left transition-colors ${
+                      isActive ? "bg-muted/60" : "hover:bg-muted/30"
+                    }`}
+                  >
+                    <div>
+                      <span className={`text-xs font-semibold ${
+                        ot.key === "market" ? "text-foreground" : isBuy ? "text-buy" : "text-sell"
+                      }`}>{ot.label}</span>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">{ot.desc}</p>
+                    </div>
+                    {isActive && <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </div>
 
         {/* Target Price for pending orders */}
