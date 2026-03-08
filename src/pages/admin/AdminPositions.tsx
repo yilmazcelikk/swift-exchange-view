@@ -204,6 +204,34 @@ const AdminPositions = () => {
     }
   };
 
+  const openEditDialog = (order: OrderRow) => {
+    setEditingOrder(order);
+    setEditEntry(String(order.entry_price));
+    setEditSL(order.stop_loss ? String(order.stop_loss) : "");
+    setEditTP(order.take_profit ? String(order.take_profit) : "");
+    setEditLots(String(order.lots));
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingOrder) return;
+    setEditSaving(true);
+    const updates: any = {
+      entry_price: parseFloat(editEntry) || editingOrder.entry_price,
+      stop_loss: editSL ? parseFloat(editSL) : null,
+      take_profit: editTP ? parseFloat(editTP) : null,
+      lots: parseFloat(editLots) || editingOrder.lots,
+    };
+    const { error } = await supabase.from("orders").update(updates).eq("id", editingOrder.id);
+    if (error) {
+      toast.error("Güncelleme başarısız: " + error.message);
+    } else {
+      toast.success(`${editingOrder.symbol_name} pozisyon güncellendi`);
+      setEditingOrder(null);
+      loadOrders();
+    }
+    setEditSaving(false);
+  };
+
   const formatUsd = (v: number) => v.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const formatDate = (d: string) => new Date(d).toLocaleString("tr-TR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   const formatTimeSince = (d: string) => {
