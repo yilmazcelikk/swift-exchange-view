@@ -354,6 +354,11 @@ Deno.serve(async (req) => {
               .select("id");
 
             if (closeErr || !closedRows || closedRows.length === 0) {
+              if (closeErr) {
+                console.error(`Stop-out close failed for order ${item.order.id}:`, closeErr.message);
+              } else {
+                console.error(`Stop-out close skipped for order ${item.order.id}: not open or already updated`);
+              }
               remainingOrders = remainingOrders.filter(ro => ro.order.id !== item.order.id);
               continue;
             }
