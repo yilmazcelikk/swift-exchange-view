@@ -550,6 +550,19 @@ const Dashboard = () => {
                 )}
               </div>
 
+              {/* Chart Button */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setSelectedOrder(null);
+                  navigate(`/trading?symbol=${encodeURIComponent(liveSelectedOrder.symbolName)}`);
+                }}
+              >
+                <BarChart3 className="h-4 w-4 mr-1" />
+                Grafiğe Git
+              </Button>
+
               {/* Close Button */}
               <Button
                 variant="destructive"
