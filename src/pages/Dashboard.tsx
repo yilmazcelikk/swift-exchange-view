@@ -475,6 +475,7 @@ const Dashboard = () => {
                       value={Math.abs(liveSelectedOrder.pnl)}
                       live={false}
                       disableFlashColor
+                      formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                       className={`font-mono font-bold text-sm ${liveSelectedOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
                     />
                   </div>
