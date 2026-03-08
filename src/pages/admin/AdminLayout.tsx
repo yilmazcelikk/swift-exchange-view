@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { lazy, Suspense } from "react";
+import {
   LayoutDashboard,
   Users,
   TrendingUp,
@@ -14,7 +14,7 @@ import { lazy, Suspense } from "react";
   Landmark,
   Settings,
   ShoppingBag,
-  TrendingUp as Logo,
+  ShieldAlert,
 } from "lucide-react";
 import AdminDashboard from "./AdminDashboard";
 import AdminUsers from "./AdminUsers";
@@ -25,6 +25,7 @@ import AdminSettings from "./AdminSettings";
 import AdminProducts from "./AdminProducts";
 import AdminReferrals from "./AdminReferrals";
 import AdminBankAccounts from "./AdminBankAccounts";
+import AdminRisk from "./AdminRisk";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 
