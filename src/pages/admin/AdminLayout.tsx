@@ -14,7 +14,7 @@ import {
   Landmark,
   Settings,
   ShoppingBag,
-  TrendingUp as Logo,
+  ShieldAlert,
 } from "lucide-react";
 import AdminDashboard from "./AdminDashboard";
 import AdminUsers from "./AdminUsers";
@@ -25,6 +25,7 @@ import AdminSettings from "./AdminSettings";
 import AdminProducts from "./AdminProducts";
 import AdminReferrals from "./AdminReferrals";
 import AdminBankAccounts from "./AdminBankAccounts";
+import AdminRisk from "./AdminRisk";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 
@@ -39,6 +40,7 @@ const navSections = [
     title: "İŞLEM YÖNETİMİ",
     items: [
       { key: "positions", label: "Pozisyonlar", icon: TrendingUp },
+      { key: "risk", label: "Risk Yönetimi", icon: ShieldAlert },
       { key: "products", label: "Ürünler", icon: ShoppingBag },
     ],
   },
@@ -92,6 +94,7 @@ const AdminLayout = () => {
       case "dashboard": return <AdminDashboard onNavigate={setActiveTab} />;
       case "users": return <AdminUsers />;
       case "positions": return <AdminPositions />;
+      case "risk": return <AdminRisk />;
       case "finance":
         return <AdminTransactions />;
       case "documents": return <AdminDocuments />;

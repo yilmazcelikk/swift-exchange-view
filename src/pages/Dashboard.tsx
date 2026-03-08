@@ -630,6 +630,43 @@ const Dashboard = () => {
 
                 {editMode ? (
                   <div className="space-y-3">
+                    {/* Quick SL buttons when in profit */}
+                    {(() => {
+                      const liveOrd = liveOrders.find(o => o.id === liveSelectedOrder.id) || liveSelectedOrder;
+                      const isInProfit = liveOrd.pnl > 0;
+                      if (!isInProfit) return null;
+
+                      const isBuy = liveOrd.type === "buy";
+                      const entry = liveOrd.entryPrice;
+                      const current = liveOrd.currentPrice;
+                      // Break-even: SL at entry price
+                      // Profit SL: SL at midpoint between entry and current
+                      const midPoint = isBuy
+                        ? entry + (current - entry) * 0.5
+                        : entry - (entry - current) * 0.5;
+
+                      return (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 text-[10px] h-7 border-primary/30 text-primary"
+                            onClick={() => setEditSL(String(entry))}
+                          >
+                            🔒 Break-Even ({formatUsd(entry)})
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex-1 text-[10px] h-7 border-buy/30 text-buy"
+                            onClick={() => setEditSL(String(parseFloat(midPoint.toFixed(5))))}
+                          >
+                            💰 Kâr Koruma ({formatUsd(midPoint)})
+                          </Button>
+                        </div>
+                      );
+                    })()}
+
                     <div>
                       <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">
                         <ShieldAlert className="h-3 w-3 text-sell" /> Zarar Durdur (SL)

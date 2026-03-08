@@ -38,6 +38,7 @@ interface OrderRow {
   status: string;
   leverage: string;
   created_at: string;
+  swap: number;
 }
 
 interface UserProfile {
@@ -57,6 +58,7 @@ const AdminPositions = () => {
   const [editSL, setEditSL] = useState("");
   const [editTP, setEditTP] = useState("");
   const [editLots, setEditLots] = useState("");
+  const [editSwap, setEditSwap] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
@@ -102,7 +104,7 @@ const AdminPositions = () => {
         data.map((o) => {
           const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
           const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), currentPrice);
-          return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl };
+          return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl, swap: Number(o.swap || 0) };
         })
       );
     } catch (err) {
@@ -227,6 +229,7 @@ const AdminPositions = () => {
     setEditSL(order.stop_loss ? String(order.stop_loss) : "");
     setEditTP(order.take_profit ? String(order.take_profit) : "");
     setEditLots(String(order.lots));
+    setEditSwap(String(order.swap || 0));
   };
 
   const handleSaveEdit = async () => {
@@ -237,6 +240,7 @@ const AdminPositions = () => {
       stop_loss: editSL ? parseFloat(editSL) : null,
       take_profit: editTP ? parseFloat(editTP) : null,
       lots: parseFloat(editLots) || editingOrder.lots,
+      swap: parseFloat(editSwap) || 0,
     };
     const { error } = await supabase.from("orders").update(updates).eq("id", editingOrder.id);
     if (error) {
@@ -793,6 +797,21 @@ const AdminPositions = () => {
                         className="font-mono h-9 bg-muted/50"
                       />
                     </div>
+                  </div>
+
+                  {/* Swap Field */}
+                  <div>
+                    <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-wider font-medium mb-1.5 text-muted-foreground">
+                      <DollarSign className="h-3 w-3" /> Swap (USD)
+                    </label>
+                    <Input
+                      type="number"
+                      step="any"
+                      value={editSwap}
+                      onChange={(e) => setEditSwap(e.target.value)}
+                      className="font-mono h-9 bg-muted/50"
+                    />
+                    <p className="text-[9px] text-muted-foreground mt-1">Negatif = maliyet, pozitif = kazanç</p>
                   </div>
                 </div>
 
