@@ -46,7 +46,7 @@ export const SymbolLogo = memo(forwardRef<HTMLDivElement, SymbolLogoProps>(funct
 
   // Generic fallback - chart icon (no letters)
   return (
-    <div className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center shrink-0 border border-border/50 overflow-hidden`}>
+    <div ref={ref} className={`${sizeClasses[size]} rounded-full bg-gradient-to-br from-muted to-muted-foreground/20 flex items-center justify-center shrink-0 border border-border/50 overflow-hidden`}>
       <svg className={`${imgSizeClasses[size]} text-muted-foreground`} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
       </svg>
