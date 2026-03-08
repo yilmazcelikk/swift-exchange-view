@@ -126,6 +126,7 @@ const Profile = () => {
         phone: data.phone || "",
         birthDate: data.birth_date || "",
         country: data.country || "",
+        metaId: data.meta_id || 0,
       });
     }
     setProfileLoading(false);
