@@ -768,16 +768,14 @@ const AdminUsers = () => {
                 {/* User Header */}
                 <div className="px-5 py-4 bg-muted/30 border-b border-border">
                   <div className="flex items-center gap-3">
-                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                      <span className="text-lg font-bold text-primary">
-                        {(liveProfile.full_name || "?")[0]?.toUpperCase()}
-                      </span>
-                    </div>
                     <div className="min-w-0">
                       <h3 className="text-base font-bold truncate">{liveProfile.full_name || "İsimsiz"}</h3>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className="text-[11px] font-mono text-muted-foreground">MTID: {liveProfile.meta_id}</span>
                         <span className="text-muted-foreground/30">•</span>
+                        <span className="text-[11px] font-mono text-muted-foreground">{liveProfile.user_id.slice(0, 12)}...</span>
+                      </div>
+                    </div>
                         <span className="text-[11px] font-mono text-muted-foreground">{liveProfile.user_id.slice(0, 12)}...</span>
                       </div>
                     </div>
