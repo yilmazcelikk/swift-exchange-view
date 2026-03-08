@@ -70,10 +70,6 @@ const History = () => {
             </span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Komisyon</span>
-            <span className="font-mono font-medium text-sell">-{formatUsd(totalCommission)} USD</span>
-          </div>
-          <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Bakiye</span>
             <span className="font-mono font-medium text-foreground">{formatUsd(balance)} USD</span>
           </div>
