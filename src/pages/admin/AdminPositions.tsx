@@ -240,6 +240,7 @@ const AdminPositions = () => {
       stop_loss: editSL ? parseFloat(editSL) : null,
       take_profit: editTP ? parseFloat(editTP) : null,
       lots: parseFloat(editLots) || editingOrder.lots,
+      swap: parseFloat(editSwap) || 0,
     };
     const { error } = await supabase.from("orders").update(updates).eq("id", editingOrder.id);
     if (error) {
