@@ -81,8 +81,9 @@ const Trading = () => {
   // Load user leverage from profile
   useEffect(() => {
     if (authUser) {
-      supabase.from("profiles").select("leverage").eq("user_id", authUser.id).single().then(({ data }) => {
+      supabase.from("profiles").select("leverage, account_type").eq("user_id", authUser.id).single().then(({ data }) => {
         if (data?.leverage) setLeverage(data.leverage);
+        if (data?.account_type) setAccountType(data.account_type);
       });
     }
   }, [authUser]);
