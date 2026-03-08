@@ -1,6 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { calculateCommission } from "@/lib/trading";
 
 interface ClosedOrder {
   id: string;
@@ -24,6 +25,8 @@ const History = () => {
   const [closedOrders, setClosedOrders] = useState<ClosedOrder[]>([]);
   const [balance, setBalance] = useState(0);
   const [totalDeposit, setTotalDeposit] = useState(0);
+  const [accountType, setAccountType] = useState("standard");
+  const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (authUser?.id) {
@@ -38,25 +41,38 @@ const History = () => {
     }
   }, [authUser?.id]);
 
+  useEffect(() => {
+    if (listRef.current) {
+      listRef.current.scrollTop = listRef.current.scrollHeight;
+    }
+  }, [closedOrders.length]);
+
   const loadHistory = async () => {
     const [ordersRes, profileRes, depositsRes] = await Promise.all([
       supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
-      supabase.from("profiles").select("balance").eq("user_id", authUser!.id).single(),
+      supabase.from("profiles").select("balance, account_type").eq("user_id", authUser!.id).single(),
       supabase.from("transactions").select("amount").eq("user_id", authUser!.id).eq("type", "deposit").eq("status", "approved"),
     ]);
 
     if (ordersRes.data) setClosedOrders(ordersRes.data.map((o: any) => ({ ...o, swap: Number(o.swap) || 0 })) as ClosedOrder[]);
-    if (profileRes.data) setBalance(Number(profileRes.data.balance));
+    if (profileRes.data) {
+      setBalance(Number(profileRes.data.balance));
+      setAccountType(profileRes.data.account_type || "standard");
+    }
     if (depositsRes.data) setTotalDeposit(depositsRes.data.reduce((s: number, t: any) => s + Number(t.amount), 0));
   };
 
-  // PnL already includes commission (net PnL stored in DB), so no need to recalculate
   const totalPnl = closedOrders.reduce((s, o) => s + Number(o.pnl), 0);
   const totalSwap = closedOrders.reduce((s, o) => s + o.swap, 0);
+  const totalCommission = closedOrders.reduce(
+    (s, o) => s + calculateCommission(o.symbol_name, Number(o.lots), Number(o.current_price), accountType),
+    0,
+  );
 
   const summaryRows = [
     { label: "Para yatır", value: totalDeposit, color: "text-foreground" },
     { label: "Net Kâr/Zarar", value: totalPnl, color: totalPnl >= 0 ? "text-buy" : "text-sell" },
+    { label: "Komisyon", value: -Math.abs(totalCommission), color: "text-sell" },
     { label: "Swap", value: totalSwap, color: totalSwap >= 0 ? "text-foreground" : "text-sell" },
     { label: "Bakiye", value: balance, color: "text-foreground" },
   ];
@@ -68,13 +84,14 @@ const History = () => {
       </div>
 
       {/* Scrollable orders area */}
-      <div className="flex-1 overflow-auto px-4 pb-[calc(env(safe-area-inset-bottom,8px)+3.5rem+6px+7rem)] md:pb-4">
+      <div ref={listRef} className="flex-1 overflow-auto px-4 pb-[calc(env(safe-area-inset-bottom,8px)+3.5rem+6px+10rem)] md:pb-4">
         {closedOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
         ) : (
           <div className="divide-y divide-border">
             {closedOrders.map((order) => {
               const pnl = Number(order.pnl);
+              const commission = calculateCommission(order.symbol_name, Number(order.lots), Number(order.current_price), accountType);
               return (
                 <div
                   key={order.id}
@@ -113,6 +130,9 @@ const History = () => {
                         ? `${new Date(order.closed_at).toLocaleDateString("tr-TR")} ${new Date(order.closed_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}`
                         : new Date(order.created_at).toLocaleDateString("tr-TR")}
                     </p>
+                  </div>
+                  <div className="mt-1 text-[10px] text-muted-foreground font-mono text-right">
+                    Komisyon: -{formatNum(Math.abs(commission))} USD
                   </div>
                 </div>
               );
