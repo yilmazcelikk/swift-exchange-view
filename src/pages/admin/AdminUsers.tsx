@@ -75,6 +75,10 @@ const AdminUsers = () => {
     credit: "",
     leverage: "",
     verification_status: "",
+    full_name: "",
+    phone: "",
+    country: "",
+    birth_date: "",
   });
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
   const [orderEditForm, setOrderEditForm] = useState({
@@ -175,6 +179,10 @@ const AdminUsers = () => {
       credit: profile.credit.toString(),
       leverage: profile.leverage,
       verification_status: profile.verification_status,
+      full_name: profile.full_name || "",
+      phone: profile.phone || "",
+      country: (profile as any).country || "",
+      birth_date: (profile as any).birth_date || "",
     });
   };
 
@@ -218,6 +226,10 @@ const AdminUsers = () => {
         free_margin: newFreeMargin,
         leverage: editForm.leverage,
         verification_status: editForm.verification_status,
+        full_name: editForm.full_name || null,
+        phone: editForm.phone || null,
+        country: editForm.country || null,
+        birth_date: editForm.birth_date || null,
       })
       .eq("id", editingUser.id);
 
@@ -758,57 +770,173 @@ const AdminUsers = () => {
 
       {/* Edit Dialog */}
       <Dialog open={!!editingUser} onOpenChange={(open) => !open && setEditingUser(null)}>
-        <DialogContent className="max-w-sm" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Kullanıcı Düzenle</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Bakiye ($)</label>
-              <Input
-                type="number"
-                value={editForm.balance}
-                onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
-                className="bg-muted/50 font-mono"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Kredi ($)</label>
-              <Input
-                type="number"
-                value={editForm.credit}
-                onChange={(e) => setEditForm({ ...editForm, credit: e.target.value })}
-                className="bg-muted/50 font-mono"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Kaldıraç</label>
-              <Select value={editForm.leverage} onValueChange={(v) => setEditForm({ ...editForm, leverage: v })}>
-                <SelectTrigger className="bg-muted/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {["1:10", "1:50", "1:100", "1:200", "1:500"].map((l) => (
-                    <SelectItem key={l} value={l}>{l}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Doğrulama Durumu</label>
-              <Select value={editForm.verification_status} onValueChange={(v) => setEditForm({ ...editForm, verification_status: v })}>
-                <SelectTrigger className="bg-muted/50">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="pending">Bekliyor</SelectItem>
-                  <SelectItem value="verified">Onaylı</SelectItem>
-                  <SelectItem value="rejected">Reddedildi</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <Button onClick={handleSave} className="w-full">Kaydet</Button>
-          </div>
+        <DialogContent className="max-w-lg p-0 overflow-hidden max-h-[90vh] overflow-y-auto" aria-describedby={undefined}>
+          {editingUser && (() => {
+            const liveProfile = profiles.find(p => p.id === editingUser.id) || editingUser;
+            return (
+              <>
+                {/* User Header */}
+                <div className="px-5 py-4 bg-muted/30 border-b border-border">
+                  <div className="flex items-center gap-3">
+                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                      <span className="text-lg font-bold text-primary">
+                        {(liveProfile.full_name || "?")[0]?.toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-base font-bold truncate">{liveProfile.full_name || "İsimsiz"}</h3>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[11px] font-mono text-muted-foreground">MTID: {liveProfile.meta_id}</span>
+                        <span className="text-muted-foreground/30">•</span>
+                        <span className="text-[11px] font-mono text-muted-foreground">{liveProfile.user_id.slice(0, 12)}...</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* Live Stats */}
+                  <div className="grid grid-cols-4 gap-2 mt-4">
+                    {[
+                      { label: "Bakiye", value: `$${Number(liveProfile.balance).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`, color: "text-buy" },
+                      { label: "Kredi", value: `$${Number(liveProfile.credit).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`, color: "text-foreground" },
+                      { label: "Varlık", value: `$${Number(liveProfile.equity).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`, color: "text-foreground" },
+                      { label: "S. Teminat", value: `$${Number(liveProfile.free_margin).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}`, color: "text-foreground" },
+                    ].map((s) => (
+                      <div key={s.label} className="text-center p-2 rounded-lg bg-background border border-border">
+                        <p className="text-[9px] text-muted-foreground uppercase tracking-wider">{s.label}</p>
+                        <p className={`text-xs font-bold font-mono mt-0.5 ${s.color}`}>{s.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="px-5 py-4 space-y-5">
+                  {/* Kişisel Bilgiler */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                      <User className="h-3.5 w-3.5" /> Kişisel Bilgiler
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Ad Soyad</label>
+                        <Input
+                          value={editForm.full_name}
+                          onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                          className="bg-muted/50 h-9 text-sm"
+                          placeholder="Ad Soyad"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Telefon</label>
+                        <Input
+                          value={editForm.phone}
+                          onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                          className="bg-muted/50 h-9 text-sm font-mono"
+                          placeholder="+90 5XX XXX XX XX"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Ülke</label>
+                        <Input
+                          value={editForm.country}
+                          onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
+                          className="bg-muted/50 h-9 text-sm"
+                          placeholder="Türkiye"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Doğum Tarihi</label>
+                        <Input
+                          value={editForm.birth_date}
+                          onChange={(e) => setEditForm({ ...editForm, birth_date: e.target.value })}
+                          className="bg-muted/50 h-9 text-sm font-mono"
+                          placeholder="GG/AA/YYYY"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Finansal Bilgiler */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                      <span className="text-buy">$</span> Finansal Bilgiler
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Bakiye ($)</label>
+                        <Input
+                          type="number"
+                          value={editForm.balance}
+                          onChange={(e) => setEditForm({ ...editForm, balance: e.target.value })}
+                          className="bg-muted/50 font-mono h-9 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Kredi ($)</label>
+                        <Input
+                          type="number"
+                          value={editForm.credit}
+                          onChange={(e) => setEditForm({ ...editForm, credit: e.target.value })}
+                          className="bg-muted/50 font-mono h-9 text-sm"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Hesap Ayarları */}
+                  <div>
+                    <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                      <Settings className="h-3.5 w-3.5" /> Hesap Ayarları
+                    </h4>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Kaldıraç</label>
+                        <Select value={editForm.leverage} onValueChange={(v) => setEditForm({ ...editForm, leverage: v })}>
+                          <SelectTrigger className="bg-muted/50 h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {["1:10", "1:50", "1:100", "1:200", "1:500"].map((l) => (
+                              <SelectItem key={l} value={l}>{l}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Doğrulama Durumu</label>
+                        <Select value={editForm.verification_status} onValueChange={(v) => setEditForm({ ...editForm, verification_status: v })}>
+                          <SelectTrigger className="bg-muted/50 h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pending">Bekliyor</SelectItem>
+                            <SelectItem value="verified">Onaylı</SelectItem>
+                            <SelectItem value="rejected">Reddedildi</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Meta Info */}
+                  <div className="p-3 rounded-lg bg-muted/30 border border-border">
+                    <div className="grid grid-cols-2 gap-y-2 text-xs">
+                      <div>
+                        <span className="text-muted-foreground">Kayıt Tarihi:</span>
+                        <p className="font-medium mt-0.5">{new Date(liveProfile.created_at).toLocaleDateString("tr-TR")}</p>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Referans Kodu:</span>
+                        <p className="font-medium font-mono mt-0.5">{liveProfile.referral_code || "—"}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button onClick={handleSave} className="w-full h-11 font-semibold">
+                    Kaydet
+                  </Button>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
