@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { calculateCommission } from "@/lib/trading";
 
 interface ClosedOrder {
   id: string;
@@ -51,16 +50,14 @@ const History = () => {
     if (depositsRes.data) setTotalDeposit(depositsRes.data.reduce((s: number, t: any) => s + Number(t.amount), 0));
   };
 
-  // Summary calculations
+  // PnL already includes commission (net PnL stored in DB), so no need to recalculate
   const totalPnl = closedOrders.reduce((s, o) => s + Number(o.pnl), 0);
   const totalSwap = closedOrders.reduce((s, o) => s + o.swap, 0);
-  const totalCommission = closedOrders.reduce((s, o) => s + calculateCommission(o.symbol_name, Number(o.lots), Number(o.current_price)), 0);
 
   const summaryRows = [
     { label: "Para yatır", value: totalDeposit, color: "text-foreground" },
-    { label: "Kâr", value: totalPnl, color: totalPnl >= 0 ? "text-buy" : "text-sell" },
+    { label: "Net Kâr/Zarar", value: totalPnl, color: totalPnl >= 0 ? "text-buy" : "text-sell" },
     { label: "Swap", value: totalSwap, color: totalSwap >= 0 ? "text-foreground" : "text-sell" },
-    { label: "Komisyon", value: -totalCommission, color: "text-sell" },
     { label: "Bakiye", value: balance, color: "text-foreground" },
   ];
 
@@ -71,7 +68,6 @@ const History = () => {
       </div>
 
       <div className="flex-1 overflow-auto px-4 pb-24 md:pb-4">
-        {/* Order list */}
         {closedOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Kapatılmış işlem bulunmuyor.</p>
         ) : (
@@ -103,8 +99,7 @@ const History = () => {
                     </div>
                     <div className="text-right">
                       <span className={`text-sm font-mono font-bold ${pnl >= 0 ? "text-buy" : "text-sell"}`}>
-                        {pnl >= 0 ? "+" : ""}
-                        {formatNum(pnl)} USD
+                        {pnl >= 0 ? "+" : ""}{formatNum(pnl)} USD
                       </span>
                     </div>
                   </div>
@@ -124,14 +119,12 @@ const History = () => {
           </div>
         )}
 
-        {/* Summary section at bottom */}
         <div className="mt-4 pt-4 border-t border-border space-y-2">
           {summaryRows.map((row) => (
             <div key={row.label} className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">{row.label}</span>
               <span className={`text-sm font-mono font-bold ${row.color}`}>
-                {row.value < 0 ? "-" : ""}
-                {formatNum(Math.abs(row.value))}
+                {row.value < 0 ? "-" : ""}{formatNum(Math.abs(row.value))}
               </span>
             </div>
           ))}

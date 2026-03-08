@@ -8,21 +8,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Order } from "@/types";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
+  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission, calculateSwap } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
@@ -40,7 +29,9 @@ const Dashboard = () => {
   const [editSL, setEditSL] = useState("");
   const [editTP, setEditTP] = useState("");
   const [editSaving, setEditSaving] = useState(false);
-  const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0 });
+  const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0, leverage: "1:200" });
+
+  const leverageRatio = parseInt(profile.leverage.split(":")[1] || "200", 10);
 
   useEffect(() => {
     if (authUser?.id) {
@@ -48,19 +39,13 @@ const Dashboard = () => {
 
       const profileChannel = supabase
         .channel('dashboard-profile')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'profiles',
-          filter: `user_id=eq.${authUser.id}`,
-        }, (payload) => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `user_id=eq.${authUser.id}` }, (payload) => {
           if (payload.new) {
             const d = payload.new as any;
             setProfile({
-              balance: Number(d.balance),
-              equity: Number(d.equity),
-              freeMargin: Number(d.free_margin),
-              credit: Number(d.credit || 0),
+              balance: Number(d.balance), equity: Number(d.equity),
+              freeMargin: Number(d.free_margin), credit: Number(d.credit || 0),
+              leverage: d.leverage || "1:200",
             });
           }
         })
@@ -68,29 +53,17 @@ const Dashboard = () => {
 
       const ordersChannel = supabase
         .channel('dashboard-orders')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'orders',
-          filter: `user_id=eq.${authUser.id}`,
-        }, () => {
-          loadOrders();
-        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${authUser.id}` }, () => loadOrders())
         .subscribe();
 
       const symbolsChannel = supabase
         .channel('dashboard-symbols')
-        .on('postgres_changes', {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'symbols',
-        }, (payload) => {
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, (payload) => {
           if (payload.new) {
             const updated = payload.new as any;
             setOrders(prev => prev.map(o => {
               if (o.symbolId === updated.id && updated.current_price) {
-                const newPrice = Number(updated.current_price);
-                return { ...o, currentPrice: newPrice };
+                return { ...o, currentPrice: Number(updated.current_price) };
               }
               return o;
             }));
@@ -106,74 +79,45 @@ const Dashboard = () => {
     }
   }, [authUser?.id]);
 
-  useEffect(() => {
-    if (!authUser?.id) return;
-    const interval = setInterval(() => {
-      loadOrders();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [authUser?.id]);
-
   const loadData = async () => {
     const [profileRes] = await Promise.all([
-      supabase.from("profiles").select("balance, equity, free_margin, credit").eq("user_id", authUser!.id).single(),
+      supabase.from("profiles").select("balance, equity, free_margin, credit, leverage").eq("user_id", authUser!.id).single(),
     ]);
-
     if (profileRes.data) {
       setProfile({
-        balance: Number(profileRes.data.balance),
-        equity: Number(profileRes.data.equity),
-        freeMargin: Number(profileRes.data.free_margin),
-        credit: Number(profileRes.data.credit || 0),
+        balance: Number(profileRes.data.balance), equity: Number(profileRes.data.equity),
+        freeMargin: Number(profileRes.data.free_margin), credit: Number(profileRes.data.credit || 0),
+        leverage: profileRes.data.leverage || "1:200",
       });
     }
-
     await loadOrders();
   };
 
   const loadOrders = async () => {
-    // Load open orders
     const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
-
     if (data) {
       const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
-      const { data: symbolsData } = await supabase
-        .from("symbols")
-        .select("id, current_price, name, category")
-        .in("id", symbolIds);
+      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, name, category").in("id", symbolIds);
       const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
-
       const catMap: Record<string, string> = {};
       symbolsData?.forEach(s => { catMap[s.id] = s.category; });
       setSymbolCategories(prev => ({ ...prev, ...catMap }));
-
       setOrders(data.map((o: any) => {
         const symbolInfo = priceMap.get(o.symbol_id);
-        const currentPrice = symbolInfo ? symbolInfo.price : Number(o.current_price);
-
         return {
-          id: o.id,
-          symbolId: o.symbol_id,
-          symbolName: o.symbol_name,
-          type: o.type as "buy" | "sell",
-          orderType: (o.order_type || "market") as "market" | "limit",
-          lots: Number(o.lots),
-          entryPrice: Number(o.entry_price),
-          currentPrice,
+          id: o.id, symbolId: o.symbol_id, symbolName: o.symbol_name,
+          type: o.type as "buy" | "sell", orderType: (o.order_type || "market") as "market" | "limit",
+          lots: Number(o.lots), entryPrice: Number(o.entry_price),
+          currentPrice: symbolInfo ? symbolInfo.price : Number(o.current_price),
           stopLoss: o.stop_loss ? Number(o.stop_loss) : undefined,
           takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
-          pnl: 0,
-          leverage: o.leverage || "1:200",
-          status: o.status as "open" | "closed",
-          createdAt: o.created_at,
+          pnl: 0, leverage: o.leverage || "1:200",
+          status: o.status as "open" | "closed", createdAt: o.created_at,
         };
       }));
     }
-
-    // Load pending orders
     const { data: pendData } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "pending");
     if (pendData) {
-      // Also fetch symbol categories for pending orders
       const pendSymbolIds = [...new Set(pendData.map((o: any) => o.symbol_id))];
       if (pendSymbolIds.length > 0) {
         const { data: pendSymbolsData } = await supabase.from("symbols").select("id, current_price, category").in("id", pendSymbolIds);
@@ -188,7 +132,6 @@ const Dashboard = () => {
   };
 
   const openOrders = orders.filter(o => o.status === 'open');
-
   const symbolPriceMap = useMemo(() => {
     const map: Record<string, { price: number; changePercent?: number; marketOpen?: boolean }> = {};
     for (const o of openOrders) {
@@ -215,9 +158,7 @@ const Dashboard = () => {
 
   const totalOpenPnl = liveOrders.reduce((sum, o) => sum + o.pnl, 0);
   const dynamicEquity = profile.balance + profile.credit + totalOpenPnl;
-  const usedMargin = liveOrders.reduce((sum, o) => {
-    return sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, 200);
-  }, 0);
+  const usedMargin = liveOrders.reduce((sum, o) => sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, leverageRatio), 0);
   const dynamicFreeMargin = dynamicEquity - usedMargin;
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
 
@@ -231,8 +172,8 @@ const Dashboard = () => {
     ...(hasOpenOrders ? [{ label: "Teminat seviyesi (%)", value: Math.round(marginLevel * 100) / 100 }] : []),
   ];
 
+  // Atomic position close using DB function
   const handleClosePosition = async (order: Order) => {
-    // Check market hours
     const cat = symbolCategories[order.symbolId] || "";
     const mStatus = getMarketStatus(order.symbolName, cat);
     if (!mStatus.isOpen) {
@@ -242,73 +183,38 @@ const Dashboard = () => {
 
     setClosingOrder(null);
     setSelectedOrder(null);
-    
+
     const liveOrder = liveOrders.find(o => o.id === order.id) || order;
     const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice);
     const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 86400000));
     const swap = calculateSwap(liveOrder.symbolName, liveOrder.lots, daysHeld);
     const netPnl = liveOrder.pnl - commission + swap;
 
-    // Atomic close: only update if still open (prevents double-close with edge function)
-    const { data: closedRows, error } = await supabase
-      .from("orders")
-      .update({ 
-        status: "closed", 
-        closed_at: new Date().toISOString(),
-        current_price: liveOrder.currentPrice,
-        pnl: netPnl,
-        swap: swap,
-      } as any)
-      .eq("id", order.id)
-      .eq("status", "open")
-      .select("id");
+    // Use atomic DB function
+    const { data: result, error } = await supabase.rpc("close_position", {
+      p_order_id: order.id,
+      p_close_price: liveOrder.currentPrice,
+      p_net_pnl: netPnl,
+      p_swap: swap,
+      p_close_reason: null,
+    });
 
     if (error) {
       toast.error("Pozisyon kapatılamadı: " + error.message);
       return;
     }
 
-    // If no rows updated, order was already closed by edge function
-    if (!closedRows || closedRows.length === 0) {
+    const res = result as any;
+    if (!res?.success) {
       toast.info("Bu pozisyon zaten kapatılmış.");
       loadData();
       return;
     }
 
-    // Fetch FRESH balance from DB (not stale React state)
-    const { data: freshProfile } = await supabase
-      .from("profiles")
-      .select("balance, credit")
-      .eq("user_id", authUser!.id)
-      .single();
-
-    const freshBalance = freshProfile ? Number(freshProfile.balance) : profile.balance;
-    const freshCredit = freshProfile ? Number(freshProfile.credit) : profile.credit;
-    const newBalance = freshBalance + netPnl;
-    
-    // Recalculate with remaining open orders
-    const remainingOrders = liveOrders.filter(o => o.id !== order.id);
-    const remainingPnl = remainingOrders.reduce((s, o) => s + o.pnl, 0);
-    const remainingMargin = remainingOrders.reduce((s, o) => {
-      return s + calculateMargin(o.symbolName, o.lots, o.entryPrice, 200);
-    }, 0);
-    const newEquity = newBalance + freshCredit + remainingPnl;
-    const newFreeMargin = newEquity - remainingMargin;
-
-    await supabase
-      .from("profiles")
-      .update({ 
-        balance: newBalance,
-        equity: newEquity,
-        free_margin: newFreeMargin,
-      })
-      .eq("user_id", authUser!.id);
-
     setOrders(prev => prev.filter(o => o.id !== order.id));
     toast.success(`${order.symbolName} ${order.type === 'buy' ? 'ALIŞ' : 'SATIŞ'} ${order.lots} lot pozisyon kapatıldı`, {
       description: `K/Z: ${netPnl >= 0 ? '+' : ''}${netPnl.toLocaleString('tr-TR', { minimumFractionDigits: 2 })} USD`,
     });
-
     loadData();
   };
 
@@ -322,86 +228,46 @@ const Dashboard = () => {
   const handleSaveSlTp = async () => {
     if (!selectedOrder) return;
     setEditSaving(true);
-    
     const slValue = editSL ? parseFloat(editSL) : null;
     const tpValue = editTP ? parseFloat(editTP) : null;
     const liveOrder = liveOrders.find(o => o.id === selectedOrder.id) || selectedOrder;
     const currentPrice = liveOrder.currentPrice;
     const isBuy = selectedOrder.type === 'buy';
 
-    // Validate SL/TP based on order direction and CURRENT price (not entry)
     if (isBuy) {
-      if (slValue !== null && slValue >= currentPrice) {
-        toast.error("Alış pozisyonunda Zarar Durdur, güncel fiyatın altında olmalıdır.");
-        setEditSaving(false);
-        return;
-      }
-      if (tpValue !== null && tpValue <= currentPrice) {
-        toast.error("Alış pozisyonunda Kâr Al, güncel fiyatın üzerinde olmalıdır.");
-        setEditSaving(false);
-        return;
-      }
+      if (slValue !== null && slValue >= currentPrice) { toast.error("Alış pozisyonunda Zarar Durdur, güncel fiyatın altında olmalıdır."); setEditSaving(false); return; }
+      if (tpValue !== null && tpValue <= currentPrice) { toast.error("Alış pozisyonunda Kâr Al, güncel fiyatın üzerinde olmalıdır."); setEditSaving(false); return; }
     } else {
-      if (slValue !== null && slValue <= currentPrice) {
-        toast.error("Satış pozisyonunda Zarar Durdur, güncel fiyatın üzerinde olmalıdır.");
-        setEditSaving(false);
-        return;
-      }
-      if (tpValue !== null && tpValue >= currentPrice) {
-        toast.error("Satış pozisyonunda Kâr Al, güncel fiyatın altında olmalıdır.");
-        setEditSaving(false);
-        return;
-      }
+      if (slValue !== null && slValue <= currentPrice) { toast.error("Satış pozisyonunda Zarar Durdur, güncel fiyatın üzerinde olmalıdır."); setEditSaving(false); return; }
+      if (tpValue !== null && tpValue >= currentPrice) { toast.error("Satış pozisyonunda Kâr Al, güncel fiyatın altında olmalıdır."); setEditSaving(false); return; }
     }
 
-    const updates: any = {
-      stop_loss: slValue,
-      take_profit: tpValue,
-    };
-    const { error } = await supabase
-      .from("orders")
-      .update(updates)
-      .eq("id", selectedOrder.id);
+    const { error } = await supabase.from("orders").update({ stop_loss: slValue, take_profit: tpValue }).eq("id", selectedOrder.id);
     if (error) {
       toast.error("Güncelleme başarısız: " + error.message);
     } else {
-      setOrders(prev => prev.map(o =>
-        o.id === selectedOrder.id
-          ? { ...o, stopLoss: updates.stop_loss ?? undefined, takeProfit: updates.take_profit ?? undefined }
-          : o
-      ));
+      setOrders(prev => prev.map(o => o.id === selectedOrder.id ? { ...o, stopLoss: slValue ?? undefined, takeProfit: tpValue ?? undefined } : o));
       toast.success("Kar Al / Zarar Durdur güncellendi");
       setEditMode(false);
     }
     setEditSaving(false);
   };
 
-  // Get live version of selected/closing order
   const liveSelectedOrder = selectedOrder ? liveOrders.find(o => o.id === selectedOrder.id) || selectedOrder : null;
   const liveClosingOrder = closingOrder ? liveOrders.find(o => o.id === closingOrder.id) || closingOrder : null;
-  const closingCommission = liveClosingOrder
-    ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice)
-    : 0;
+  const closingCommission = liveClosingOrder ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice) : 0;
   const closingNetPnl = liveClosingOrder ? liveClosingOrder.pnl - closingCommission : 0;
 
   const formatUsd = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
-      {/* Top PnL Display */}
+      {/* Top PnL */}
       {liveOrders.length > 0 && (
         <div className="flex items-center justify-center px-4 pt-4 pb-2">
           {totalOpenPnl < 0 && <span className="text-lg md:text-xl font-bold font-mono text-sell">-</span>}
-          <AnimatedPrice
-            value={Math.abs(totalOpenPnl)}
-            live={false}
-            disableFlashColor
-            formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}
-          />
-          <span className={`text-lg md:text-xl font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
-            USD
-          </span>
+          <AnimatedPrice value={Math.abs(totalOpenPnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`} />
+          <span className={`text-lg md:text-xl font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>USD</span>
         </div>
       )}
 
@@ -412,7 +278,6 @@ const Dashboard = () => {
           const isLowMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 100;
           const isCriticalMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 30;
           const isNegativeFreeMargin = stat.label === "Serbest teminat" && stat.value < 0;
-
           let valueColorClass = "text-foreground";
           if (isCriticalMargin) valueColorClass = "text-sell animate-pulse";
           else if (isLowMargin) valueColorClass = "text-sell";
@@ -422,12 +287,7 @@ const Dashboard = () => {
             <div key={stat.label} className={`flex items-center justify-between ${isCriticalMargin ? "bg-sell/10 -mx-4 px-4 py-0.5 rounded-lg" : ""}`}>
               <span className={`text-xs ${isCriticalMargin ? "text-sell font-medium" : "text-muted-foreground"}`}>{stat.label}:</span>
               <span className="text-xs font-mono font-medium text-foreground">
-                <AnimatedPrice
-                  value={Math.abs(stat.value)}
-                  live={false}
-                  formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  className={`text-xs font-mono font-medium ${valueColorClass}`}
-                />
+                <AnimatedPrice value={Math.abs(stat.value)} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-xs font-mono font-medium ${valueColorClass}`} />
                 <span className="ml-0.5">{stat.label.includes('%') ? '' : ' USD'}</span>
               </span>
             </div>
@@ -440,18 +300,14 @@ const Dashboard = () => {
         <h2 className="text-sm font-semibold text-foreground">Pozisyonlar ({liveOrders.length})</h2>
       </div>
 
-      {/* Open Positions List */}
+      {/* Positions List */}
       <div className="flex-1 overflow-auto px-4 pb-4">
         {liveOrders.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Açık pozisyon bulunmuyor.</p>
         ) : (
           <div className="divide-y divide-border">
             {liveOrders.map((order) => (
-              <button
-                key={order.id}
-                onClick={() => openOrderSheet(order)}
-                className="w-full py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-colors rounded-lg px-2 -mx-2"
-              >
+              <button key={order.id} onClick={() => openOrderSheet(order)} className="w-full py-3 text-left hover:bg-muted/30 active:bg-muted/50 transition-colors rounded-lg px-2 -mx-2">
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
@@ -467,28 +323,14 @@ const Dashboard = () => {
                     </div>
                     {(order.stopLoss || order.takeProfit) && (
                       <div className="flex items-center gap-2 mt-0.5">
-                        {order.stopLoss && (
-                          <span className="text-[10px] text-sell font-mono flex items-center gap-0.5">
-                            <ShieldAlert className="h-2.5 w-2.5" /> {formatUsd(order.stopLoss)}
-                          </span>
-                        )}
-                        {order.takeProfit && (
-                          <span className="text-[10px] text-buy font-mono flex items-center gap-0.5">
-                            <Target className="h-2.5 w-2.5" /> {formatUsd(order.takeProfit)}
-                          </span>
-                        )}
+                        {order.stopLoss && <span className="text-[10px] text-sell font-mono flex items-center gap-0.5"><ShieldAlert className="h-2.5 w-2.5" /> {formatUsd(order.stopLoss)}</span>}
+                        {order.takeProfit && <span className="text-[10px] text-buy font-mono flex items-center gap-0.5"><Target className="h-2.5 w-2.5" /> {formatUsd(order.takeProfit)}</span>}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center gap-1.5 shrink-0">
                     {order.pnl < 0 && <span className="text-sm font-mono font-bold text-sell">-</span>}
-                    <AnimatedPrice
-                      value={Math.abs(order.pnl)}
-                      live={false}
-                      disableFlashColor
-                      formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
-                    />
+                    <AnimatedPrice value={Math.abs(order.pnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-sm font-mono font-bold ${order.pnl >= 0 ? 'text-buy' : 'text-sell'}`} />
                     <ChevronRight className="h-4 w-4 text-muted-foreground" />
                   </div>
                 </div>
@@ -497,7 +339,7 @@ const Dashboard = () => {
           </div>
         )}
 
-        {/* Pending Orders Section */}
+        {/* Pending Orders */}
         {pendingOrders.length > 0 && (
           <>
             <div className="pt-4 pb-2">
@@ -508,12 +350,7 @@ const Dashboard = () => {
             </div>
             <div className="divide-y divide-border">
               {pendingOrders.map((order: any) => {
-                const orderTypeLabels: Record<string, string> = {
-                  buy_limit: "BUY LIMIT",
-                  sell_limit: "SELL LIMIT",
-                  buy_stop: "BUY STOP",
-                  sell_stop: "SELL STOP",
-                };
+                const orderTypeLabels: Record<string, string> = { buy_limit: "BUY LIMIT", sell_limit: "SELL LIMIT", buy_stop: "BUY STOP", sell_stop: "SELL STOP" };
                 const isBuy = order.type === "buy";
                 return (
                   <div key={order.id} className="py-3 px-2 -mx-2 flex items-center gap-3">
@@ -524,42 +361,15 @@ const Dashboard = () => {
                           {orderTypeLabels[order.order_type] || order.order_type}
                         </span>
                       </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-[11px] text-muted-foreground font-mono">
-                          {Number(order.lots)} lot @ {formatUsd(Number(order.target_price))}
-                        </span>
-                      </div>
-                      {(order.stop_loss || order.take_profit) && (
-                        <div className="flex items-center gap-2 mt-0.5">
-                          {order.stop_loss && (
-                            <span className="text-[10px] text-sell font-mono flex items-center gap-0.5">
-                              <ShieldAlert className="h-2.5 w-2.5" /> {formatUsd(Number(order.stop_loss))}
-                            </span>
-                          )}
-                          {order.take_profit && (
-                            <span className="text-[10px] text-buy font-mono flex items-center gap-0.5">
-                              <Target className="h-2.5 w-2.5" /> {formatUsd(Number(order.take_profit))}
-                            </span>
-                          )}
-                        </div>
-                      )}
+                      <span className="text-[11px] text-muted-foreground font-mono">{Number(order.lots)} lot @ {formatUsd(Number(order.target_price))}</span>
                     </div>
                     <Button
-                      variant="ghost"
-                      size="icon"
+                      variant="ghost" size="icon"
                       className="h-8 w-8 shrink-0 text-sell hover:bg-sell/10"
                       onClick={async () => {
-                        const { error } = await supabase
-                          .from("orders")
-                          .update({ status: "closed", closed_at: new Date().toISOString(), close_reason: "cancelled", pnl: 0 } as any)
-                          .eq("id", order.id)
-                          .eq("status", "pending");
-                        if (error) {
-                          toast.error("İptal başarısız: " + error.message);
-                        } else {
-                          toast.success(`${order.symbol_name} bekleyen emir iptal edildi`);
-                          loadData();
-                        }
+                        const { error } = await supabase.from("orders").update({ status: "closed", closed_at: new Date().toISOString(), close_reason: "cancelled", pnl: 0 } as any).eq("id", order.id).eq("status", "pending");
+                        if (error) toast.error("İptal başarısız: " + error.message);
+                        else { toast.success(`${order.symbol_name} bekleyen emir iptal edildi`); loadData(); }
                       }}
                     >
                       <X className="h-4 w-4" />
@@ -578,41 +388,22 @@ const Dashboard = () => {
           <SheetHeader className="pb-2">
             <SheetTitle className="flex items-center gap-2">
               <span>{liveSelectedOrder?.symbolName}</span>
-              <span className={`text-xs font-bold px-2 py-0.5 rounded ${
-                liveSelectedOrder?.type === 'buy' ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'
-              }`}>
+              <span className={`text-xs font-bold px-2 py-0.5 rounded ${liveSelectedOrder?.type === 'buy' ? 'bg-buy/15 text-buy' : 'bg-sell/15 text-sell'}`}>
                 {liveSelectedOrder?.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
               </span>
             </SheetTitle>
           </SheetHeader>
-
           {liveSelectedOrder && (
             <div className="space-y-4 pt-2">
-              {/* Position Info */}
               <div className="bg-muted/40 rounded-xl p-3 space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Lot</span>
-                  <span className="font-mono font-medium">{liveSelectedOrder.lots}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Giriş Fiyatı</span>
-                  <span className="font-mono font-medium">{formatUsd(liveSelectedOrder.entryPrice)}</span>
-                </div>
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Güncel Fiyat</span>
-                  <AnimatedPrice value={liveSelectedOrder.currentPrice} live={false} className="font-mono font-medium text-sm" />
-                </div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Lot</span><span className="font-mono font-medium">{liveSelectedOrder.lots}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Giriş Fiyatı</span><span className="font-mono font-medium">{formatUsd(liveSelectedOrder.entryPrice)}</span></div>
+                <div className="flex justify-between text-sm"><span className="text-muted-foreground">Güncel Fiyat</span><AnimatedPrice value={liveSelectedOrder.currentPrice} live={false} className="font-mono font-medium text-sm" /></div>
                 <div className="flex justify-between text-sm border-t border-border pt-2">
                   <span className="text-muted-foreground font-medium">K/Z</span>
                   <div className="flex items-center">
                     {liveSelectedOrder.pnl < 0 && <span className="font-mono font-bold text-sm text-sell">-</span>}
-                    <AnimatedPrice
-                      value={Math.abs(liveSelectedOrder.pnl)}
-                      live={false}
-                      disableFlashColor
-                      formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                      className={`font-mono font-bold text-sm ${liveSelectedOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`}
-                    />
+                    <AnimatedPrice value={Math.abs(liveSelectedOrder.pnl)} live={false} disableFlashColor formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`font-mono font-bold text-sm ${liveSelectedOrder.pnl >= 0 ? 'text-buy' : 'text-sell'}`} />
                   </div>
                 </div>
               </div>
@@ -621,135 +412,57 @@ const Dashboard = () => {
               <div className="bg-muted/40 rounded-xl p-3 space-y-3">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-semibold">Zarar Durdur / Kâr Al</span>
-                  {!editMode && (
-                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setEditMode(true)}>
-                      Düzenle
-                    </Button>
-                  )}
+                  {!editMode && <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setEditMode(true)}>Düzenle</Button>}
                 </div>
-
                 {editMode ? (
                   <div className="space-y-3">
-                    {/* Quick SL buttons when in profit */}
                     {(() => {
                       const liveOrd = liveOrders.find(o => o.id === liveSelectedOrder.id) || liveSelectedOrder;
-                      const isInProfit = liveOrd.pnl > 0;
-                      if (!isInProfit) return null;
-
+                      if (liveOrd.pnl <= 0) return null;
                       const isBuy = liveOrd.type === "buy";
                       const entry = liveOrd.entryPrice;
                       const current = liveOrd.currentPrice;
-                      // Break-even: SL at entry price
-                      // Profit SL: SL at midpoint between entry and current
-                      const midPoint = isBuy
-                        ? entry + (current - entry) * 0.5
-                        : entry - (entry - current) * 0.5;
-
+                      const midPoint = isBuy ? entry + (current - entry) * 0.5 : entry - (entry - current) * 0.5;
                       return (
                         <div className="flex gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 text-[10px] h-7 border-primary/30 text-primary"
-                            onClick={() => setEditSL(String(entry))}
-                          >
-                            🔒 Break-Even ({formatUsd(entry)})
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex-1 text-[10px] h-7 border-buy/30 text-buy"
-                            onClick={() => setEditSL(String(parseFloat(midPoint.toFixed(5))))}
-                          >
-                            💰 Kâr Koruma ({formatUsd(midPoint)})
-                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1 text-[10px] h-7 border-primary/30 text-primary" onClick={() => setEditSL(String(entry))}>🔒 Break-Even ({formatUsd(entry)})</Button>
+                          <Button variant="outline" size="sm" className="flex-1 text-[10px] h-7 border-buy/30 text-buy" onClick={() => setEditSL(String(parseFloat(midPoint.toFixed(5))))}>💰 Kâr Koruma ({formatUsd(midPoint)})</Button>
                         </div>
                       );
                     })()}
-
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">
-                        <ShieldAlert className="h-3 w-3 text-sell" /> Zarar Durdur (SL)
-                      </label>
-                      <Input
-                        type="number"
-                        step="any"
-                        placeholder="Boş bırakılabilir"
-                        value={editSL}
-                        onChange={(e) => setEditSL(e.target.value)}
-                        className="font-mono bg-background h-9"
-                      />
+                      <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><ShieldAlert className="h-3 w-3 text-sell" /> Zarar Durdur (SL)</label>
+                      <Input type="number" step="any" placeholder="Boş bırakılabilir" value={editSL} onChange={(e) => setEditSL(e.target.value)} className="font-mono bg-background h-9" />
                     </div>
                     <div>
-                      <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1">
-                        <Target className="h-3 w-3 text-buy" /> Kâr Al (TP)
-                      </label>
-                      <Input
-                        type="number"
-                        step="any"
-                        placeholder="Boş bırakılabilir"
-                        value={editTP}
-                        onChange={(e) => setEditTP(e.target.value)}
-                        className="font-mono bg-background h-9"
-                      />
+                      <label className="text-xs text-muted-foreground mb-1 block flex items-center gap-1"><Target className="h-3 w-3 text-buy" /> Kâr Al (TP)</label>
+                      <Input type="number" step="any" placeholder="Boş bırakılabilir" value={editTP} onChange={(e) => setEditTP(e.target.value)} className="font-mono bg-background h-9" />
                     </div>
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="flex-1" onClick={() => setEditMode(false)}>İptal</Button>
-                      <Button size="sm" className="flex-1" onClick={handleSaveSlTp} disabled={editSaving}>
-                        {editSaving ? "Kaydediliyor..." : "Kaydet"}
-                      </Button>
+                      <Button size="sm" className="flex-1" onClick={handleSaveSlTp} disabled={editSaving}>{editSaving ? "Kaydediliyor..." : "Kaydet"}</Button>
                     </div>
                   </div>
                 ) : (
                   <div className="space-y-1.5">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <ShieldAlert className="h-3 w-3 text-sell" /> Zarar Durdur
-                      </span>
-                      <span className="font-mono text-sell">
-                        {liveSelectedOrder.stopLoss ? formatUsd(liveSelectedOrder.stopLoss) : "—"}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground flex items-center gap-1">
-                        <Target className="h-3 w-3 text-buy" /> Kâr Al
-                      </span>
-                      <span className="font-mono text-buy">
-                        {liveSelectedOrder.takeProfit ? formatUsd(liveSelectedOrder.takeProfit) : "—"}
-                      </span>
-                    </div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground flex items-center gap-1"><ShieldAlert className="h-3 w-3 text-sell" /> Zarar Durdur</span><span className="font-mono text-sell">{liveSelectedOrder.stopLoss ? formatUsd(liveSelectedOrder.stopLoss) : "—"}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground flex items-center gap-1"><Target className="h-3 w-3 text-buy" /> Kâr Al</span><span className="font-mono text-buy">{liveSelectedOrder.takeProfit ? formatUsd(liveSelectedOrder.takeProfit) : "—"}</span></div>
                   </div>
                 )}
               </div>
 
-              {/* Chart Button */}
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={() => {
-                  setSelectedOrder(null);
-                  navigate(`/trading?symbol=${encodeURIComponent(liveSelectedOrder.symbolName)}`);
-                }}
-              >
-                <BarChart3 className="h-4 w-4 mr-1" />
-                Grafik
+              <Button variant="outline" className="w-full" onClick={() => { setSelectedOrder(null); navigate(`/trading?symbol=${encodeURIComponent(liveSelectedOrder.symbolName)}`); }}>
+                <BarChart3 className="h-4 w-4 mr-1" /> Grafik
               </Button>
-
-              {/* Close Button */}
-              <Button
-                variant="destructive"
-                className="w-full"
-                onClick={() => setClosingOrder(liveSelectedOrder)}
-              >
-                <X className="h-4 w-4 mr-1" />
-                Pozisyonu Kapat
+              <Button variant="destructive" className="w-full" onClick={() => setClosingOrder(liveSelectedOrder)}>
+                <X className="h-4 w-4 mr-1" /> Pozisyonu Kapat
               </Button>
             </div>
           )}
         </SheetContent>
       </Sheet>
 
-      {/* Close Position Confirm Dialog */}
+      {/* Close Confirm */}
       <AlertDialog open={!!closingOrder} onOpenChange={(open) => !open && setClosingOrder(null)}>
         <AlertDialogContent className="max-w-sm">
           <AlertDialogHeader>
@@ -759,30 +472,14 @@ const Dashboard = () => {
                 <p>Bu pozisyonu kapatmak istediğinize emin misiniz?</p>
                 {liveClosingOrder && (
                   <div className="bg-muted/50 rounded-lg p-3 space-y-1">
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Sembol</span>
-                      <span className="font-semibold">{liveClosingOrder.symbolName}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Yön</span>
-                      <span className={liveClosingOrder.type === 'buy' ? 'text-buy font-medium' : 'text-sell font-medium'}>
-                        {liveClosingOrder.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">Lot</span>
-                      <span className="font-mono">{liveClosingOrder.lots}</span>
-                    </div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Sembol</span><span className="font-semibold">{liveClosingOrder.symbolName}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Yön</span><span className={liveClosingOrder.type === 'buy' ? 'text-buy font-medium' : 'text-sell font-medium'}>{liveClosingOrder.type === 'buy' ? 'ALIŞ' : 'SATIŞ'}</span></div>
+                    <div className="flex justify-between text-sm"><span className="text-muted-foreground">Lot</span><span className="font-mono">{liveClosingOrder.lots}</span></div>
                     <div className="flex justify-between text-sm border-t border-border pt-1 mt-1">
                       <span className="text-muted-foreground font-medium">Net K/Z</span>
                       <div className="flex items-center">
                         {closingNetPnl < 0 && <span className="font-mono font-bold text-sm text-sell">-</span>}
-                        <AnimatedPrice
-                          value={Math.abs(closingNetPnl)}
-                          live={false}
-                          disableFlashColor
-                          className={`font-mono font-bold text-sm ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`}
-                        />
+                        <AnimatedPrice value={Math.abs(closingNetPnl)} live={false} disableFlashColor className={`font-mono font-bold text-sm ${closingNetPnl >= 0 ? 'text-buy' : 'text-sell'}`} />
                       </div>
                     </div>
                   </div>
@@ -792,12 +489,7 @@ const Dashboard = () => {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>İptal</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => closingOrder && handleClosePosition(closingOrder)}
-              className="bg-sell hover:bg-sell/90 text-sell-foreground"
-            >
-              Pozisyonu Kapat
-            </AlertDialogAction>
+            <AlertDialogAction onClick={() => closingOrder && handleClosePosition(closingOrder)} className="bg-sell hover:bg-sell/90 text-sell-foreground">Pozisyonu Kapat</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

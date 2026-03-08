@@ -99,12 +99,11 @@ const Finance = () => {
       return;
     }
 
-    // Balance check — fetch current profile balance and convert TRY amount to USD
     setSubmitting(true);
     try {
       const { data: profileData } = await supabase
         .from("profiles")
-        .select("balance")
+        .select("balance, free_margin")
         .eq("user_id", authUser.id)
         .single();
 
@@ -114,7 +113,6 @@ const Finance = () => {
         return;
       }
 
-      // Get USDTRY rate to compare TRY withdrawal against USD balance
       const { data: rateData } = await supabase
         .from("symbols")
         .select("current_price")
@@ -122,6 +120,14 @@ const Finance = () => {
         .single();
       const usdTryRate = rateData?.current_price && Number(rateData.current_price) > 0 ? Number(rateData.current_price) : 32.0;
       const amountInUsd = amount / usdTryRate;
+
+      // Check against free margin (accounts for open positions)
+      const freeMargin = Number(profileData.free_margin);
+      if (amountInUsd > freeMargin) {
+        toast.error(`Yetersiz serbest teminat. Açık pozisyonlarınız dikkate alındığında çekilebilir: $${freeMargin.toLocaleString("en-US", { minimumFractionDigits: 2 })}`);
+        setSubmitting(false);
+        return;
+      }
 
       if (amountInUsd > Number(profileData.balance)) {
         toast.error(`Yetersiz bakiye. Mevcut bakiyeniz: $${Number(profileData.balance).toLocaleString("en-US", { minimumFractionDigits: 2 })}`);
