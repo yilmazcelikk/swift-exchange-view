@@ -182,11 +182,13 @@ const AdminPositions = () => {
 
   const closePosition = async (order: OrderRow) => {
     const commission = calculateCommission(order.symbol_name, order.lots, order.current_price);
-    const netPnl = order.pnl - commission;
+    const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
+    const swap = calculateSwap(order.symbol_name, order.lots, daysHeld);
+    const netPnl = order.pnl - commission + swap;
 
     const { error } = await supabase
       .from("orders")
-      .update({ status: "closed", closed_at: new Date().toISOString(), current_price: order.current_price, pnl: netPnl })
+      .update({ status: "closed", closed_at: new Date().toISOString(), current_price: order.current_price, pnl: netPnl, swap: swap } as any)
       .eq("id", order.id);
 
     if (error) {
