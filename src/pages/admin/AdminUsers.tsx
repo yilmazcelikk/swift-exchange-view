@@ -769,70 +769,166 @@ const AdminUsers = () => {
 
       {/* Order Edit Dialog */}
       <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
-        <DialogContent className="max-w-sm" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>
-              İşlem Düzenle — {editingOrder?.symbol_name} ({editingOrder?.type === "buy" ? "AL" : "SAT"})
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium mb-1 block">Giriş Fiyatı</label>
-              <Input
-                type="number"
-                value={orderEditForm.entry_price}
-                onChange={(e) => setOrderEditForm({ ...orderEditForm, entry_price: e.target.value })}
-                className="bg-muted/50 font-mono"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Lot</label>
-              <Input
-                type="number"
-                value={orderEditForm.lots}
-                onChange={(e) => setOrderEditForm({ ...orderEditForm, lots: e.target.value })}
-                className="bg-muted/50 font-mono"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Zarar Durdur (SL)</label>
-              <Input
-                type="number"
-                value={orderEditForm.stop_loss}
-                onChange={(e) => setOrderEditForm({ ...orderEditForm, stop_loss: e.target.value })}
-                className="bg-muted/50 font-mono"
-                placeholder="Opsiyonel"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">Kâr Al (TP)</label>
-              <Input
-                type="number"
-                value={orderEditForm.take_profit}
-                onChange={(e) => setOrderEditForm({ ...orderEditForm, take_profit: e.target.value })}
-                className="bg-muted/50 font-mono"
-                placeholder="Opsiyonel"
-                step="0.01"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">K/Z (PnL)</label>
-              <Input
-                type="number"
-                value={orderEditForm.pnl}
-                onChange={(e) => setOrderEditForm({ ...orderEditForm, pnl: e.target.value })}
-                className="bg-muted/50 font-mono"
-                step="0.01"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <Button onClick={handleOrderSave} className="w-full">Kaydet</Button>
-              <Button variant="destructive" onClick={handleOrderClose} className="w-full">Pozisyonu Kapat</Button>
-            </div>
-          </div>
+        <DialogContent className="max-w-md p-0 overflow-hidden" aria-describedby={undefined}>
+          {editingOrder && (() => {
+            const entryVal = parseFloat(orderEditForm.entry_price) || editingOrder.entry_price;
+            const lotsVal = parseFloat(orderEditForm.lots) || editingOrder.lots;
+            const currentPnl = calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, editingOrder.current_price);
+            const margin = calculateMargin(editingOrder.symbol_name, lotsVal, entryVal, 200);
+            const commission = calculateCommission(editingOrder.symbol_name, lotsVal, editingOrder.current_price);
+            const netPnl = currentPnl - commission;
+            const pnlPercent = margin > 0 ? (currentPnl / margin) * 100 : 0;
+            const slVal = orderEditForm.stop_loss ? parseFloat(orderEditForm.stop_loss) : null;
+            const tpVal = orderEditForm.take_profit ? parseFloat(orderEditForm.take_profit) : null;
+            const slPnl = slVal ? calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, slVal) : null;
+            const tpPnl = tpVal ? calculatePnl(editingOrder.symbol_name, editingOrder.type as "buy" | "sell", lotsVal, entryVal, tpVal) : null;
+
+            return (
+              <>
+                {/* Header Banner */}
+                <div className={`px-5 py-4 ${editingOrder.type === "buy" ? "bg-buy/10" : "bg-sell/10"}`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className={`h-10 w-10 rounded-xl flex items-center justify-center ${editingOrder.type === "buy" ? "bg-buy/20" : "bg-sell/20"}`}>
+                        {editingOrder.type === "buy" ? (
+                          <TrendingUp className="h-5 w-5 text-buy" />
+                        ) : (
+                          <TrendingDown className="h-5 w-5 text-sell" />
+                        )}
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-foreground">{editingOrder.symbol_name}</h3>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${editingOrder.type === "buy" ? "bg-buy/20 text-buy" : "bg-sell/20 text-sell"}`}>
+                            {editingOrder.type === "buy" ? "ALIŞ" : "SATIŞ"}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground bg-muted px-2 py-0.5 rounded-full">1:200</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] text-muted-foreground">Anlık Fiyat</p>
+                      <p className="text-base font-bold font-mono text-foreground">{Number(editingOrder.current_price).toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Live Stats Bar */}
+                <div className="grid grid-cols-3 gap-px bg-border mx-5 mt-4 rounded-lg overflow-hidden">
+                  <div className="bg-card p-2.5 text-center">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-wider">Teminat</p>
+                    <p className="text-xs font-bold font-mono text-foreground mt-0.5">${margin.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</p>
+                  </div>
+                  <div className="bg-card p-2.5 text-center">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-wider">K/Z</p>
+                    <p className={`text-xs font-bold font-mono mt-0.5 ${currentPnl >= 0 ? "text-buy" : "text-sell"}`}>
+                      {currentPnl >= 0 ? "+" : ""}{currentPnl.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}$
+                    </p>
+                  </div>
+                  <div className="bg-card p-2.5 text-center">
+                    <p className="text-[9px] text-muted-foreground uppercase tracking-wider">K/Z %</p>
+                    <p className={`text-xs font-bold font-mono mt-0.5 ${pnlPercent >= 0 ? "text-buy" : "text-sell"}`}>
+                      {pnlPercent >= 0 ? "+" : ""}{pnlPercent.toFixed(2)}%
+                    </p>
+                  </div>
+                </div>
+
+                {/* Form Fields */}
+                <div className="px-5 py-4 space-y-4">
+                  {/* Entry Price & Lots */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Giriş Fiyatı</label>
+                      <Input
+                        type="number"
+                        value={orderEditForm.entry_price}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, entry_price: e.target.value })}
+                        className="bg-muted/50 font-mono h-10 text-sm"
+                        step="0.01"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Lot Miktarı</label>
+                      <Input
+                        type="number"
+                        value={orderEditForm.lots}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, lots: e.target.value })}
+                        className="bg-muted/50 font-mono h-10 text-sm"
+                        step="0.01"
+                      />
+                    </div>
+                  </div>
+
+                  {/* SL & TP */}
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-[11px] font-semibold text-sell uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <ShieldAlert className="h-3 w-3" /> Zarar Durdur
+                      </label>
+                      <Input
+                        type="number"
+                        value={orderEditForm.stop_loss}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, stop_loss: e.target.value })}
+                        className="bg-muted/50 font-mono h-10 text-sm border-sell/20 focus-visible:ring-sell/30"
+                        placeholder="—"
+                        step="0.01"
+                      />
+                      {slPnl !== null && (
+                        <p className={`text-[10px] font-mono mt-1 ${slPnl >= 0 ? "text-buy" : "text-sell"}`}>
+                          → {slPnl >= 0 ? "+" : ""}{slPnl.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}$
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <label className="text-[11px] font-semibold text-buy uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                        <Target className="h-3 w-3" /> Kâr Al
+                      </label>
+                      <Input
+                        type="number"
+                        value={orderEditForm.take_profit}
+                        onChange={(e) => setOrderEditForm({ ...orderEditForm, take_profit: e.target.value })}
+                        className="bg-muted/50 font-mono h-10 text-sm border-buy/20 focus-visible:ring-buy/30"
+                        placeholder="—"
+                        step="0.01"
+                      />
+                      {tpPnl !== null && (
+                        <p className={`text-[10px] font-mono mt-1 ${tpPnl >= 0 ? "text-buy" : "text-sell"}`}>
+                          → {tpPnl >= 0 ? "+" : ""}{tpPnl.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}$
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Manual PnL Override */}
+                  <div className="p-3 rounded-lg border border-border bg-muted/30">
+                    <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
+                      Manuel K/Z (Hesaplanan: <span className={currentPnl >= 0 ? "text-buy" : "text-sell"}>{currentPnl >= 0 ? "+" : ""}{currentPnl.toFixed(2)}$</span>)
+                    </label>
+                    <Input
+                      type="number"
+                      value={orderEditForm.pnl}
+                      onChange={(e) => setOrderEditForm({ ...orderEditForm, pnl: e.target.value })}
+                      className="bg-background font-mono h-10 text-sm"
+                      step="0.01"
+                    />
+                    <p className="text-[9px] text-muted-foreground mt-1.5">
+                      Komisyon: {commission.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}$ • Net K/Z: <span className={netPnl >= 0 ? "text-buy" : "text-sell"}>{netPnl >= 0 ? "+" : ""}{netPnl.toFixed(2)}$</span>
+                    </p>
+                  </div>
+
+                  {/* Action Buttons */}
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <Button onClick={handleOrderSave} className="w-full h-11 font-semibold">
+                      Kaydet
+                    </Button>
+                    <Button variant="destructive" onClick={handleOrderClose} className="w-full h-11 font-semibold">
+                      Pozisyonu Kapat
+                    </Button>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
     </div>
