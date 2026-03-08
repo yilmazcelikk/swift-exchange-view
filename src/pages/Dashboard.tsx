@@ -136,9 +136,9 @@ const Dashboard = () => {
       const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
       const { data: symbolsData } = await supabase
         .from("symbols")
-        .select("id, current_price")
+        .select("id, current_price, name, category")
         .in("id", symbolIds);
-      const priceMap = new Map(symbolsData?.map(s => [s.id, Number(s.current_price)]) || []);
+      const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
 
       setOrders(data.map((o: any) => {
         const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
