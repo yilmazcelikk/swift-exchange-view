@@ -69,7 +69,7 @@ const Register = () => {
 
         if (refData) {
           profileUpdates.referral_code = code;
-          await supabase.from("referral_codes").update({ usage_count: (refData as any).usage_count ? (refData as any).usage_count + 1 : 1 } as any).eq("id", refData.id);
+          await supabase.rpc("increment_referral_usage", { p_code_id: refData.id });
         } else {
           toast.warning("Referans kodu geçersiz veya aktif değil, kod kaydedilmedi.");
         }

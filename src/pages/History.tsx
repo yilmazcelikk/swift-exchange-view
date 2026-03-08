@@ -26,15 +26,18 @@ const History = () => {
   const [balance, setBalance] = useState(0);
   const [totalDeposit, setTotalDeposit] = useState(0);
   const [accountType, setAccountType] = useState("standard");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 50;
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (authUser?.id) {
-      loadHistory();
+      loadHistory(0);
 
       const channel = supabase
         .channel("history-orders")
-        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => loadHistory())
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { setPage(0); loadHistory(0); })
         .subscribe();
 
       return () => { supabase.removeChannel(channel); };
@@ -47,14 +50,23 @@ const History = () => {
     }
   }, [closedOrders.length]);
 
-  const loadHistory = async () => {
+  const loadHistory = async (pageNum = 0) => {
+    const from = pageNum * PAGE_SIZE;
+    const to = from + PAGE_SIZE - 1;
     const [ordersRes, profileRes, depositsRes] = await Promise.all([
-      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }).range(from, to),
       supabase.from("profiles").select("balance, account_type").eq("user_id", authUser!.id).single(),
       supabase.from("transactions").select("amount").eq("user_id", authUser!.id).eq("type", "deposit").eq("status", "approved"),
     ]);
 
-    if (ordersRes.data) setClosedOrders(ordersRes.data.map((o: any) => ({ ...o, swap: Number(o.swap) || 0 })) as ClosedOrder[]);
+    if (ordersRes.data) {
+      if (pageNum === 0) {
+        setClosedOrders(ordersRes.data.map((o: any) => ({ ...o, swap: Number(o.swap) || 0 })) as ClosedOrder[]);
+      } else {
+        setClosedOrders(prev => [...prev, ...ordersRes.data!.map((o: any) => ({ ...o, swap: Number(o.swap) || 0 })) as ClosedOrder[]]);
+      }
+      setHasMore(ordersRes.data.length === PAGE_SIZE);
+    }
     if (profileRes.data) {
       setBalance(Number(profileRes.data.balance));
       setAccountType(profileRes.data.account_type || "standard");
@@ -138,6 +150,14 @@ const History = () => {
               );
             })}
           </div>
+        )}
+        {hasMore && closedOrders.length > 0 && (
+          <button
+            onClick={() => { const next = page + 1; setPage(next); loadHistory(next); }}
+            className="w-full py-2 mt-2 text-xs text-primary font-medium hover:underline"
+          >
+            Daha fazla yükle...
+          </button>
         )}
       </div>
 
