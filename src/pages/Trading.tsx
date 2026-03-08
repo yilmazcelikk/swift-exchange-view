@@ -729,7 +729,7 @@ const Trading = () => {
       </div>
 
       {/* Order Panel */}
-      <div className="border-t border-border bg-card p-3 space-y-3">
+      <div className="border-t border-border bg-card p-3 space-y-3 pb-40">
         {/* Market closed warning */}
         {!currentMarketStatus.isOpen && (
           <div className="text-center py-1.5 px-3 rounded-lg bg-muted text-muted-foreground text-xs font-medium">
