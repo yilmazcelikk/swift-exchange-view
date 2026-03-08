@@ -524,8 +524,8 @@ const Trading = () => {
 
       {/* Professional Chart */}
       <div className="h-[280px] md:flex-1 md:h-auto min-h-0 relative shrink-0">
-        {/* Zoom controls */}
-        <div className="absolute top-2 left-2 z-20 flex gap-1">
+        {/* Zoom controls - desktop only */}
+        <div className="absolute top-2 left-2 z-20 hidden md:flex gap-1">
           <button onClick={() => zoomIn()} className="h-7 w-7 rounded bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-muted transition-colors">
             <ZoomIn className="h-3.5 w-3.5 text-foreground" />
           </button>
