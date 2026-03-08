@@ -47,7 +47,7 @@
     --input: 220 13% 91%;
     --ring: 217 91% 60%;
 
-    --radius: 0.75rem;
+    --radius: 0.375rem;
 
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 47% 11%;
@@ -63,57 +63,57 @@
   }
 
   .dark {
-    --background: 228 28% 6%;
-    --foreground: 210 20% 95%;
+    --background: 220 20% 4%;
+    --foreground: 210 15% 88%;
 
-    --card: 228 24% 9%;
-    --card-foreground: 210 20% 95%;
+    --card: 220 18% 7%;
+    --card-foreground: 210 15% 88%;
 
-    --popover: 228 24% 9%;
-    --popover-foreground: 210 20% 95%;
+    --popover: 220 18% 7%;
+    --popover-foreground: 210 15% 88%;
 
-    --primary: 213 94% 56%;
+    --primary: 210 100% 56%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 228 20% 14%;
-    --secondary-foreground: 210 20% 95%;
+    --secondary: 220 16% 11%;
+    --secondary-foreground: 210 15% 88%;
 
-    --muted: 228 20% 14%;
-    --muted-foreground: 218 12% 52%;
+    --muted: 220 16% 11%;
+    --muted-foreground: 215 10% 48%;
 
-    --accent: 228 20% 14%;
-    --accent-foreground: 210 20% 95%;
+    --accent: 220 16% 11%;
+    --accent-foreground: 210 15% 88%;
 
     --destructive: 0 63% 31%;
-    --destructive-foreground: 210 20% 95%;
+    --destructive-foreground: 210 15% 88%;
 
-    --success: 152 60% 42%;
+    --success: 145 72% 44%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 45 93% 47%;
     --warning-foreground: 0 0% 100%;
 
-    --buy: 152 60% 42%;
+    --buy: 145 72% 44%;
     --buy-foreground: 0 0% 100%;
 
-    --sell: 0 72% 55%;
+    --sell: 0 68% 52%;
     --sell-foreground: 0 0% 100%;
 
-    --border: 228 18% 16%;
-    --input: 228 18% 16%;
-    --ring: 213 94% 56%;
+    --border: 220 14% 12%;
+    --input: 220 14% 12%;
+    --ring: 210 100% 56%;
 
-    --sidebar-background: 228 28% 5%;
-    --sidebar-foreground: 210 20% 95%;
-    --sidebar-primary: 213 94% 56%;
+    --sidebar-background: 220 20% 3%;
+    --sidebar-foreground: 210 15% 88%;
+    --sidebar-primary: 210 100% 56%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 228 20% 12%;
-    --sidebar-accent-foreground: 210 20% 95%;
-    --sidebar-border: 228 18% 13%;
-    --sidebar-ring: 213 94% 56%;
+    --sidebar-accent: 220 16% 9%;
+    --sidebar-accent-foreground: 210 15% 88%;
+    --sidebar-border: 220 14% 10%;
+    --sidebar-ring: 210 100% 56%;
 
-    --chart-up: 152 60% 42%;
-    --chart-down: 0 72% 55%;
+    --chart-up: 145 72% 44%;
+    --chart-down: 0 68% 52%;
   }
 }
 
@@ -161,5 +161,27 @@
 
   .safe-area-bottom {
     padding-bottom: var(--app-safe-bottom);
+  }
+
+  /* Terminal grid lines */
+  .terminal-grid {
+    background-image: linear-gradient(hsl(var(--border) / 0.3) 1px, transparent 1px);
+    background-size: 100% 2rem;
+  }
+
+  /* Scanline effect for data sections */
+  .terminal-row {
+    @apply border-b border-border/50 transition-colors;
+  }
+  .terminal-row:hover {
+    background-color: hsl(var(--primary) / 0.04);
+  }
+
+  /* Glow effect for important numbers */
+  .glow-buy {
+    text-shadow: 0 0 8px hsl(var(--buy) / 0.4);
+  }
+  .glow-sell {
+    text-shadow: 0 0 8px hsl(var(--sell) / 0.4);
   }
 }

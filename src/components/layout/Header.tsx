@@ -51,7 +51,6 @@ export function Header() {
     loadProfile();
     loadOrders();
 
-    // Realtime for profile
     const profileChannel = supabase
       .channel('header-profile')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles', filter: `user_id=eq.${user.id}` }, (payload) => {
@@ -62,7 +61,6 @@ export function Header() {
       })
       .subscribe();
 
-    // Realtime for orders
     const ordersChannel = supabase
       .channel('header-orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, () => {
@@ -70,7 +68,6 @@ export function Header() {
       })
       .subscribe();
 
-    // Realtime for symbol prices
     const symbolsChannel = supabase
       .channel('header-symbols')
       .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, (payload) => {
@@ -83,7 +80,6 @@ export function Header() {
       })
       .subscribe();
 
-    // Poll orders for fresh prices
     const interval = setInterval(loadOrders, 5000);
 
     return () => {
@@ -94,7 +90,6 @@ export function Header() {
     };
   }, [user]);
 
-  // Dynamic calculations
   const { dynamicEquity, dynamicFreeMargin } = useMemo(() => {
     if (!profile) return { dynamicEquity: 0, dynamicFreeMargin: 0 };
     
@@ -115,24 +110,28 @@ export function Header() {
     return { dynamicEquity: equity, dynamicFreeMargin: freeMargin };
   }, [profile, openOrders]);
 
+  const formatVal = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
   const stats = [
-    { label: "Bakiye", value: `$${(profile?.balance ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
-    { label: "Kredi", value: `$${(profile?.credit ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
-    { label: "Varlık", value: `$${dynamicEquity.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
-    { label: "Serbest", value: `$${dynamicFreeMargin.toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
-  ];
+    { label: "BAL", value: formatVal(profile?.balance ?? 0) },
+    { label: "CRD", value: formatVal(profile?.credit ?? 0), hide: (profile?.credit ?? 0) === 0 },
+    { label: "EQT", value: formatVal(dynamicEquity) },
+    { label: "FREE", value: formatVal(dynamicFreeMargin), negative: dynamicFreeMargin < 0 },
+  ].filter(s => !s.hide);
 
   return (
-    <header className="h-12 md:h-14 border-b bg-card flex items-center justify-between px-3 md:px-4 gap-2">
-      <div className="flex items-center gap-3 md:gap-6 overflow-x-auto no-scrollbar">
+    <header className="h-10 md:h-11 border-b border-border bg-card flex items-center justify-between px-2 md:px-3 gap-1">
+      <div className="flex items-center gap-2 md:gap-4 overflow-x-auto no-scrollbar flex-1">
         {stats.map((stat) => (
           <div key={stat.label} className="flex items-center gap-1 whitespace-nowrap">
-            <span className="text-[10px] md:text-xs text-muted-foreground">{stat.label}</span>
-            <span className="text-xs md:text-sm font-semibold font-mono text-foreground">{stat.value}</span>
+            <span className="text-[9px] md:text-[10px] font-mono text-muted-foreground uppercase tracking-wider">{stat.label}</span>
+            <span className={`text-[11px] md:text-xs font-mono font-semibold tabular-nums ${stat.negative ? 'text-sell glow-sell' : 'text-foreground'}`}>
+              {stat.value}
+            </span>
           </div>
         ))}
       </div>
-      <div className="flex items-center gap-1 md:gap-3 shrink-0">
+      <div className="flex items-center shrink-0">
         <ThemeToggle />
       </div>
     </header>

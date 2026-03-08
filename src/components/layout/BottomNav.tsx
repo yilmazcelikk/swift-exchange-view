@@ -11,18 +11,18 @@ const navItems = [
 
 export function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 8px)' }}>
-      <div className="flex items-center justify-around h-14">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card/95 backdrop-blur-sm border-t border-border" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 6px)' }}>
+      <div className="flex items-center justify-around h-12">
         {navItems.map((item) => (
           <NavLink
             key={item.title}
             to={item.url}
             end
-            className="flex flex-col items-center justify-center gap-1 flex-1 py-2 text-muted-foreground transition-colors"
+            className="flex flex-col items-center justify-center gap-0.5 flex-1 py-1.5 text-muted-foreground transition-colors"
             activeClassName="text-primary"
           >
-            <item.icon className="h-5 w-5" />
-            <span className="text-[10px] font-medium">{item.title}</span>
+            <item.icon className="h-4.5 w-4.5" strokeWidth={1.5} />
+            <span className="text-[9px] font-mono font-medium uppercase tracking-wide">{item.title}</span>
           </NavLink>
         ))}
       </div>
