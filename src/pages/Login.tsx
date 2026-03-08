@@ -9,10 +9,10 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => !!localStorage.getItem("rememberedEmail"));
   const [submitLoading, setSubmitLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -34,6 +34,13 @@ const Login = () => {
         return;
       }
 
+      // Remember me
+      if (rememberMe) {
+        localStorage.setItem("rememberedEmail", email);
+      } else {
+        localStorage.removeItem("rememberedEmail");
+      }
+
       const userId = data.user?.id;
       if (!userId) {
         toast.error("Oturum bilgisi alınamadı. Lütfen tekrar deneyin.");
@@ -52,15 +59,7 @@ const Login = () => {
         return;
       }
 
-      const { data: isAdminRole, error: roleError } = await supabase.rpc("has_role", {
-        _user_id: userId,
-        _role: "admin",
-      });
-
-      if (roleError) {
-        console.error("Role check error:", roleError);
-      }
-
+      const { data: isAdminRole } = await supabase.rpc("has_role", { _user_id: userId, _role: "admin" });
       navigate(isAdminRole ? "/admin" : "/dashboard", { replace: true });
     } catch (err) {
       console.error("Login unexpected error:", err);
@@ -78,28 +77,17 @@ const Login = () => {
           <div className="absolute top-10 right-10 w-80 h-80 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, #3b82f6 0%, transparent 70%)" }} />
           <div className="absolute bottom-20 left-10 w-64 h-64 rounded-full blur-3xl" style={{ background: "radial-gradient(circle, #1d4ed8 0%, transparent 70%)" }} />
         </div>
-
         <div className="relative z-10 space-y-8 w-full max-w-lg text-center">
           <div className="flex justify-center mb-6">
             <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-40 w-40 object-contain rounded-full" />
           </div>
-          <h2 className="text-2xl font-bold text-white/90" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
-            Marbaş Menkul Değerler
-          </h2>
+          <h2 className="text-2xl font-bold text-white/90" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>Marbaş Menkul Değerler</h2>
           <div className="space-y-4 text-white/75 text-sm leading-relaxed" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
-            <p>
-              Marbaş Menkul Değerler A.Ş., Türk sermaye piyasalarının güvenilir aracı kurumlarından biri olarak yerli ve yabancı bireysel ve kurumsal yatırımcılara hizmet vermektedir.
-            </p>
-            <p>
-              SPK lisanslı yapısıyla yatırımcılarına güvenli, hızlı ve şeffaf bir yatırım deneyimi sunmayı hedefleyen Marbaş Menkul Değerler, teknolojik altyapısını sürekli geliştirerek müşterilerine en iyi hizmeti vermeye odaklanmaktadır.
-            </p>
+            <p>Marbaş Menkul Değerler A.Ş., Türk sermaye piyasalarının güvenilir aracı kurumlarından biri olarak yerli ve yabancı bireysel ve kurumsal yatırımcılara hizmet vermektedir.</p>
+            <p>SPK lisanslı yapısıyla yatırımcılarına güvenli, hızlı ve şeffaf bir yatırım deneyimi sunmayı hedefleyen Marbaş Menkul Değerler, teknolojik altyapısını sürekli geliştirerek müşterilerine en iyi hizmeti vermeye odaklanmaktadır.</p>
           </div>
           <div className="grid grid-cols-3 gap-3 pt-4">
-             {[
-               { label: "Lisans", value: "SPK" },
-               { label: "Hizmet", value: "Borsa İstanbul" },
-               { label: "Güvenlik", value: "A+" },
-             ].map((s) => (
+            {[{ label: "Lisans", value: "SPK" }, { label: "Hizmet", value: "Borsa İstanbul" }, { label: "Güvenlik", value: "A+" }].map((s) => (
               <div key={s.label} className="text-center p-3 rounded-xl bg-white/5 backdrop-blur border border-white/10">
                 <p className="text-base font-bold text-white">{s.value}</p>
                 <p className="text-[11px] text-white/50 mt-1">{s.label}</p>
