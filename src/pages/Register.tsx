@@ -140,7 +140,7 @@ const Register = () => {
             <div>
               <label className="text-sm font-medium mb-1.5 block">Şifre</label>
               <div className="relative">
-                <Input type={showPassword ? "text" : "password"} placeholder="••••••••" value={formData.password} onChange={(e) => update("password", e.target.value)} className="bg-muted/50 pr-10" />
+                <Input type={showPassword ? "text" : "password"} placeholder="Şifrenizi girin" value={formData.password} onChange={(e) => update("password", e.target.value)} className="bg-muted/50 pr-10" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
