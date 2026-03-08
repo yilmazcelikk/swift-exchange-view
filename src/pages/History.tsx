@@ -40,7 +40,7 @@ const History = () => {
 
   const loadHistory = async () => {
     const [ordersRes, profileRes, depositsRes] = await Promise.all([
-      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: false }),
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
       supabase.from("profiles").select("balance").eq("user_id", authUser!.id).single(),
       supabase.from("transactions").select("amount").eq("user_id", authUser!.id).eq("type", "deposit").eq("status", "approved"),
     ]);
