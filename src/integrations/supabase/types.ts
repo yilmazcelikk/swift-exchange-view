@@ -195,6 +195,7 @@ export type Database = {
         Row: {
           balance: number
           ban_reason: string | null
+          ban_type: string
           birth_date: string | null
           country: string | null
           created_at: string
@@ -215,6 +216,7 @@ export type Database = {
         Insert: {
           balance?: number
           ban_reason?: string | null
+          ban_type?: string
           birth_date?: string | null
           country?: string | null
           created_at?: string
@@ -235,6 +237,7 @@ export type Database = {
         Update: {
           balance?: number
           ban_reason?: string | null
+          ban_type?: string
           birth_date?: string | null
           country?: string | null
           created_at?: string

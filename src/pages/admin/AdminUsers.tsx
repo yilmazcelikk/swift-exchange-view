@@ -43,6 +43,7 @@ interface Profile {
   created_at: string;
   is_banned: boolean;
   ban_reason: string | null;
+  ban_type: string;
   referral_code: string | null;
 }
 
@@ -343,18 +344,33 @@ const AdminUsers = () => {
     setLoadingAllOrders(false);
   };
 
-  const handleBanToggle = async (profile: Profile) => {
-    const newBanned = !profile.is_banned;
-    const reason = newBanned ? prompt("Engelleme sebebi (opsiyonel):") || "Hesap engellenmiştir" : null;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_banned: newBanned, ban_reason: reason })
-      .eq("id", profile.id);
-    if (error) {
-      toast.error("İşlem başarısız: " + error.message);
+  const handleBanToggle = async (profile: Profile, banType?: string) => {
+    if (profile.is_banned) {
+      // Unban
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_banned: false, ban_reason: null, ban_type: "account" })
+        .eq("id", profile.id);
+      if (error) {
+        toast.error("İşlem başarısız: " + error.message);
+      } else {
+        toast.success("Engel kaldırıldı");
+        loadProfiles();
+      }
     } else {
-      toast.success(newBanned ? "Kullanıcı engellendi" : "Engel kaldırıldı");
-      loadProfiles();
+      // Ban
+      const type = banType || "account";
+      const reason = prompt("Engelleme sebebi (opsiyonel):") || (type === "full" ? "Hesap tamamen engellenmiştir" : "Hesap engellenmiştir");
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_banned: true, ban_reason: reason, ban_type: type })
+        .eq("id", profile.id);
+      if (error) {
+        toast.error("İşlem başarısız: " + error.message);
+      } else {
+        toast.success(type === "full" ? "Kullanıcı tamamen engellendi (site erişimi kapalı)" : "Kullanıcı engellendi (giriş yapamaz)");
+        loadProfiles();
+      }
     }
   };
 
@@ -646,17 +662,43 @@ const AdminUsers = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Ayarlar
                 </Button>
-                <Button
-                  variant={liveProfile.is_banned ? "outline" : "destructive"}
-                  className="w-full"
-                  onClick={() => handleBanToggle(liveProfile)}
-                >
-                  {liveProfile.is_banned ? (
-                    <><ShieldCheck className="h-4 w-4 mr-2" /> Engeli Kaldır</>
-                  ) : (
-                    <><Ban className="h-4 w-4 mr-2" /> Kullanıcıyı Engelle</>
-                  )}
-                </Button>
+                {liveProfile.is_banned ? (
+                  <>
+                    <div className="p-3 rounded-lg border border-destructive/30 bg-destructive/5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Ban className="h-4 w-4 text-destructive" />
+                        <span className="text-sm font-semibold text-destructive">
+                          {liveProfile.ban_type === "full" ? "Tam Engel (Site Erişimi Kapalı)" : "Hesap Engeli (Giriş Yapamaz)"}
+                        </span>
+                      </div>
+                      {liveProfile.ban_reason && (
+                        <p className="text-xs text-muted-foreground ml-6">{liveProfile.ban_reason}</p>
+                      )}
+                    </div>
+                    <Button variant="outline" className="w-full border-success text-success hover:bg-success/10" onClick={() => handleBanToggle(liveProfile)}>
+                      <ShieldCheck className="h-4 w-4 mr-2" /> Engeli Kaldır
+                    </Button>
+                  </>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <Button
+                      variant="outline"
+                      className="w-full border-warning text-warning hover:bg-warning/10"
+                      onClick={() => handleBanToggle(liveProfile, "account")}
+                    >
+                      <Ban className="h-4 w-4 mr-1" />
+                      <span className="text-xs">Hesap Engeli</span>
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      className="w-full"
+                      onClick={() => handleBanToggle(liveProfile, "full")}
+                    >
+                      <ShieldAlert className="h-4 w-4 mr-1" />
+                      <span className="text-xs">Tam Engel</span>
+                    </Button>
+                  </div>
+                )}
               </div>
 
               {/* All Orders Dialog Content */}

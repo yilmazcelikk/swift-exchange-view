@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ban_type text DEFAULT 'account' NOT NULL;

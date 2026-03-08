@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isFullBanned: boolean;
   loading: boolean;
   roleResolved: boolean;
   signOut: () => Promise<void>;
@@ -15,6 +16,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   isAdmin: false,
+  isFullBanned: false,
   loading: true,
   roleResolved: false,
   signOut: async () => {},
@@ -26,6 +28,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isFullBanned, setIsFullBanned] = useState(false);
   const [loading, setLoading] = useState(true);
   const [roleResolved, setRoleResolved] = useState(false);
 
@@ -68,8 +71,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         if (nextSession?.user) {
           await checkAdmin(nextSession.user.id);
+          // Check full ban
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("is_banned, ban_type")
+            .eq("user_id", nextSession.user.id)
+            .single();
+          if (profileData?.is_banned && profileData?.ban_type === "full") {
+            setIsFullBanned(true);
+          } else {
+            setIsFullBanned(false);
+          }
         } else {
           setIsAdmin(false);
+          setIsFullBanned(false);
         }
       } catch (err) {
         console.error("resolveSession error:", err);
@@ -156,7 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, loading, roleResolved, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isFullBanned, loading, roleResolved, signOut }}>
       {children}
     </AuthContext.Provider>
   );
