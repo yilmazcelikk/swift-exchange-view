@@ -226,6 +226,10 @@ const AdminUsers = () => {
         free_margin: newFreeMargin,
         leverage: editForm.leverage,
         verification_status: editForm.verification_status,
+        full_name: editForm.full_name || null,
+        phone: editForm.phone || null,
+        country: editForm.country || null,
+        birth_date: editForm.birth_date || null,
       })
       .eq("id", editingUser.id);
 
