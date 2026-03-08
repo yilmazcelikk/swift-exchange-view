@@ -6,7 +6,7 @@ import { generateCandleData } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams, useNavigate } from "react-router-dom";
-import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe, ZoomIn, ZoomOut, Maximize2, ChevronDown } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
 import { resolveLogoUrl } from "@/data/symbolLogos";
