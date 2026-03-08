@@ -27,6 +27,7 @@ const AdminBankAccounts = () => {
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [loading, setLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newAccount, setNewAccount] = useState({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
 
   useEffect(() => { load(); }, []);
