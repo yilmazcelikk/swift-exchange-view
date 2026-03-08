@@ -370,7 +370,7 @@ const AdminRisk = () => {
                             style={{ width: `${Math.min(100, (user.marginLevel / 500) * 100)}%` }}
                           />
                         </div>
-                        <span className={`text-[10px] font-mono font-bold w-12 text-right ${user.marginLevel > 200 ? "text-buy" : user.marginLevel > 100 ? "text-yellow-500" : "text-sell"}`}>
+                        <span className={`text-[10px] font-mono font-bold w-12 text-right ${user.marginLevel > 100 ? "text-buy" : user.marginLevel > 30 ? "text-yellow-500" : "text-sell"}`}>
                           %{user.marginLevel.toFixed(0)}
                         </span>
                       </div>

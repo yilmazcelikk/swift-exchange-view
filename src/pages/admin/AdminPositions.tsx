@@ -499,7 +499,7 @@ const AdminPositions = () => {
                             style={{ width: `${Math.min(100, (marginLevel / 300) * 100)}%` }}
                           />
                         </div>
-                        <span className={`text-[9px] font-mono font-medium ${marginLevel > 150 ? "text-buy" : marginLevel > 100 ? "text-yellow-500" : "text-sell"}`}>
+                        <span className={`text-[9px] font-mono font-medium ${marginLevel > 100 ? "text-buy" : marginLevel > 30 ? "text-yellow-500" : "text-sell"}`}>
                           %{marginLevel.toFixed(0)}
                         </span>
                       </div>
