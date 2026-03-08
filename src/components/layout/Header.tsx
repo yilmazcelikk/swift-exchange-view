@@ -107,8 +107,7 @@ export function Header() {
     }, 0);
 
     const usedMargin = openOrders.reduce((sum, o) => {
-      const leverageNum = parseInt(o.leverage?.split(":")[1]) || 200;
-      return sum + calculateMargin(o.symbol_name, o.lots, o.entry_price, leverageNum);
+      return sum + calculateMargin(o.symbol_name, o.lots, o.entry_price, 200);
     }, 0);
 
     const equity = profile.balance + profile.credit + totalPnl;

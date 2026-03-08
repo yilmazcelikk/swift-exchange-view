@@ -308,8 +308,7 @@ const AdminUsers = () => {
           for (const o of remainingOrders) {
             const livePrice = priceMap.get((o as any).symbol_id) || Number((o as any).entry_price);
             remainingPnl += calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice);
-            const lev = parseInt(o.leverage?.split(":")[1]) || 200;
-            remainingMargin += calculateMargin(o.symbol_name, Number(o.lots), Number(o.entry_price), lev);
+            remainingMargin += calculateMargin(o.symbol_name, Number(o.lots), Number(o.entry_price), 200);
           }
         }
         
