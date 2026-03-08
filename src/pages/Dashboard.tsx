@@ -272,7 +272,7 @@ const Dashboard = () => {
       )}
 
       {/* Account Stats */}
-      <div className="px-4 pb-1.5">
+      <div className="px-4 pt-2 pb-1.5">
         {accountStats.map((stat) => {
           const isMarginLevel = stat.label === "Teminat seviyesi (%)";
           const isLowMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 100;
