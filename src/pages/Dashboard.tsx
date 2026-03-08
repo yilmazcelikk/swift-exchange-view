@@ -367,22 +367,32 @@ const Dashboard = () => {
 
       {/* Account Stats */}
       <div className="px-4 pb-3 space-y-1">
-        {accountStats.map((stat) => (
-          <div key={stat.label} className="flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">{stat.label}:</span>
-            <span className="text-xs font-mono font-medium text-foreground">
-              <AnimatedPrice
-                value={Math.abs(stat.value)}
-                live={false}
-                formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                className={`text-xs font-mono font-medium ${
-                  stat.label === "Serbest teminat" && stat.value < 0 ? "text-sell" : "text-foreground"
-                }`}
-              />
-              <span className="ml-0.5">{stat.label.includes('%') ? '' : ' USD'}</span>
-            </span>
-          </div>
-        ))}
+        {accountStats.map((stat) => {
+          const isMarginLevel = stat.label === "Teminat seviyesi (%)";
+          const isLowMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 100;
+          const isCriticalMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 30;
+          const isNegativeFreeMargin = stat.label === "Serbest teminat" && stat.value < 0;
+
+          let valueColorClass = "text-foreground";
+          if (isCriticalMargin) valueColorClass = "text-sell animate-pulse";
+          else if (isLowMargin) valueColorClass = "text-sell";
+          else if (isNegativeFreeMargin) valueColorClass = "text-sell";
+
+          return (
+            <div key={stat.label} className={`flex items-center justify-between ${isCriticalMargin ? "bg-sell/10 -mx-4 px-4 py-0.5 rounded-lg" : ""}`}>
+              <span className={`text-xs ${isCriticalMargin ? "text-sell font-medium" : "text-muted-foreground"}`}>{stat.label}:</span>
+              <span className="text-xs font-mono font-medium text-foreground">
+                <AnimatedPrice
+                  value={Math.abs(stat.value)}
+                  live={false}
+                  formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  className={`text-xs font-mono font-medium ${valueColorClass}`}
+                />
+                <span className="ml-0.5">{stat.label.includes('%') ? '' : ' USD'}</span>
+              </span>
+            </div>
+          );
+        })}
       </div>
 
       {/* Positions Header */}
