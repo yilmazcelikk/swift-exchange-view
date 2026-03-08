@@ -81,7 +81,6 @@ const History = () => {
           <div className="divide-y divide-border">
             {closedOrders.map((order) => {
               const pnl = Number(order.pnl);
-              const pnl = Number(order.pnl);
               return (
               <div key={order.id} className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
                   order.close_reason === 'stop_loss'
