@@ -97,7 +97,7 @@ export const STOCK_LOGOS: Record<string, string> = {
   TCELL: `${TV}/turkcell--big.svg`,
   THYAO: `${TV}/turk-hava-yollari--big.svg`,
   TOASO: `${CB}/tofas.com.tr`,             // Clearbit (no TV logo)
-  TSKB: `${TV}/turkiye-sinai-kalkinma-bankasi--big.svg`,
+  TSKB: `${CB}/tskb.com.tr`,
   TTKOM: `${TV}/turk-telekom--big.svg`,
   TTRAK: `${TV}/turk-traktor--big.svg`,
   TUPRS: `${TV}/tupras--big.svg`,
