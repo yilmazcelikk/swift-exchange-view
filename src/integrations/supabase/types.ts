@@ -394,6 +394,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      generate_random_meta_id: { Args: never; Returns: number }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
