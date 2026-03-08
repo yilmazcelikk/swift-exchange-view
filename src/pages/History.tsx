@@ -80,7 +80,7 @@ const History = () => {
         ) : (
           <div className="divide-y divide-border">
             {closedOrders.map((order) => {
-              const commission = calculateCommission(order.symbol_name, Number(order.lots), Number(order.current_price));
+              const pnl = Number(order.pnl);
               const pnl = Number(order.pnl);
               return (
               <div key={order.id} className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
