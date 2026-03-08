@@ -565,7 +565,7 @@ const Trading = () => {
   };
 
   return (
-    <div className="flex flex-col md:h-[calc(100vh-3.5rem)] animate-slide-up overflow-y-auto md:overflow-hidden overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="flex flex-col h-[calc(100vh-3.5rem)] animate-slide-up overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Header */}
       <div className="p-3 border-b border-border flex items-center gap-3">
         <button onClick={() => setSelectedSymbol(null)} className="p-1 hover:bg-muted rounded">
@@ -623,7 +623,7 @@ const Trading = () => {
       </div>
 
       {/* Professional Chart */}
-      <div className="h-[280px] md:flex-1 md:h-auto min-h-0 relative shrink-0">
+      <div className="h-[280px] md:flex-1 md:h-auto min-h-[280px] relative shrink-0">
         {/* Zoom controls - desktop only */}
         <div className="absolute top-2 left-2 z-20 hidden md:flex gap-1">
           <button onClick={() => zoomIn()} className="h-7 w-7 rounded bg-card/80 backdrop-blur border border-border/50 flex items-center justify-center hover:bg-muted transition-colors">
@@ -729,7 +729,7 @@ const Trading = () => {
       </div>
 
       {/* Order Panel */}
-      <div className="border-t border-border bg-card p-3 space-y-3 pb-40">
+      <div className="border-t border-border bg-card p-3 space-y-3 overflow-y-auto flex-1 md:flex-none md:overflow-visible">
         {/* Market closed warning */}
         {!currentMarketStatus.isOpen && (
           <div className="text-center py-1.5 px-3 rounded-lg bg-muted text-muted-foreground text-xs font-medium">
