@@ -471,7 +471,13 @@ const AdminUsers = () => {
                     {getVerificationBadge(profile.verification_status)}
                   </TableCell>
                   <TableCell className="hidden lg:table-cell">
-                    <span className="text-xs text-muted-foreground">Standart</span>
+                    <span className={`text-xs px-2 py-0.5 rounded-full ${
+                      profile.account_type === "diamond" ? "bg-primary/20 text-primary" :
+                      profile.account_type === "gold" ? "bg-amber-500/20 text-amber-500" :
+                      "bg-muted text-muted-foreground"
+                    }`}>
+                      {ACCOUNT_TYPE_LABELS[profile.account_type] || "Standart"}
+                    </span>
                   </TableCell>
                   <TableCell className="text-right">
                     <span className="font-mono text-sm font-semibold text-success">
