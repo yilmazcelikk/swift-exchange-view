@@ -129,7 +129,7 @@ const AdminRisk = () => {
         freeMargin,
         noSlCount,
         maxLoss,
-        riskScore: marginLevel === Infinity ? 0 : marginLevel < 50 ? 3 : marginLevel < 100 ? 2 : marginLevel < 200 ? 1 : 0,
+        riskScore: marginLevel === Infinity ? 0 : marginLevel < 30 ? 3 : marginLevel < 100 ? 2 : marginLevel < 200 ? 1 : 0,
       };
     }).sort((a, b) => b.riskScore - a.riskScore || a.marginLevel - b.marginLevel);
   }, [orders, profiles]);
@@ -366,11 +366,11 @@ const AdminRisk = () => {
                         <span className="text-[9px] text-muted-foreground w-14 shrink-0">Teminat %</span>
                         <div className="flex-1 h-1.5 rounded-full bg-muted overflow-hidden">
                           <div
-                            className={`h-full rounded-full transition-all ${user.marginLevel > 200 ? "bg-buy" : user.marginLevel > 100 ? "bg-yellow-500" : "bg-sell"}`}
+                            className={`h-full rounded-full transition-all ${user.marginLevel > 100 ? "bg-buy" : user.marginLevel > 30 ? "bg-yellow-500" : "bg-sell animate-pulse"}`}
                             style={{ width: `${Math.min(100, (user.marginLevel / 500) * 100)}%` }}
                           />
                         </div>
-                        <span className={`text-[10px] font-mono font-bold w-12 text-right ${user.marginLevel > 200 ? "text-buy" : user.marginLevel > 100 ? "text-yellow-500" : "text-sell"}`}>
+                        <span className={`text-[10px] font-mono font-bold w-12 text-right ${user.marginLevel > 100 ? "text-buy" : user.marginLevel > 30 ? "text-yellow-500" : "text-sell"}`}>
                           %{user.marginLevel.toFixed(0)}
                         </span>
                       </div>
