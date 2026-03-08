@@ -61,6 +61,7 @@ const Profile = () => {
     phone: "",
     birthDate: "",
     country: "",
+    metaId: 0,
   });
   const [isEditing, setIsEditing] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
