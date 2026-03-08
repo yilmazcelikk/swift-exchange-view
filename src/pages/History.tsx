@@ -26,6 +26,9 @@ const History = () => {
   const [balance, setBalance] = useState(0);
   const [totalDeposit, setTotalDeposit] = useState(0);
   const [accountType, setAccountType] = useState("standard");
+  const [page, setPage] = useState(0);
+  const [hasMore, setHasMore] = useState(true);
+  const PAGE_SIZE = 50;
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
