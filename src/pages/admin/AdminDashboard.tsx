@@ -58,7 +58,11 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
       openPositions: openOrders.length,
       pendingWithdrawals,
       pendingDeposits,
-      onlineUsers: new Set(openOrders.map((o) => o.user_id)).size,
+      onlineUsers: profiles.filter((p) => {
+        const updatedAt = new Date(p.updated_at).getTime();
+        const fiveMinAgo = Date.now() - 5 * 60 * 1000;
+        return updatedAt > fiveMinAgo;
+      }).length,
     });
 
     // Recent activities from transactions
