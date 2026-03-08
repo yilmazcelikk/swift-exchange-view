@@ -24,6 +24,7 @@ import AdminDocuments from "./AdminDocuments";
 import AdminSettings from "./AdminSettings";
 import AdminProducts from "./AdminProducts";
 import AdminReferrals from "./AdminReferrals";
+import AdminBankAccounts from "./AdminBankAccounts";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 
