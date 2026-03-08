@@ -752,11 +752,11 @@ const Trading = () => {
             <ChevronDown className={`h-3.5 w-3.5 text-muted-foreground transition-transform ${orderTypeOpen ? "rotate-180" : ""}`} />
           </button>
 
-          {orderTypeOpen && (
-            <>
-              {/* Backdrop to close on outside tap */}
-              <div className="fixed inset-0 z-40" onClick={() => setOrderTypeOpen(false)} />
-              <div className="absolute z-50 bottom-full left-0 right-0 mb-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-bottom-1 duration-150">
+           {orderTypeOpen && (
+             <>
+               {/* Backdrop to close on outside tap */}
+               <div className="fixed inset-0 z-40" onClick={() => setOrderTypeOpen(false)} />
+               <div className="absolute z-50 top-full left-0 right-0 mt-1 bg-popover border border-border rounded-lg shadow-lg overflow-hidden animate-in fade-in slide-in-from-top-1 duration-150">
                 {([
                   { key: "market" as const, label: "Piyasa", desc: "Anlık piyasa fiyatından" },
                   { key: "buy_limit" as const, label: "Buy Limit", desc: "Fiyat düşünce al" },
