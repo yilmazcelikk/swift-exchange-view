@@ -162,6 +162,7 @@ const Dashboard = () => {
           stopLoss: o.stop_loss ? Number(o.stop_loss) : undefined,
           takeProfit: o.take_profit ? Number(o.take_profit) : undefined,
           pnl: 0,
+          leverage: o.leverage || "1:200",
           status: o.status as "open" | "closed",
           createdAt: o.created_at,
         };
