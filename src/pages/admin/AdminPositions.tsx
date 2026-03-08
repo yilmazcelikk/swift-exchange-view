@@ -590,6 +590,14 @@ const AdminPositions = () => {
                               <Button
                                 size="icon"
                                 variant="ghost"
+                                className="h-7 w-7 text-primary hover:bg-primary/10"
+                                onClick={(e) => { e.stopPropagation(); openEditDialog(order); }}
+                              >
+                                <Pencil className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
                                 className="h-7 w-7 text-sell hover:bg-sell/10"
                                 onClick={(e) => { e.stopPropagation(); setClosingOrder(order); }}
                               >
