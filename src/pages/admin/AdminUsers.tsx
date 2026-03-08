@@ -344,18 +344,33 @@ const AdminUsers = () => {
     setLoadingAllOrders(false);
   };
 
-  const handleBanToggle = async (profile: Profile) => {
-    const newBanned = !profile.is_banned;
-    const reason = newBanned ? prompt("Engelleme sebebi (opsiyonel):") || "Hesap engellenmiştir" : null;
-    const { error } = await supabase
-      .from("profiles")
-      .update({ is_banned: newBanned, ban_reason: reason })
-      .eq("id", profile.id);
-    if (error) {
-      toast.error("İşlem başarısız: " + error.message);
+  const handleBanToggle = async (profile: Profile, banType?: string) => {
+    if (profile.is_banned) {
+      // Unban
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_banned: false, ban_reason: null, ban_type: "account" })
+        .eq("id", profile.id);
+      if (error) {
+        toast.error("İşlem başarısız: " + error.message);
+      } else {
+        toast.success("Engel kaldırıldı");
+        loadProfiles();
+      }
     } else {
-      toast.success(newBanned ? "Kullanıcı engellendi" : "Engel kaldırıldı");
-      loadProfiles();
+      // Ban
+      const type = banType || "account";
+      const reason = prompt("Engelleme sebebi (opsiyonel):") || (type === "full" ? "Hesap tamamen engellenmiştir" : "Hesap engellenmiştir");
+      const { error } = await supabase
+        .from("profiles")
+        .update({ is_banned: true, ban_reason: reason, ban_type: type })
+        .eq("id", profile.id);
+      if (error) {
+        toast.error("İşlem başarısız: " + error.message);
+      } else {
+        toast.success(type === "full" ? "Kullanıcı tamamen engellendi (site erişimi kapalı)" : "Kullanıcı engellendi (giriş yapamaz)");
+        loadProfiles();
+      }
     }
   };
 
