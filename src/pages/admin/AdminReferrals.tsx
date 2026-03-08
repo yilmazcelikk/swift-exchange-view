@@ -31,6 +31,7 @@ const AdminReferrals = () => {
   const [codes, setCodes] = useState<ReferralCode[]>([]);
   const [loading, setLoading] = useState(false);
   const [showCreate, setShowCreate] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [newCode, setNewCode] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [creating, setCreating] = useState(false);
