@@ -195,7 +195,7 @@ const AdminUsers = () => {
     // Calculate used margin from open orders
     const { data: marginOrders } = await supabase
       .from("orders")
-      .select("lots, entry_price, leverage")
+      .select("lots, entry_price, leverage, symbol_name")
       .eq("user_id", editingUser.user_id)
       .eq("status", "open");
     
