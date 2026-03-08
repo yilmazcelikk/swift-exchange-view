@@ -52,6 +52,7 @@ export interface Order {
   stopLoss?: number;
   takeProfit?: number;
   pnl: number;
+  leverage: string;
   status: 'open' | 'closed' | 'pending';
   createdAt: string;
 }
