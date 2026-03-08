@@ -172,7 +172,7 @@ Deno.serve(async (req) => {
           .single();
 
         if (profile) {
-          const newBalance = Math.max(0, Number(profile.balance) + netPnl);
+          const newBalance = Number(profile.balance) + netPnl;
           const remainingOrders = allOpenOrders.filter(o => o.user_id === order.user_id && o.id !== order.id && !closedOrderIds.has(o.id));
           let remainingPnl = 0;
           for (const ro of remainingOrders) {
@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
               continue;
             }
 
-            currentBalance = Math.max(0, currentBalance + netPnl);
+            currentBalance = currentBalance + netPnl;
             remainingOrders = remainingOrders.filter(ro => ro.order.id !== item.order.id);
             stopOutClosedCount++;
             console.log(`Stop out closed: ${item.order.symbol_name} ${item.order.type}, PnL: ${netPnl.toFixed(2)}`);
