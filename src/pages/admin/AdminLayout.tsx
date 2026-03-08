@@ -53,6 +53,7 @@ const navSections = [
     title: "FİNANSAL",
     items: [
       { key: "finance", label: "Finans Talepleri", icon: Landmark },
+      { key: "bank-accounts", label: "Banka Hesapları", icon: Landmark },
     ],
   },
   {
