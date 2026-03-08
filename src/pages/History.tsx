@@ -54,9 +54,6 @@ const History = () => {
   };
 
   const closedPnlTotal = closedOrders.reduce((sum, o) => sum + Number(o.pnl), 0);
-  const totalCommission = closedOrders.reduce((sum, o) => {
-    return sum + calculateCommission(o.symbol_name, Number(o.lots), Number(o.current_price));
-  }, 0);
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
