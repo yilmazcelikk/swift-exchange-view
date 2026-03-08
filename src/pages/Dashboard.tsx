@@ -345,6 +345,7 @@ const Dashboard = () => {
             value={Math.abs(totalOpenPnl)}
             live={false}
             disableFlashColor
+            formatFn={(v) => v === 0 ? "0.00" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             className={`text-lg md:text-xl font-bold font-mono ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}
           />
           <span className={`text-lg md:text-xl font-bold font-mono ml-1 ${totalOpenPnl >= 0 ? 'text-buy' : 'text-sell'}`}>
