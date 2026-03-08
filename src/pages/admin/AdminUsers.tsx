@@ -187,6 +187,7 @@ const AdminUsers = () => {
       phone: profile.phone || "",
       country: profile.country || "",
       birth_date: profile.birth_date || "",
+      account_type: profile.account_type || "standard",
     });
   };
 
