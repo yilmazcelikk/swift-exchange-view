@@ -99,6 +99,13 @@ const Finance = () => {
       return;
     }
 
+    // IBAN validation (TR + 24 digits = 26 chars total)
+    const cleanIban = withdrawIban.replace(/\s/g, "").toUpperCase();
+    if (!/^TR\d{24}$/.test(cleanIban)) {
+      toast.error("Geçersiz IBAN formatı. TR ile başlamalı ve 26 karakter olmalıdır.");
+      return;
+    }
+
     setSubmitting(true);
     try {
       // Check for existing pending withdrawals

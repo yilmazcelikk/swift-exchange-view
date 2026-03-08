@@ -80,23 +80,36 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       return;
     }
 
-    // Also get all open orders to calculate real-time used margin
+    // Also get all open orders to calculate real-time used margin and unrealized PnL
     const { data: openOrders } = await supabase
       .from("orders")
-      .select("symbol_name, lots, entry_price, leverage")
+      .select("symbol_name, lots, entry_price, leverage, type, symbol_id")
       .eq("user_id", userId)
       .eq("status", "open");
 
-    const currentUsedMargin = (openOrders || []).reduce((sum, o: any) => {
+    // Get live prices for open positions
+    const openSymbolIds = [...new Set((openOrders || []).map((o: any) => o.symbol_id))];
+    let livePriceMap: Record<string, number> = {};
+    if (openSymbolIds.length > 0) {
+      const { data: symData } = await supabase.from("symbols").select("id, current_price").in("id", openSymbolIds);
+      if (symData) symData.forEach((s: any) => { livePriceMap[s.id] = Number(s.current_price); });
+    }
+
+    let currentUsedMargin = 0;
+    let unrealizedPnl = 0;
+    for (const o of (openOrders || []) as any[]) {
       const oLev = parseInt((o.leverage || "1:200").split(":")[1] || "200", 10);
       const cs = getContractSize(o.symbol_name);
-      return sum + (Number(o.lots) * cs * Number(o.entry_price)) / oLev;
-    }, 0);
+      currentUsedMargin += (Number(o.lots) * cs * Number(o.entry_price)) / oLev;
+      const liveP = livePriceMap[o.symbol_id] || Number(o.entry_price);
+      const diff = o.type === "buy" ? liveP - Number(o.entry_price) : Number(o.entry_price) - liveP;
+      unrealizedPnl += diff * Number(o.lots) * cs;
+    }
 
     const midPrice = price;
     const entryPriceForMargin = isPending ? (pendingTargetPrice || midPrice) : (type === "buy" ? ask : bid);
     const requiredMargin = calculateMargin(symbol.name, lots, entryPriceForMargin, leverageRatio);
-    const realEquity = Number(profileData.balance) + Number(profileData.credit);
+    const realEquity = Number(profileData.balance) + Number(profileData.credit) + unrealizedPnl;
     const realFreeMargin = realEquity - currentUsedMargin;
 
     if (requiredMargin > realFreeMargin) {
