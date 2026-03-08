@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
-import { X, ChevronRight, ShieldAlert, Target } from "lucide-react";
+import { X, ChevronRight, ShieldAlert, Target, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -549,6 +549,19 @@ const Dashboard = () => {
                   </div>
                 )}
               </div>
+
+              {/* Chart Button */}
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => {
+                  setSelectedOrder(null);
+                  navigate(`/trading?symbol=${encodeURIComponent(liveSelectedOrder.symbolName)}`);
+                }}
+              >
+                <BarChart3 className="h-4 w-4 mr-1" />
+                Grafiğe Git
+              </Button>
 
               {/* Close Button */}
               <Button

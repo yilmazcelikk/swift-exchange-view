@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { generateCandleData } from "@/data/mockData";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSearchParams } from "react-router-dom";
 import { Search, Minus, Plus, ChevronLeft, Gem, BarChart3, Bitcoin, Building2, Globe, ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
@@ -56,6 +57,7 @@ const CONTRACT_SIZE = 100000; // Standard forex lot size
 
 const Trading = () => {
   const { user: authUser } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedSymbol, setSelectedSymbol] = useState<DBSymbol | null>(null);
@@ -128,6 +130,19 @@ const Trading = () => {
     }
     setLoading(false);
   };
+
+  // Auto-select symbol from URL query param
+  useEffect(() => {
+    const symbolParam = searchParams.get("symbol");
+    if (symbolParam && symbols.length > 0 && !selectedSymbol) {
+      const found = symbols.find(s => s.name === symbolParam);
+      if (found) {
+        setSelectedSymbol(found);
+        searchParams.delete("symbol");
+        setSearchParams(searchParams, { replace: true });
+      }
+    }
+  }, [symbols, searchParams]);
 
   const filteredSymbols = symbols
     .filter((s) => {
