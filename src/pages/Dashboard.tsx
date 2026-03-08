@@ -308,29 +308,30 @@ const Dashboard = () => {
     
     const slValue = editSL ? parseFloat(editSL) : null;
     const tpValue = editTP ? parseFloat(editTP) : null;
-    const entry = selectedOrder.entryPrice;
+    const liveOrder = liveOrders.find(o => o.id === selectedOrder.id) || selectedOrder;
+    const currentPrice = liveOrder.currentPrice;
     const isBuy = selectedOrder.type === 'buy';
 
-    // Validate SL/TP based on order direction
+    // Validate SL/TP based on order direction and CURRENT price (not entry)
     if (isBuy) {
-      if (slValue !== null && slValue >= entry) {
-        toast.error("Alış pozisyonunda Zarar Durdur, giriş fiyatının altında olmalıdır.");
+      if (slValue !== null && slValue >= currentPrice) {
+        toast.error("Alış pozisyonunda Zarar Durdur, güncel fiyatın altında olmalıdır.");
         setEditSaving(false);
         return;
       }
-      if (tpValue !== null && tpValue <= entry) {
-        toast.error("Alış pozisyonunda Kâr Al, giriş fiyatının üzerinde olmalıdır.");
+      if (tpValue !== null && tpValue <= currentPrice) {
+        toast.error("Alış pozisyonunda Kâr Al, güncel fiyatın üzerinde olmalıdır.");
         setEditSaving(false);
         return;
       }
     } else {
-      if (slValue !== null && slValue <= entry) {
-        toast.error("Satış pozisyonunda Zarar Durdur, giriş fiyatının üzerinde olmalıdır.");
+      if (slValue !== null && slValue <= currentPrice) {
+        toast.error("Satış pozisyonunda Zarar Durdur, güncel fiyatın üzerinde olmalıdır.");
         setEditSaving(false);
         return;
       }
-      if (tpValue !== null && tpValue >= entry) {
-        toast.error("Satış pozisyonunda Kâr Al, giriş fiyatının altında olmalıdır.");
+      if (tpValue !== null && tpValue >= currentPrice) {
+        toast.error("Satış pozisyonunda Kâr Al, güncel fiyatın altında olmalıdır.");
         setEditSaving(false);
         return;
       }
