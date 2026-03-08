@@ -191,7 +191,7 @@ const AdminDocuments = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {docs.map((doc) => (
+                  {paginatedDocs.map((doc) => (
                     <tr key={doc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
