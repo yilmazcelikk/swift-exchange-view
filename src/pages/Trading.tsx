@@ -736,41 +736,73 @@ const Trading = () => {
           </div>
         )}
 
-        {/* Order Type Selector */}
-        <div className="flex gap-1 overflow-x-auto no-scrollbar">
-          {([
-            { key: "market", label: "Piyasa" },
-            { key: "buy_limit", label: "Buy Limit" },
-            { key: "sell_limit", label: "Sell Limit" },
-            { key: "buy_stop", label: "Buy Stop" },
-            { key: "sell_stop", label: "Sell Stop" },
-          ] as const).map((ot) => (
-            <button
-              key={ot.key}
-              onClick={() => setOrderType(ot.key)}
-              className={`px-2.5 py-1 rounded text-[10px] font-medium whitespace-nowrap transition-colors ${
-                orderType === ot.key
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
-              }`}
-            >
-              {ot.label}
-            </button>
-          ))}
+        {/* Order Type Tabs */}
+        <div className="relative bg-muted/60 rounded-lg p-0.5 flex">
+          <button
+            onClick={() => setOrderType("market")}
+            className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              orderType === "market"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Piyasa
+          </button>
+          <button
+            onClick={() => {
+              if (orderType === "market") setOrderType("buy_limit");
+            }}
+            className={`flex-1 py-1.5 rounded-md text-xs font-semibold transition-all ${
+              orderType !== "market"
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground"
+            }`}
+          >
+            Bekleyen
+          </button>
         </div>
+
+        {/* Pending order sub-types */}
+        {orderType !== "market" && (
+          <div className="grid grid-cols-4 gap-1">
+            {([
+              { key: "buy_limit" as const, label: "Buy Limit", color: "buy" },
+              { key: "sell_limit" as const, label: "Sell Limit", color: "sell" },
+              { key: "buy_stop" as const, label: "Buy Stop", color: "buy" },
+              { key: "sell_stop" as const, label: "Sell Stop", color: "sell" },
+            ]).map((ot) => (
+              <button
+                key={ot.key}
+                onClick={() => setOrderType(ot.key)}
+                className={`py-1.5 rounded-md text-[10px] font-semibold transition-all border ${
+                  orderType === ot.key
+                    ? ot.color === "buy"
+                      ? "bg-buy/15 text-buy border-buy/30"
+                      : "bg-sell/15 text-sell border-sell/30"
+                    : "bg-transparent text-muted-foreground border-transparent hover:border-border"
+                }`}
+              >
+                {ot.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Target Price for pending orders */}
         {orderType !== "market" && (
-          <div>
+          <div className="relative">
             <label className="text-[10px] text-muted-foreground mb-0.5 block">Hedef Fiyat</label>
             <Input
               type="number"
               step="any"
-              placeholder={`Tetikleme fiyatı`}
+              placeholder={`Tetikleme fiyatı girin`}
               value={targetPrice}
               onChange={(e) => setTargetPrice(e.target.value)}
-              className="bg-muted/50 h-8 text-xs font-mono"
+              className="bg-muted/50 h-9 text-xs font-mono pr-16"
             />
+            <span className="absolute right-3 top-[22px] text-[10px] text-muted-foreground font-mono">
+              Şuan: {formatPrice(price)}
+            </span>
           </div>
         )}
 
@@ -812,8 +844,7 @@ const Trading = () => {
           </div>
         </div>
 
-
-        {/* Buy / Sell buttons */}
+        {/* Action Buttons */}
         {orderType === "market" ? (
           <div className="grid grid-cols-2 gap-2">
             <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
@@ -828,7 +859,7 @@ const Trading = () => {
         ) : (
           <Button
             onClick={() => handleOrder(orderType.startsWith("buy") ? "buy" : "sell")}
-            disabled={orderLoading || !currentMarketStatus.isOpen}
+            disabled={orderLoading || !currentMarketStatus.isOpen || !targetPrice}
             className={`w-full h-12 font-bold disabled:opacity-50 ${
               orderType.startsWith("buy")
                 ? "bg-buy hover:bg-buy/90 text-buy-foreground"
@@ -836,7 +867,7 @@ const Trading = () => {
             }`}
           >
             {orderType === "buy_limit" ? "BUY LIMIT" : orderType === "sell_limit" ? "SELL LIMIT" : orderType === "buy_stop" ? "BUY STOP" : "SELL STOP"}
-            {targetPrice ? ` @ ${formatPrice(parseFloat(targetPrice))}` : ""}
+            {targetPrice ? ` @ ${formatPrice(parseFloat(targetPrice))}` : " Emri Ver"}
           </Button>
         )}
       </div>
