@@ -63,6 +63,7 @@ const Profile = () => {
     birthDate: "",
     country: "",
     metaId: 0,
+    accountType: "standard",
   });
   const [isEditing, setIsEditing] = useState(false);
   const [passwords, setPasswords] = useState({ current: "", new: "", confirm: "" });
