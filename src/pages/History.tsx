@@ -108,9 +108,9 @@ const History = () => {
                 <div
                   key={order.id}
                   className={`py-3 rounded-xl px-3 -mx-1 transition-all ${
-                    order.close_reason === "stop_loss"
+                    pnl < 0
                       ? "bg-gradient-to-r from-sell/10 via-sell/5 to-transparent border border-sell/20 shadow-[0_0_12px_-4px] shadow-sell/20"
-                      : order.close_reason === "take_profit"
+                      : pnl > 0
                       ? "bg-gradient-to-r from-buy/10 via-buy/5 to-transparent border border-buy/20 shadow-[0_0_12px_-4px] shadow-buy/20"
                       : "bg-card/50"
                   }`}
