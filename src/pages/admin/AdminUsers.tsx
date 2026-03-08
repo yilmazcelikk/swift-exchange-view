@@ -902,6 +902,19 @@ const AdminUsers = () => {
                           </SelectContent>
                         </Select>
                       </div>
+                      <div>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Hesap Türü</label>
+                        <Select value={editForm.account_type} onValueChange={(v) => setEditForm({ ...editForm, account_type: v })}>
+                          <SelectTrigger className="bg-muted/50 h-9 text-sm">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="standard">Standart</SelectItem>
+                            <SelectItem value="gold">Altın</SelectItem>
+                            <SelectItem value="diamond">Elmas</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
                     </div>
                   </div>
 
