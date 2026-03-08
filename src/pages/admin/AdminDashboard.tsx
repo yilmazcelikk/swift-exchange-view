@@ -38,7 +38,6 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
       openPositions: openOrdersRes.count || 0,
       pendingWithdrawals: pendingWithdrawalsRes.count || 0,
       pendingDeposits: pendingDepositsRes.count || 0,
-      onlineUsers: 0, // Would need presence tracking for real data
     });
 
     const recent = (recentTxRes.data || []).map((t: any) => ({
