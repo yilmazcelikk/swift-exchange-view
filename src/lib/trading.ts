@@ -92,6 +92,61 @@ export const ACCOUNT_TYPE_LABELS: Record<string, string> = {
 };
 
 /**
+ * Spread multipliers per account type
+ * Lower multiplier = tighter spread = better for the user
+ */
+export const SPREAD_MULTIPLIERS: Record<string, number> = {
+  standard: 1.0,
+  gold: 0.7,
+  diamond: 0.4,
+};
+
+/**
+ * Base spread calculation per instrument (in price units)
+ * These are intentionally tight spreads
+ */
+export function getBaseSpread(symbolName: string, price: number): number {
+  const name = symbolName.toUpperCase();
+
+  // Forex majors - very tight
+  if (['EURUSD', 'GBPUSD', 'USDJPY', 'USDCHF', 'AUDUSD', 'NZDUSD', 'USDCAD'].some(s => name === s))
+    return price * 0.00008;
+  // Forex minors
+  if (name.length === 6 && !name.endsWith('USD')) return price * 0.00015;
+
+  // Gold / Silver
+  if (name === 'XAUUSD') return 0.30;
+  if (name === 'XAGUSD') return 0.02;
+
+  // Energy
+  if (name === 'USOIL' || name === 'UKOIL') return 0.03;
+  if (name === 'NATGAS') return 0.005;
+
+  // Indices
+  if (['US500', 'US30', 'USTEC'].includes(name)) return price * 0.00015;
+  if (['DE40', 'UK100', 'JP225', 'FR40'].includes(name)) return price * 0.0002;
+
+  // Crypto - slightly wider
+  if (name === 'BTCUSD') return price * 0.0003;
+  if (['ETHUSD', 'BNBUSD', 'SOLUSD'].includes(name)) return price * 0.0004;
+  if (name.endsWith('USD')) return price * 0.0006;
+
+  // BIST stocks
+  if (price > 100) return price * 0.001;
+  if (price > 10) return price * 0.002;
+  return price * 0.003;
+}
+
+/**
+ * Get final spread for a symbol based on account type
+ */
+export function getSpread(symbolName: string, price: number, accountType: string = 'standard'): number {
+  const base = getBaseSpread(symbolName, price);
+  const multiplier = SPREAD_MULTIPLIERS[accountType] ?? SPREAD_MULTIPLIERS.standard;
+  return base * multiplier;
+}
+
+/**
  * Swap rate per lot per day (in USD) - small overnight fee
  * Negative = cost to hold position overnight
  */

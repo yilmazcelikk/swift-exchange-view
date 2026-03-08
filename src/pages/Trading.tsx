@@ -12,6 +12,7 @@ import { SymbolLogo } from "@/components/SymbolLogo";
 import { resolveLogoUrl } from "@/data/symbolLogos";
 import { getMarketStatus } from "@/lib/marketHours";
 import { toast } from "sonner";
+import { getSpread as calcSpread } from "@/lib/trading";
 
 interface CandleRow {
   bucket_time: string;
@@ -53,7 +54,7 @@ const categories = [
   { key: "crypto", label: "Kripto", icon: Bitcoin },
 ];
 
-const CONTRACT_SIZE = 100000; // Standard forex lot size
+const CONTRACT_SIZE = 100000; // Standard forex lot size (unused but kept for reference)
 
 const Trading = () => {
   const { user: authUser } = useAuth();
@@ -66,6 +67,7 @@ const Trading = () => {
   const [loading, setLoading] = useState(true);
   const [lots, setLots] = useState(0.1);
   const [leverage, setLeverage] = useState("1:200");
+  const [accountType, setAccountType] = useState("standard");
   const [stopLoss, setStopLoss] = useState("");
   const [takeProfit, setTakeProfit] = useState("");
   const [timeframe, setTimeframe] = useState<Timeframe>("15m");
@@ -79,8 +81,9 @@ const Trading = () => {
   // Load user leverage from profile
   useEffect(() => {
     if (authUser) {
-      supabase.from("profiles").select("leverage").eq("user_id", authUser.id).single().then(({ data }) => {
+      supabase.from("profiles").select("leverage, account_type").eq("user_id", authUser.id).single().then(({ data }) => {
         if (data?.leverage) setLeverage(data.leverage);
+        if (data?.account_type) setAccountType(data.account_type);
       });
     }
   }, [authUser]);
@@ -257,11 +260,7 @@ const Trading = () => {
 
   const quickLots = [0.01, 0.05, 0.1, 0.5, 1.0, 5.0];
 
-  const getSpread = (price: number) => {
-    if (price > 1000) return price * 0.0001;
-    if (price > 10) return price * 0.0005;
-    return price * 0.001;
-  };
+  // Spread is now calculated via trading.ts based on account type
 
   const [orderLoading, setOrderLoading] = useState(false);
 
@@ -440,7 +439,7 @@ const Trading = () => {
 
   // Symbol detail + chart + order panel
   const price = selectedSymbol.current_price || 0;
-  const spread = getSpread(price);
+  const spread = calcSpread(selectedSymbol.name, price, accountType);
   const bid = price - spread / 2;
   const ask = price + spread / 2;
   const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);

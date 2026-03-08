@@ -113,6 +113,42 @@ const AdminSettings = () => {
         <h2 className="text-2xl font-bold">Sistem Ayarları</h2>
       </div>
 
+      {/* Account Type Spread Info */}
+      <Card className="border-border">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base flex items-center gap-2">
+            <TrendingUp className="h-5 w-5 text-buy" />
+            Hesap Tipi & Spread Bilgisi
+          </CardTitle>
+          <p className="text-sm text-muted-foreground">
+            Her hesap tipine göre spread çarpanları. Düşük çarpan = daha dar spread = kullanıcıya avantaj.
+          </p>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {[
+              { type: "Standart", multiplier: "1.0×", desc: "Varsayılan spread", color: "text-muted-foreground" },
+              { type: "Altın", multiplier: "0.7×", desc: "%%30 daha dar spread", color: "text-yellow-500" },
+              { type: "Elmas", multiplier: "0.4×", desc: "%%60 daha dar spread", color: "text-primary" },
+            ].map((item) => (
+              <div key={item.type} className="rounded-lg border border-border p-4 space-y-1">
+                <p className={`text-sm font-bold ${item.color}`}>{item.type}</p>
+                <p className="text-2xl font-mono font-bold">{item.multiplier}</p>
+                <p className="text-xs text-muted-foreground">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 bg-muted/50 rounded-lg p-3 text-xs text-muted-foreground space-y-1">
+            <p className="font-semibold text-foreground text-sm">Spread Örnekleri</p>
+            <div className="grid grid-cols-3 gap-2 mt-2">
+              <div><span className="font-medium">EURUSD:</span> ~0.8 / 0.6 / 0.3 pip</div>
+              <div><span className="font-medium">XAUUSD:</span> ~0.30 / 0.21 / 0.12 $</div>
+              <div><span className="font-medium">BTCUSD:</span> ~%0.03 / %0.02 / %0.01</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* TradingView API Connection */}
       <Card className="border-border">
         <CardHeader className="pb-3">
