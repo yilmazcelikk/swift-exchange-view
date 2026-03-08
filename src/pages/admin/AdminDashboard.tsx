@@ -3,8 +3,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
-  Users, UserCheck, TrendingUp, ArrowDownToLine, ArrowUpFromLine, Wifi,
-  UserPlus, FileText, BarChart3, Landmark, ClipboardList, Settings, RefreshCw,
+  Users, UserCheck, TrendingUp, ArrowDownToLine, ArrowUpFromLine,
+  RefreshCw,
 } from "lucide-react";
 
 const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) => {
