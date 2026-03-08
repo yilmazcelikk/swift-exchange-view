@@ -292,6 +292,34 @@ const Trading = () => {
     setOrderLoading(true);
     try {
       const price = selectedSymbol.current_price || 0;
+      const slValue = stopLoss ? parseFloat(stopLoss) : null;
+      const tpValue = takeProfit ? parseFloat(takeProfit) : null;
+
+      // SL/TP validation based on order direction
+      if (type === "buy") {
+        if (slValue !== null && slValue >= price) {
+          toast.error("Alış emrinde Zarar Durdur, güncel fiyatın altında olmalıdır.");
+          setOrderLoading(false);
+          return;
+        }
+        if (tpValue !== null && tpValue <= price) {
+          toast.error("Alış emrinde Kâr Al, güncel fiyatın üzerinde olmalıdır.");
+          setOrderLoading(false);
+          return;
+        }
+      } else {
+        if (slValue !== null && slValue <= price) {
+          toast.error("Satış emrinde Zarar Durdur, güncel fiyatın üzerinde olmalıdır.");
+          setOrderLoading(false);
+          return;
+        }
+        if (tpValue !== null && tpValue >= price) {
+          toast.error("Satış emrinde Kâr Al, güncel fiyatın altında olmalıdır.");
+          setOrderLoading(false);
+          return;
+        }
+      }
+
       const { error } = await supabase.from("orders").insert({
         user_id: authUser.id,
         symbol_id: selectedSymbol.id,
@@ -302,8 +330,8 @@ const Trading = () => {
         leverage,
         entry_price: price,
         current_price: price,
-        stop_loss: stopLoss ? parseFloat(stopLoss) : null,
-        take_profit: takeProfit ? parseFloat(takeProfit) : null,
+        stop_loss: slValue,
+        take_profit: tpValue,
       });
       if (error) throw error;
       toast.success(`${selectedSymbol.name} ${type === "buy" ? "ALIŞ" : "SATIŞ"} emri verildi`, {
