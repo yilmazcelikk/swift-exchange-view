@@ -220,9 +220,6 @@ const Profile = () => {
     );
   }
 
-  const initials = profile.fullName
-    ? profile.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
-    : "?";
 
   const infoFields = [
     { icon: User, label: "Ad Soyad", value: profile.fullName, key: "fullName" as const, editable: true },
