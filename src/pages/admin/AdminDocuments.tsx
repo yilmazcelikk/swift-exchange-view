@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle, XCircle, FileText, Eye, Download, RefreshCw, Clock, User } from "lucide-react";
+import { CheckCircle, XCircle, FileText, Eye, Download, RefreshCw, Clock, User, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
