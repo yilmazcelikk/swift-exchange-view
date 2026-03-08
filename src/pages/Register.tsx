@@ -114,7 +114,7 @@ const Register = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">E-posta</label>
-              <Input type="email" placeholder="ornek@email.com" value={formData.email} onChange={(e) => update("email", e.target.value)} className="bg-muted/50" />
+              <Input type="email" placeholder="E-posta adresinizi girin" value={formData.email} onChange={(e) => update("email", e.target.value)} className="bg-muted/50" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Telefon</label>
