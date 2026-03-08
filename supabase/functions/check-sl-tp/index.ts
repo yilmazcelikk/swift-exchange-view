@@ -270,7 +270,9 @@ Deno.serve(async (req) => {
 
           for (const item of orderPnls) {
             const commission = calculateCommission(item.order.symbol_name, Number(item.order.lots), item.currentPrice, profile.account_type || "standard");
-            const netPnl = item.pnl - commission;
+            const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(item.order.created_at).getTime()) / 86400000));
+            const swap = calculateSwap(item.order.symbol_name, Number(item.order.lots), daysHeld);
+            const netPnl = item.pnl - commission + swap;
 
             // Atomic close - only if still open
             const { data: closedRows, error: closeErr } = await supabase
@@ -280,6 +282,7 @@ Deno.serve(async (req) => {
                 closed_at: new Date().toISOString(),
                 current_price: item.currentPrice,
                 pnl: netPnl,
+                swap: swap,
                 close_reason: "stop_out",
               })
               .eq("id", item.order.id)
