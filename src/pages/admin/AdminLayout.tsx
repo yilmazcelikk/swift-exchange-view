@@ -148,7 +148,7 @@ const AdminLayout = () => {
 
         <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border">
           <button
-            onClick={signOut}
+            onClick={async () => { await signOut(); navigate("/login", { replace: true }); }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
           >
             <LogOut className="h-4 w-4 shrink-0" />
