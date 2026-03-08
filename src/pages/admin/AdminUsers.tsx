@@ -75,6 +75,10 @@ const AdminUsers = () => {
     credit: "",
     leverage: "",
     verification_status: "",
+    full_name: "",
+    phone: "",
+    country: "",
+    birth_date: "",
   });
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
   const [orderEditForm, setOrderEditForm] = useState({
