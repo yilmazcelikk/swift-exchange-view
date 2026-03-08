@@ -430,6 +430,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      increment_referral_usage: {
+        Args: { p_code_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "user"
