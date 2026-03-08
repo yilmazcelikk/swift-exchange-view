@@ -47,6 +47,7 @@ interface Profile {
   ban_reason: string | null;
   ban_type: string;
   referral_code: string | null;
+  account_type: string;
 }
 
 interface OrderRow {
