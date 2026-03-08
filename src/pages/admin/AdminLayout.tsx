@@ -98,6 +98,7 @@ const AdminLayout = () => {
       case "settings": return <AdminSettings />;
       case "products": return <AdminProducts />;
       case "referrals": return <AdminReferrals />;
+      case "bank-accounts": return <AdminBankAccounts />;
       default: return <AdminDashboard onNavigate={setActiveTab} />;
     }
   };
