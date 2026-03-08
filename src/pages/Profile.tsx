@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  XCircle, Pencil, Sun, Moon, LogOut,
+  XCircle, Pencil, Sun, Moon, LogOut, Mail, Phone, MapPin, Calendar, User,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "next-themes";
@@ -23,25 +23,25 @@ const verificationSteps = [
 const ThemeCard = () => {
   const { theme, setTheme } = useTheme();
   return (
-    <Card className="bg-card border-border">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          {theme === "dark" ? <Moon className="h-5 w-5 text-primary" /> : <Sun className="h-5 w-5 text-primary" />}
-          Görünüm
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
+    <Card className="bg-card border-border overflow-hidden">
+      <CardContent className="p-4">
+        <div className="flex items-center gap-3 mb-3">
+          <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+            {theme === "dark" ? <Moon className="h-4.5 w-4.5 text-primary" /> : <Sun className="h-4.5 w-4.5 text-primary" />}
+          </div>
+          <span className="text-sm font-semibold">Görünüm</span>
+        </div>
         <div className="flex gap-2">
           <Button
             variant={theme === "light" ? "default" : "outline"}
-            className="flex-1 gap-2"
+            className="flex-1 gap-2 h-10"
             onClick={() => setTheme("light")}
           >
             <Sun className="h-4 w-4" /> Açık
           </Button>
           <Button
             variant={theme === "dark" ? "default" : "outline"}
-            className="flex-1 gap-2"
+            className="flex-1 gap-2 h-10"
             onClick={() => setTheme("dark")}
           >
             <Moon className="h-4 w-4" /> Koyu
@@ -80,7 +80,6 @@ const Profile = () => {
   }, [authUser]);
 
   const loadVerificationStatus = async () => {
-    // Check documents status
     const { data: docs } = await supabase
       .from("documents")
       .select("type, status")
@@ -91,7 +90,6 @@ const Profile = () => {
       const hasAddress = docs.find(d => d.type === "identity_back" || d.type === "address_proof");
 
       if (hasFront && hasAddress) {
-        // Both uploaded
         const allApproved = docs.every(d => d.status === "approved");
         const anyRejected = docs.some(d => d.status === "rejected");
         setCurrentStep(3);
@@ -101,13 +99,12 @@ const Profile = () => {
       }
     }
 
-    // Also check profile verification_status
-    const { data: profile } = await supabase
+    const { data: profileData } = await supabase
       .from("profiles")
       .select("verification_status")
       .eq("user_id", authUser!.id)
       .single();
-    if (profile?.verification_status === "verified") {
+    if (profileData?.verification_status === "verified") {
       setVerificationStatus("approved");
       setCurrentStep(3);
     }
@@ -166,31 +163,16 @@ const Profile = () => {
     }
   };
 
-  const statusIcon = (status: string) => {
-    if (status === "approved") return <CheckCircle className="h-4 w-4 text-buy" />;
-    if (status === "pending") return <Clock className="h-4 w-4 text-warning" />;
-    return <XCircle className="h-4 w-4 text-sell" />;
-  };
-
-  const statusLabel = (status: string) => {
-    if (status === "approved") return "Onaylandı";
-    if (status === "pending") return "Bekliyor";
-    return "Reddedildi";
-  };
-
   const [submitting, setSubmitting] = useState(false);
 
   const handleVerificationUpload = async () => {
     if (!authUser || !frontFile) return;
     setSubmitting(true);
     try {
-      // Upload front ID
       const frontExt = frontFile.name.split(".").pop();
       const frontPath = `${authUser.id}/id_front_${Date.now()}.${frontExt}`;
       const { error: frontUploadErr } = await supabase.storage.from("documents").upload(frontPath, frontFile);
       if (frontUploadErr) throw frontUploadErr;
-
-      const { data: frontUrlData } = supabase.storage.from("documents").getPublicUrl(frontPath);
 
       await supabase.from("documents").insert({
         user_id: authUser.id,
@@ -236,10 +218,20 @@ const Profile = () => {
     );
   }
 
+  const initials = profile.fullName
+    ? profile.fullName.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2)
+    : "?";
+
+  const infoFields = [
+    { icon: User, label: "Ad Soyad", value: profile.fullName, key: "fullName" as const, editable: true },
+    { icon: Mail, label: "E-posta", value: profile.email, key: "email" as const, editable: false },
+    { icon: Phone, label: "Telefon", value: profile.phone, key: "phone" as const, editable: true },
+    { icon: Calendar, label: "Doğum Tarihi", value: profile.birthDate, key: "birthDate" as const, editable: true, type: "date" },
+    { icon: MapPin, label: "Ülke", value: profile.country, key: "country" as const, editable: true },
+  ];
+
   return (
     <div className="p-4 md:p-6 max-w-2xl mx-auto space-y-4 animate-slide-up pb-24 md:pb-6">
-      <h1 className="text-xl md:text-2xl font-bold">Hesabım</h1>
-
       <Tabs defaultValue="info" className="w-full">
         <TabsList className="w-full grid grid-cols-3 h-auto">
           <TabsTrigger value="info" className="text-xs px-1 py-2">Bilgilerim</TabsTrigger>
@@ -249,65 +241,96 @@ const Profile = () => {
 
         {/* ─── Kişisel Bilgiler ─── */}
         <TabsContent value="info" className="space-y-4 mt-4">
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3 flex flex-row items-center justify-between">
-              <CardTitle className="text-base flex items-center gap-2">
-                <UserCircle className="h-5 w-5 text-primary" />
-                Profil Bilgileri
-              </CardTitle>
+          {/* Profile Header Card */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary/15 via-primary/5 to-transparent border border-primary/10 p-5">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full -translate-y-1/2 translate-x-1/2" />
+            <div className="absolute bottom-0 left-0 w-20 h-20 bg-primary/5 rounded-full translate-y-1/2 -translate-x-1/2" />
+            <div className="relative flex items-center gap-4">
+              <div className="h-16 w-16 rounded-2xl bg-primary/20 border-2 border-primary/30 flex items-center justify-center shrink-0">
+                <span className="text-xl font-bold text-primary">{initials}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-lg font-bold text-foreground truncate">
+                  {profile.fullName || "İsim belirtilmemiş"}
+                </h2>
+                <p className="text-xs text-muted-foreground truncate mt-0.5">{profile.email}</p>
+                <div className="mt-2">
+                  {verificationStatus === "approved" ? (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-buy/10 text-buy">
+                      <ShieldCheck className="h-3 w-3" /> Doğrulanmış
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-warning/10 text-warning">
+                      <Clock className="h-3 w-3" /> Doğrulanmamış
+                    </span>
+                  )}
+                </div>
+              </div>
               {!isEditing && (
-                <Button variant="ghost" size="icon" onClick={() => setIsEditing(true)}>
+                <Button variant="ghost" size="icon" className="shrink-0 h-9 w-9 rounded-xl" onClick={() => setIsEditing(true)}>
                   <Pencil className="h-4 w-4" />
                 </Button>
               )}
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Ad Soyad</label>
-                <Input value={profile.fullName} disabled={!isEditing} onChange={(e) => setProfile({ ...profile, fullName: e.target.value })} className="bg-muted/50" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">E-posta</label>
-                <Input value={profile.email} disabled className="bg-muted/50 opacity-60" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Telefon</label>
-                <Input value={profile.phone} disabled={!isEditing} onChange={(e) => setProfile({ ...profile, phone: e.target.value })} className="bg-muted/50" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Doğum Tarihi</label>
-                <Input type="date" value={profile.birthDate} disabled={!isEditing} onChange={(e) => setProfile({ ...profile, birthDate: e.target.value })} className="bg-muted/50" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1 block">Ülke</label>
-                <Input value={profile.country} disabled={!isEditing} onChange={(e) => setProfile({ ...profile, country: e.target.value })} className="bg-muted/50" />
-              </div>
-              {isEditing && (
-                <div className="flex gap-2">
-                  <Button className="flex-1" onClick={handleUpdateProfile}>Kaydet</Button>
-                  <Button variant="outline" className="flex-1" onClick={() => setIsEditing(false)}>İptal</Button>
+            </div>
+          </div>
+
+          {/* Info Fields */}
+          <Card className="bg-card border-border overflow-hidden">
+            <CardContent className="p-0">
+              {infoFields.map((field, i) => (
+                <div key={field.key}>
+                  {i > 0 && <div className="h-px bg-border mx-4" />}
+                  <div className="flex items-center gap-3 px-4 py-3.5">
+                    <div className="h-9 w-9 rounded-xl bg-muted flex items-center justify-center shrink-0">
+                      <field.icon className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{field.label}</p>
+                      {isEditing && field.editable ? (
+                        <Input
+                          type={field.type || "text"}
+                          value={field.value}
+                          onChange={(e) => setProfile({ ...profile, [field.key]: e.target.value })}
+                          className="mt-1 h-8 text-sm bg-muted/50 border-border"
+                        />
+                      ) : (
+                        <p className="text-sm font-medium text-foreground truncate mt-0.5">
+                          {field.value || <span className="text-muted-foreground italic">Belirtilmemiş</span>}
+                        </p>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              )}
+              ))}
             </CardContent>
           </Card>
+
+          {isEditing && (
+            <div className="flex gap-2">
+              <Button className="flex-1" onClick={handleUpdateProfile}>Kaydet</Button>
+              <Button variant="outline" className="flex-1" onClick={() => setIsEditing(false)}>İptal</Button>
+            </div>
+          )}
         </TabsContent>
 
         {/* ─── Ayarlar ─── */}
         <TabsContent value="settings" className="space-y-4 mt-4">
           <ThemeCard />
 
-          <Card className="bg-card border-border">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Şifre Değiştir</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
+          <Card className="bg-card border-border overflow-hidden">
+            <CardContent className="p-4 space-y-3">
+              <div className="flex items-center gap-3 mb-1">
+                <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <ShieldCheck className="h-4.5 w-4.5 text-primary" />
+                </div>
+                <span className="text-sm font-semibold">Şifre Değiştir</span>
+              </div>
               <Input type="password" placeholder="Yeni Şifre" value={passwords.new} onChange={(e) => setPasswords({ ...passwords, new: e.target.value })} className="bg-muted/50" />
               <Input type="password" placeholder="Yeni Şifre Tekrar" value={passwords.confirm} onChange={(e) => setPasswords({ ...passwords, confirm: e.target.value })} className="bg-muted/50" />
               <Button variant="outline" className="w-full" onClick={handleChangePassword}>Şifre Değiştir</Button>
             </CardContent>
           </Card>
         </TabsContent>
-
 
         {/* ─── Kimlik Doğrulama ─── */}
         <TabsContent value="verify" className="space-y-4 mt-4">
@@ -395,7 +418,6 @@ const Profile = () => {
             </CardContent>
           </Card>
         </TabsContent>
-
       </Tabs>
 
       <Button
