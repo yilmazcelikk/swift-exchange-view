@@ -111,9 +111,6 @@ const History = () => {
                       <span className={`text-sm font-mono font-bold ${pnl >= 0 ? 'text-buy' : 'text-sell'}`}>
                         {pnl >= 0 ? '+' : ''}{formatUsd(pnl)} USD
                       </span>
-                      <p className="text-[10px] text-muted-foreground font-mono">
-                        Komisyon: -{formatUsd(commission)}
-                      </p>
                     </div>
                   </div>
                   <div className="flex items-center justify-between mt-1">
