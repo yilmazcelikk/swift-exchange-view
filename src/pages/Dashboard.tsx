@@ -388,7 +388,7 @@ const Dashboard = () => {
 
       {/* Position Detail Sheet */}
       <Sheet open={!!selectedOrder} onOpenChange={(open) => { if (!open) { setSelectedOrder(null); setEditMode(false); } }}>
-        <SheetContent side="bottom" className="rounded-t-2xl max-h-[85vh] overflow-y-auto">
+        <SheetContent side="bottom" className="rounded-t-2xl max-h-[80dvh] overflow-y-auto" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 16px)' }}>
           <SheetHeader className="pb-2">
             <SheetTitle className="flex items-center gap-2">
               <span>{liveSelectedOrder?.symbolName}</span>
