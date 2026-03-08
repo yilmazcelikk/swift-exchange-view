@@ -575,7 +575,7 @@ const Trading = () => {
           <ChevronLeft className="h-4.5 w-4.5 text-foreground" />
         </button>
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <SymbolLogo symbol={selectedSymbol.name} category={selectedSymbol.category} className="h-7 w-7 rounded-full" />
+          <SymbolLogo symbol={selectedSymbol.name} category={selectedSymbol.category} size="sm" />
           <div className="min-w-0">
             <div className="flex items-center gap-1.5">
               <h2 className="text-sm font-bold truncate">{selectedSymbol.name}</h2>
