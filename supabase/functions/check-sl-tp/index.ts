@@ -316,7 +316,8 @@ Deno.serve(async (req) => {
         for (const order of orders) {
           const cp = priceMap.get(order.symbol_id) || Number(order.current_price);
           const pnl = calculatePnl(order.symbol_name, order.type, Number(order.lots), Number(order.entry_price), cp);
-          const margin = calculateMargin(order.symbol_name, Number(order.lots), Number(order.entry_price), 200);
+          const oLev = parseInt((order.leverage || "1:200").split(":")[1] || "200", 10);
+          const margin = calculateMargin(order.symbol_name, Number(order.lots), Number(order.entry_price), oLev);
           totalPnl += pnl;
           totalMargin += margin;
           orderPnls.push({ order, pnl, margin, currentPrice: cp });
