@@ -120,6 +120,8 @@ const AdminDocuments = () => {
 
   const pendingCount = docs.filter(d => d.status === "pending").length;
   const approvedCount = docs.filter(d => d.status === "approved").length;
+  const totalPages = Math.ceil(docs.length / ITEMS_PER_PAGE);
+  const paginatedDocs = docs.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   return (
     <div className="space-y-6">
