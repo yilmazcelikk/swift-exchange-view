@@ -42,6 +42,36 @@ const generateRefNumber = (id: string) => {
   return `REF-${String(hash).slice(0, 6).padStart(6, '0')}`;
 };
 
+// Transactions may store either:
+// - amount already converted to USD, OR
+// - amount in original currency with exchange_rate + original_amount (USD)
+// We always want to display the approved USD equivalent in History.
+const getTxnUsdAmount = (t: Pick<Transaction, "amount" | "currency" | "original_amount" | "original_currency" | "exchange_rate">) => {
+  const amount = Number(t.amount) || 0;
+  const originalAmount = t.original_amount != null ? Number(t.original_amount) : null;
+  const rate = t.exchange_rate != null ? Number(t.exchange_rate) : null;
+  const currency = (t.currency || "").toUpperCase();
+  const originalCurrency = (t.original_currency || "").toUpperCase();
+
+  // Prefer explicitly stored USD equivalent when present
+  if (originalCurrency === "USD" && originalAmount != null && !Number.isNaN(originalAmount)) {
+    return originalAmount;
+  }
+
+  // If already USD
+  if (currency === "USD") {
+    return amount;
+  }
+
+  // Fallback: compute from exchange rate if available (e.g., TRY / USDTRY)
+  if (rate != null && rate > 0 && !Number.isNaN(rate)) {
+    return amount / rate;
+  }
+
+  // Last resort: show stored amount
+  return amount;
+};
+
 const History = () => {
   const { user: authUser } = useAuth();
   const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
@@ -108,7 +138,9 @@ const History = () => {
           itemType: 'transaction',
           data: {
             ...t,
-            amount: Number(t.amount), // Amount zaten USD olarak kaydediliyor
+            amount: Number(t.amount),
+            original_amount: t.original_amount == null ? null : Number(t.original_amount),
+            exchange_rate: t.exchange_rate == null ? null : Number(t.exchange_rate),
           } as Transaction
         });
       });
@@ -140,9 +172,9 @@ const History = () => {
       const deposits = transactionsRes.data.filter((t: any) => t.type === 'deposit');
       const withdrawals = transactionsRes.data.filter((t: any) => t.type === 'withdrawal');
       
-      // Amounts are already in USD after approval
-      setTotalDeposit(deposits.reduce((s: number, t: any) => s + Number(t.amount), 0));
-      setTotalWithdrawal(withdrawals.reduce((s: number, t: any) => s + Number(t.amount), 0));
+      // Always sum using the approved USD equivalent
+      setTotalDeposit(deposits.reduce((s: number, t: any) => s + getTxnUsdAmount(t), 0));
+      setTotalWithdrawal(withdrawals.reduce((s: number, t: any) => s + getTxnUsdAmount(t), 0));
     }
   };
 
