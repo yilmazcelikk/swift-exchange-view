@@ -104,25 +104,11 @@ const History = () => {
 
     if (transactionsRes.data) {
       transactionsRes.data.forEach((t: any) => {
-        // Convert TRY to USD if not already converted
-        let usdAmount = Number(t.amount);
-        let originalAmount = t.original_amount;
-        let originalCurrency = t.original_currency;
-        
-        // If this is a TRY transaction that hasn't been converted yet
-        if (t.currency === 'TRY' && !t.original_currency) {
-          originalAmount = t.amount;
-          originalCurrency = 'TRY';
-          usdAmount = Number((Number(t.amount) / 44).toFixed(2));
-        }
-        
         items.push({
           itemType: 'transaction',
           data: {
             ...t,
-            amount: usdAmount,
-            original_amount: originalAmount,
-            original_currency: originalCurrency,
+            amount: Number(t.amount), // Amount zaten USD olarak kaydediliyor
           } as Transaction
         });
       });
