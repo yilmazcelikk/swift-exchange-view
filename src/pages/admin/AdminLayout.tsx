@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   TrendingUp,
-  ArrowDownToLine,
   FileText,
   LogOut,
   Menu,
@@ -28,46 +27,52 @@ import AdminBankAccounts from "./AdminBankAccounts";
 import AdminRisk from "./AdminRisk";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
+import { supabase } from "@/integrations/supabase/client";
 
-const navSections = [
+interface PendingCounts {
+  finance: number;
+  kyc: number;
+}
+
+const buildNavSections = (badges: PendingCounts) => [
   {
     title: "GENEL",
     items: [
-      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, badge: 0 },
     ],
   },
   {
     title: "İŞLEM YÖNETİMİ",
     items: [
-      { key: "positions", label: "Pozisyonlar", icon: TrendingUp },
-      { key: "risk", label: "Risk Yönetimi", icon: ShieldAlert },
-      { key: "products", label: "Ürünler", icon: ShoppingBag },
+      { key: "positions", label: "Pozisyonlar", icon: TrendingUp, badge: 0 },
+      { key: "risk", label: "Risk Yönetimi", icon: ShieldAlert, badge: 0 },
+      { key: "products", label: "Ürünler", icon: ShoppingBag, badge: 0 },
     ],
   },
   {
     title: "KULLANICI",
     items: [
-      { key: "users", label: "Kullanıcılar", icon: Users },
-      { key: "documents", label: "KYC", icon: FileText },
+      { key: "users", label: "Kullanıcılar", icon: Users, badge: 0 },
+      { key: "documents", label: "KYC", icon: FileText, badge: badges.kyc },
     ],
   },
   {
     title: "FİNANSAL",
     items: [
-      { key: "finance", label: "Finans Talepleri", icon: Landmark },
-      { key: "bank-accounts", label: "Banka Hesapları", icon: Landmark },
+      { key: "finance", label: "Finans Talepleri", icon: Landmark, badge: badges.finance },
+      { key: "bank-accounts", label: "Banka Hesapları", icon: Landmark, badge: 0 },
     ],
   },
   {
     title: "PAZARLAMA",
     items: [
-      { key: "referrals", label: "Referans Linkleri", icon: Landmark },
+      { key: "referrals", label: "Referans Linkleri", icon: Landmark, badge: 0 },
     ],
   },
   {
     title: "SİSTEM",
     items: [
-      { key: "settings", label: "Sistem Ayarları", icon: Settings },
+      { key: "settings", label: "Sistem Ayarları", icon: Settings, badge: 0 },
     ],
   },
 ];
