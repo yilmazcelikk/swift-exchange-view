@@ -168,6 +168,7 @@ const Trading = () => {
             symbolName={selectedSymbol.name}
             currentPrice={price}
             isPositive={isPositive}
+            positions={openPositions.filter(p => p.symbol_name === selectedSymbol.name)}
           />
         ) : (
           <TradingViewChart
