@@ -96,7 +96,22 @@ export const TradingViewChart = memo(({ symbolName }: TradingViewChartProps) => 
             "compare_symbol",
             "display_market_status",
             "study_templates",
+            "popup_hints",
+            "show_interval_dialog_on_key_press",
+            "header_widget",
+            "timezone_menu",
+            "snapshot_trading_drawings",
           ],
+          overrides: {
+            "paneProperties.legendProperties.showStudyArguments": false,
+            "paneProperties.legendProperties.showStudyTitles": false,
+            "paneProperties.legendProperties.showStudyValues": false,
+            "paneProperties.legendProperties.showSeriesTitle": false,
+            "paneProperties.legendProperties.showSeriesOHLC": false,
+            "paneProperties.legendProperties.showLegend": false,
+            "paneProperties.legendProperties.showBarChange": false,
+            "scalesProperties.showSymbolLabels": false,
+          },
           enabled_features: ["hide_left_toolbar_by_default"],
         });
       } catch (e) {
