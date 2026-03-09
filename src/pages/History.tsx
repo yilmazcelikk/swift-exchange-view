@@ -43,30 +43,39 @@ const generateRefNumber = (id: string) => {
 };
 
 // Transactions may store either:
-// - amount already converted to USD, OR
-// - amount in original currency with exchange_rate + original_amount (USD)
-// We always want to display the approved USD equivalent in History.
-const getTxnUsdAmount = (t: Pick<Transaction, "amount" | "currency" | "original_amount" | "original_currency" | "exchange_rate">) => {
+// - amount already converted to USD (currency=USD), OR
+// - amount in original currency (e.g., TRY) with exchange_rate to derive USD.
+// History should always display the USD equivalent.
+//
+// NOTE: Some older approved rows may have currency=TRY but missing exchange_rate.
+// In that case we fall back to the fixed USDTRY rate requested by the business.
+const FIXED_USDTRY_RATE = 44;
+
+const getTxnUsdAmount = (
+  t: Pick<Transaction, "amount" | "currency" | "original_amount" | "original_currency" | "exchange_rate">,
+) => {
   const amount = Number(t.amount) || 0;
   const originalAmount = t.original_amount != null ? Number(t.original_amount) : null;
-  const rate = t.exchange_rate != null ? Number(t.exchange_rate) : null;
+  const explicitRate = t.exchange_rate != null ? Number(t.exchange_rate) : null;
   const currency = (t.currency || "").toUpperCase();
   const originalCurrency = (t.original_currency || "").toUpperCase();
 
-  // Prefer explicitly stored USD equivalent when present
+  // Preferred: already-approved USD amount is stored as amount with currency=USD
+  if (currency === "USD") return amount;
+
+  // If original explicitly stored USD equivalent exists, prefer it
   if (originalCurrency === "USD" && originalAmount != null && !Number.isNaN(originalAmount)) {
     return originalAmount;
   }
 
-  // If already USD
-  if (currency === "USD") {
-    return amount;
-  }
+  // If stored in TRY (or any non-USD), convert using exchange_rate, else fallback fixed rate
+  const rate = explicitRate != null && explicitRate > 0 && !Number.isNaN(explicitRate)
+    ? explicitRate
+    : currency === "TRY"
+      ? FIXED_USDTRY_RATE
+      : null;
 
-  // Fallback: compute from exchange rate if available (e.g., TRY / USDTRY)
-  if (rate != null && rate > 0 && !Number.isNaN(rate)) {
-    return amount / rate;
-  }
+  if (rate != null && rate > 0) return amount / rate;
 
   // Last resort: show stored amount
   return amount;
