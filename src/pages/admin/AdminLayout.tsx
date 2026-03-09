@@ -161,7 +161,12 @@ const AdminLayout = () => {
                     }`}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    {item.label}
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span className="h-5 min-w-5 px-1 rounded-full bg-warning text-[10px] font-bold text-warning-foreground flex items-center justify-center">
+                        {item.badge > 99 ? "99+" : item.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
