@@ -353,9 +353,12 @@ export type Database = {
           amount: number
           created_at: string
           currency: string
+          exchange_rate: number | null
           iban: string | null
           id: string
           method: string | null
+          original_amount: number | null
+          original_currency: string | null
           receipt_url: string | null
           status: string
           type: string
@@ -366,9 +369,12 @@ export type Database = {
           amount: number
           created_at?: string
           currency?: string
+          exchange_rate?: number | null
           iban?: string | null
           id?: string
           method?: string | null
+          original_amount?: number | null
+          original_currency?: string | null
           receipt_url?: string | null
           status?: string
           type: string
@@ -379,9 +385,12 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          exchange_rate?: number | null
           iban?: string | null
           id?: string
           method?: string | null
+          original_amount?: number | null
+          original_currency?: string | null
           receipt_url?: string | null
           status?: string
           type?: string
