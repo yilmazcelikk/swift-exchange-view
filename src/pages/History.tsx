@@ -153,8 +153,26 @@ const History = () => {
     if (transactionsRes.data) {
       const deposits = transactionsRes.data.filter((t: any) => t.type === 'deposit');
       const withdrawals = transactionsRes.data.filter((t: any) => t.type === 'withdrawal');
-      setTotalDeposit(deposits.reduce((s: number, t: any) => s + Number(t.amount), 0));
-      setTotalWithdrawal(withdrawals.reduce((s: number, t: any) => s + Number(t.amount), 0));
+      
+      // Calculate totals in USD (convert TRY if needed)
+      const depositTotal = deposits.reduce((s: number, t: any) => {
+        let amount = Number(t.amount);
+        if (t.currency === 'TRY' && !t.original_currency) {
+          amount = Number((amount / 44).toFixed(2));
+        }
+        return s + amount;
+      }, 0);
+      
+      const withdrawalTotal = withdrawals.reduce((s: number, t: any) => {
+        let amount = Number(t.amount);
+        if (t.currency === 'TRY' && !t.original_currency) {
+          amount = Number((amount / 44).toFixed(2));
+        }
+        return s + amount;
+      }, 0);
+      
+      setTotalDeposit(depositTotal);
+      setTotalWithdrawal(withdrawalTotal);
     }
   };
 
