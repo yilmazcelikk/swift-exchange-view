@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
-import { calculatePnl, calculateMargin, calculateCommission, calculateSwap } from "@/lib/trading";
+import { calculatePnl, calculateMargin, calculateCommission, calculateSwap, calculateNetMargin } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
 import { getMarketStatus } from "@/lib/marketHours";
 

@@ -95,24 +95,35 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       if (symData) symData.forEach((s: any) => { livePriceMap[s.id] = Number(s.current_price); });
     }
 
-    let currentUsedMargin = 0;
-    let unrealizedPnl = 0;
-    for (const o of (openOrders || []) as any[]) {
-      const oLev = parseInt((o.leverage || "1:200").split(":")[1] || "200", 10);
-      const cs = getContractSize(o.symbol_name);
-      currentUsedMargin += (Number(o.lots) * cs * Number(o.entry_price)) / oLev;
-      const liveP = livePriceMap[o.symbol_id] || Number(o.entry_price);
-      const diff = o.type === "buy" ? liveP - Number(o.entry_price) : Number(o.entry_price) - liveP;
-      unrealizedPnl += diff * Number(o.lots) * cs;
-    }
+    // Calculate net margin with hedge netting
+    const existingOrders = (openOrders || []).map((o: any) => ({
+      symbol_name: o.symbol_name,
+      lots: Number(o.lots),
+      entry_price: Number(o.entry_price),
+      leverage: o.leverage || "1:200",
+      type: o.type,
+    }));
 
+    const currentNetMargin = calculateNetMargin(existingOrders);
+
+    // Add the new order to the list and calculate new net margin
     const midPrice = price;
     const entryPriceForMargin = isPending ? (pendingTargetPrice || midPrice) : (type === "buy" ? ask : bid);
-    const requiredMargin = calculateMargin(symbol.name, lots, entryPriceForMargin, leverageRatio);
-    const realEquity = Number(profileData.balance) + Number(profileData.credit) + unrealizedPnl;
-    const realFreeMargin = realEquity - currentUsedMargin;
+    const newOrder = {
+      symbol_name: symbol.name,
+      lots,
+      entry_price: entryPriceForMargin,
+      leverage,
+      type,
+    };
+    const newNetMargin = calculateNetMargin([...existingOrders, newOrder]);
 
-    if (requiredMargin > realFreeMargin) {
+    // The additional margin required is the difference
+    const additionalMarginNeeded = newNetMargin - currentNetMargin;
+    const realEquity = Number(profileData.balance) + Number(profileData.credit) + unrealizedPnl;
+    const realFreeMargin = realEquity - currentNetMargin;
+
+    if (additionalMarginNeeded > realFreeMargin) {
       toast.error("Yetersiz bakiye. Lütfen hesabınıza para yatırın.");
       return;
     }
