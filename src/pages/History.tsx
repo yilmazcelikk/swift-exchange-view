@@ -297,14 +297,6 @@ const History = () => {
             })}
           </div>
         )}
-        {hasMore && historyItems.length > 0 && (
-          <button
-            onClick={() => { const next = page + 1; setPage(next); loadHistory(next); }}
-            className="w-full py-2 mt-2 text-xs text-primary font-medium hover:underline"
-          >
-            Daha fazla yükle...
-          </button>
-        )}
       </div>
 
       {/* Summary - static at bottom, NOT fixed */}
