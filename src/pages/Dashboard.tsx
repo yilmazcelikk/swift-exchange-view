@@ -165,6 +165,28 @@ const Dashboard = () => {
   const dynamicFreeMargin = dynamicEquity - usedMargin;
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
 
+  // Auto-trigger stop-out check when margin level drops below threshold
+  const stopOutTriggeredRef = useRef(false);
+  useEffect(() => {
+    if (usedMargin > 0 && marginLevel <= 30 && !stopOutTriggeredRef.current && liveOrders.length > 0) {
+      stopOutTriggeredRef.current = true;
+      console.log(`[StopOut] Margin level ${marginLevel.toFixed(2)}% <= 30%, triggering check-sl-tp`);
+      supabase.functions.invoke('check-sl-tp').then(({ data, error }) => {
+        if (error) console.error('[StopOut] Error:', error);
+        else {
+          console.log('[StopOut] Result:', data);
+          if (data?.stopOutClosed > 0 || data?.closed > 0) {
+            loadData();
+          }
+        }
+        // Allow re-trigger after 10 seconds
+        setTimeout(() => { stopOutTriggeredRef.current = false; }, 10000);
+      });
+    } else if (marginLevel > 30) {
+      stopOutTriggeredRef.current = false;
+    }
+  }, [marginLevel, usedMargin, liveOrders.length]);
+
   const hasOpenOrders = liveOrders.length > 0;
   const isMarginCall = hasOpenOrders && usedMargin > 0 && marginLevel <= 100 && marginLevel > 30;
   const isCriticalMargin = hasOpenOrders && usedMargin > 0 && marginLevel <= 80 && marginLevel > 30;
