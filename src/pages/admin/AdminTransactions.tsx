@@ -74,6 +74,15 @@ const AdminTransactions = () => {
     setLoading(false);
   };
 
+  const getUsdTryRate = async (): Promise<number> => {
+    const { data } = await supabase
+      .from("symbols")
+      .select("current_price")
+      .eq("name", "USDTRY")
+      .single();
+    return data?.current_price && Number(data.current_price) > 0 ? Number(data.current_price) : 32.0;
+  };
+
   const updateTxStatus = async (id: string, status: string) => {
     const tx = transactions.find(t => t.id === id);
     if (!tx) return;
@@ -87,7 +96,11 @@ const AdminTransactions = () => {
         .single();
 
       if (profile) {
-        const amount = Number(tx.amount);
+        let amount = Number(tx.amount);
+        if (tx.currency === "TRY") {
+          const rate = await getUsdTryRate();
+          amount = Number((amount / rate).toFixed(2));
+        }
         if (Number(profile.balance) < amount) {
           toast.error(`Yetersiz bakiye! Kullanıcı bakiyesi: $${Number(profile.balance).toFixed(2)}, Çekim: $${amount.toFixed(2)}`);
           return;
@@ -106,7 +119,13 @@ const AdminTransactions = () => {
         .single();
 
       if (profile) {
-        const amount = Number(tx.amount);
+        let amount = Number(tx.amount);
+        if (tx.currency === "TRY") {
+          const rate = await getUsdTryRate();
+          amount = Number((amount / rate).toFixed(2));
+          toast.info(`Kur: 1 USD = ${rate.toFixed(2)} TRY → ${amount.toFixed(2)} USD`);
+        }
+
         const sign = tx.type === "deposit" ? 1 : -1;
         await supabase.from("profiles").update({
           balance: Number(profile.balance) + sign * amount,
