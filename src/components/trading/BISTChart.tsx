@@ -254,6 +254,59 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
               />
             ))}
 
+            {/* Open Position Lines */}
+            {positions.map((pos) => {
+              const entryPct = ((pos.entry_price - chartLow) / chartRange) * 100;
+              const slPct = pos.stop_loss ? ((pos.stop_loss - chartLow) / chartRange) * 100 : null;
+              const tpPct = pos.take_profit ? ((pos.take_profit - chartLow) / chartRange) * 100 : null;
+              const isBuy = pos.type === "buy";
+
+              return (
+                <div key={pos.id}>
+                  {/* Entry Price Line */}
+                  <div
+                    className="absolute left-0 right-0 z-8 border-t border-solid"
+                    style={{
+                      bottom: `${Math.min(Math.max(entryPct, 0), 100)}%`,
+                      borderColor: isBuy ? 'hsl(var(--buy))' : 'hsl(var(--sell))',
+                    }}
+                  >
+                    <span
+                      className={`absolute left-0 text-[8px] font-mono px-1 py-0.5 rounded-r translate-y-[-50%] ${
+                        isBuy ? "bg-buy/80 text-buy-foreground" : "bg-sell/80 text-sell-foreground"
+                      }`}
+                    >
+                      {isBuy ? "AL" : "SAT"} {formatPrice(pos.entry_price)}
+                    </span>
+                  </div>
+
+                  {/* Stop Loss Line */}
+                  {slPct !== null && (
+                    <div
+                      className="absolute left-0 right-0 z-7 border-t border-dotted border-sell/70"
+                      style={{ bottom: `${Math.min(Math.max(slPct, 0), 100)}%` }}
+                    >
+                      <span className="absolute left-0 text-[7px] font-mono px-1 py-0.5 rounded-r translate-y-[-50%] bg-sell/60 text-sell-foreground">
+                        SL {formatPrice(pos.stop_loss!)}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Take Profit Line */}
+                  {tpPct !== null && (
+                    <div
+                      className="absolute left-0 right-0 z-7 border-t border-dotted border-buy/70"
+                      style={{ bottom: `${Math.min(Math.max(tpPct, 0), 100)}%` }}
+                    >
+                      <span className="absolute left-0 text-[7px] font-mono px-1 py-0.5 rounded-r translate-y-[-50%] bg-buy/60 text-buy-foreground">
+                        TP {formatPrice(pos.take_profit!)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+
             {/* Current price line */}
             <div
               className="absolute left-0 right-0 z-10 border-t-2 border-dashed"
