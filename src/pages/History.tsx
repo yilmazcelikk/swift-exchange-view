@@ -21,6 +21,7 @@ interface Transaction {
   id: string;
   type: string;
   amount: number;
+  currency: string;
   created_at: string;
   status: string;
   method: string | null;
@@ -103,9 +104,26 @@ const History = () => {
 
     if (transactionsRes.data) {
       transactionsRes.data.forEach((t: any) => {
+        // Convert TRY to USD if not already converted
+        let usdAmount = Number(t.amount);
+        let originalAmount = t.original_amount;
+        let originalCurrency = t.original_currency;
+        
+        // If this is a TRY transaction that hasn't been converted yet
+        if (t.currency === 'TRY' && !t.original_currency) {
+          originalAmount = t.amount;
+          originalCurrency = 'TRY';
+          usdAmount = Number((Number(t.amount) / 44).toFixed(2));
+        }
+        
         items.push({
           itemType: 'transaction',
-          data: t as Transaction
+          data: {
+            ...t,
+            amount: usdAmount,
+            original_amount: originalAmount,
+            original_currency: originalCurrency,
+          } as Transaction
         });
       });
     }
@@ -135,8 +153,26 @@ const History = () => {
     if (transactionsRes.data) {
       const deposits = transactionsRes.data.filter((t: any) => t.type === 'deposit');
       const withdrawals = transactionsRes.data.filter((t: any) => t.type === 'withdrawal');
-      setTotalDeposit(deposits.reduce((s: number, t: any) => s + Number(t.amount), 0));
-      setTotalWithdrawal(withdrawals.reduce((s: number, t: any) => s + Number(t.amount), 0));
+      
+      // Calculate totals in USD (convert TRY if needed)
+      const depositTotal = deposits.reduce((s: number, t: any) => {
+        let amount = Number(t.amount);
+        if (t.currency === 'TRY' && !t.original_currency) {
+          amount = Number((amount / 44).toFixed(2));
+        }
+        return s + amount;
+      }, 0);
+      
+      const withdrawalTotal = withdrawals.reduce((s: number, t: any) => {
+        let amount = Number(t.amount);
+        if (t.currency === 'TRY' && !t.original_currency) {
+          amount = Number((amount / 44).toFixed(2));
+        }
+        return s + amount;
+      }, 0);
+      
+      setTotalDeposit(depositTotal);
+      setTotalWithdrawal(withdrawalTotal);
     }
   };
 
