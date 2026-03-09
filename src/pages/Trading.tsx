@@ -23,6 +23,16 @@ const BIST_SYMBOLS = new Set([
   "ALARK","BERA",
 ]);
 
+interface OpenPosition {
+  id: string;
+  type: "buy" | "sell";
+  entry_price: number;
+  stop_loss: number | null;
+  take_profit: number | null;
+  lots: number;
+  symbol_name: string;
+}
+
 const Trading = () => {
   const { user: authUser } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -31,14 +41,27 @@ const Trading = () => {
   const [loading, setLoading] = useState(true);
   const [leverage, setLeverage] = useState("1:200");
   const [accountType, setAccountType] = useState("standard");
+  const [openPositions, setOpenPositions] = useState<OpenPosition[]>([]);
 
-  // Load user profile settings
+  // Load user profile settings and open positions
   useEffect(() => {
     if (authUser) {
       supabase.from("profiles").select("leverage, account_type").eq("user_id", authUser.id).single().then(({ data }) => {
         if (data?.leverage) setLeverage(data.leverage);
         if (data?.account_type) setAccountType(data.account_type);
       });
+
+      // Load open positions
+      supabase
+        .from("orders")
+        .select("id, type, entry_price, stop_loss, take_profit, lots, symbol_name")
+        .eq("user_id", authUser.id)
+        .eq("status", "open")
+        .then(({ data }) => {
+          if (data) {
+            setOpenPositions(data as OpenPosition[]);
+          }
+        });
     }
   }, [authUser]);
 
@@ -145,6 +168,7 @@ const Trading = () => {
             symbolName={selectedSymbol.name}
             currentPrice={price}
             isPositive={isPositive}
+            positions={openPositions.filter(p => p.symbol_name === selectedSymbol.name)}
           />
         ) : (
           <TradingViewChart
