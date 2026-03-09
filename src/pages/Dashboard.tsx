@@ -158,10 +158,13 @@ const Dashboard = () => {
 
   const totalOpenPnl = liveOrders.reduce((sum, o) => sum + o.pnl, 0);
   const dynamicEquity = profile.balance + profile.credit + totalOpenPnl;
-  const usedMargin = liveOrders.reduce((sum, o) => {
-    const lev = parseInt((o.leverage || "1:200").split(":")[1] || "200", 10);
-    return sum + calculateMargin(o.symbolName, o.lots, o.entryPrice, lev);
-  }, 0);
+  const usedMargin = calculateNetMargin(liveOrders.map(o => ({
+    symbol_name: o.symbolName,
+    lots: o.lots,
+    entry_price: o.entryPrice,
+    leverage: o.leverage || "1:200",
+    type: o.type,
+  })));
   const dynamicFreeMargin = dynamicEquity - usedMargin;
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
 
