@@ -74,11 +74,6 @@ const AdminTransactions = () => {
     setLoading(false);
   };
 
-  const getUsdTryRate = async (): Promise<number> => {
-    // Sabit kur: 1 USD = 44 TRY
-    return 44.0;
-  };
-
   const updateTxStatus = async (id: string, status: string) => {
     const tx = transactions.find(t => t.id === id);
     if (!tx) return;
@@ -92,11 +87,7 @@ const AdminTransactions = () => {
         .single();
 
       if (profile) {
-        let amount = Number(tx.amount);
-        if (tx.currency === "TRY") {
-          const rate = await getUsdTryRate();
-          amount = Number((amount / rate).toFixed(2));
-        }
+        const amount = Number(tx.amount);
         if (Number(profile.balance) < amount) {
           toast.error(`Yetersiz bakiye! Kullanıcı bakiyesi: $${Number(profile.balance).toFixed(2)}, Çekim: $${amount.toFixed(2)}`);
           return;
@@ -104,19 +95,7 @@ const AdminTransactions = () => {
       }
     }
 
-    // Update transaction status and store exchange rate info
-    const updateData: any = { status };
-    if (status === "approved" && tx.currency === "TRY") {
-      const rate = await getUsdTryRate();
-      updateData.exchange_rate = rate;
-      updateData.original_amount = tx.amount;
-      updateData.original_currency = tx.currency;
-      const usdAmount = Number((Number(tx.amount) / rate).toFixed(2));
-      updateData.amount = usdAmount;
-      updateData.currency = 'USD'; // Currency'yi de USD olarak güncelle
-    }
-
-    const { error } = await supabase.from("transactions").update(updateData).eq("id", id);
+    const { error } = await supabase.from("transactions").update({ status }).eq("id", id);
     if (error) { toast.error("Güncelleme başarısız"); return; }
 
     if (status === "approved" && tx) {
@@ -127,12 +106,7 @@ const AdminTransactions = () => {
         .single();
 
       if (profile) {
-        let amount = Number(tx.amount);
-        if (tx.currency === "TRY") {
-          const rate = await getUsdTryRate();
-          amount = Number((amount / rate).toFixed(2));
-        }
-
+        const amount = Number(tx.amount);
         const sign = tx.type === "deposit" ? 1 : -1;
         await supabase.from("profiles").update({
           balance: Number(profile.balance) + sign * amount,
@@ -142,14 +116,7 @@ const AdminTransactions = () => {
       }
     }
 
-    if (status === "approved" && tx.currency === "TRY") {
-      const rate = await getUsdTryRate();
-      let amount = Number(tx.amount);
-      const usdAmount = Number((amount / rate).toFixed(2));
-      toast.success(`Onaylandı - ${amount.toLocaleString("tr-TR")} TL → ${usdAmount.toFixed(2)} USD (Kur: ${rate.toFixed(2)})`);
-    } else {
-      toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
-    }
+    toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
     setConfirmAction(null);
     load();
   };
