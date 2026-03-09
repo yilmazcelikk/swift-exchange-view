@@ -166,6 +166,9 @@ const Dashboard = () => {
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
 
   const hasOpenOrders = liveOrders.length > 0;
+  const isMarginCall = hasOpenOrders && usedMargin > 0 && marginLevel <= 100;
+  const isCriticalMargin = hasOpenOrders && usedMargin > 0 && marginLevel <= 80;
+  const isStopOutDanger = hasOpenOrders && usedMargin > 0 && marginLevel <= 30;
   const accountStats = [
     { label: "Bakiye", value: profile.balance },
     ...(profile.credit > 0 ? [{ label: "Kredi", value: profile.credit }] : []),
@@ -276,22 +279,39 @@ const Dashboard = () => {
         )}
       </div>
 
+      {/* Margin Call / Stop Out Warning Banner */}
+      {isMarginCall && (
+        <div className={`mx-4 mt-2 mb-1 rounded-lg px-3 py-2 flex items-center gap-2 ${isStopOutDanger ? 'bg-sell/20 border border-sell/40 animate-pulse' : isCriticalMargin ? 'bg-sell/15 border border-sell/30' : 'bg-orange-500/15 border border-orange-500/30'}`}>
+          <ShieldAlert className={`h-4 w-4 shrink-0 ${isStopOutDanger ? 'text-sell' : isCriticalMargin ? 'text-sell' : 'text-orange-500'}`} />
+          <div className="flex-1 min-w-0">
+            <span className={`text-[11px] font-bold ${isStopOutDanger ? 'text-sell' : isCriticalMargin ? 'text-sell' : 'text-orange-500'}`}>
+              {isStopOutDanger ? '⚠️ STOP OUT RİSKİ — %30 altı!' : isCriticalMargin ? '⚠️ KRİTİK TEMİNAT — %80 altı!' : '⚠️ MARGIN CALL — %100 altı'}
+            </span>
+            <p className={`text-[10px] ${isStopOutDanger ? 'text-sell/80' : isCriticalMargin ? 'text-sell/80' : 'text-orange-500/80'}`}>
+              {isStopOutDanger ? 'Pozisyonlarınız otomatik kapatılabilir.' : isCriticalMargin ? 'Teminat seviyeniz kritik düzeyde düşük.' : 'Hesabınıza bakiye eklemeniz önerilir.'}
+            </p>
+          </div>
+          <span className={`text-sm font-mono font-bold shrink-0 ${isStopOutDanger ? 'text-sell' : isCriticalMargin ? 'text-sell' : 'text-orange-500'}`}>
+            %{marginLevel.toFixed(1)}
+          </span>
+        </div>
+      )}
+
       {/* Account Stats */}
       <div className="px-4 pt-2 pb-1.5">
         {accountStats.map((stat) => {
-          const isMarginLevel = stat.label === "Teminat seviyesi (%)";
-          const isLowMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 100;
-          const isCriticalMargin = isMarginLevel && hasOpenOrders && marginLevel > 0 && marginLevel < 30;
+          const isMarginLevelStat = stat.label === "Teminat seviyesi (%)";
           const isNegativeFreeMargin = stat.label === "Serbest teminat" && stat.value < 0;
           const isNegativeValue = stat.value < 0;
           let valueColorClass = "text-foreground";
-          if (isCriticalMargin) valueColorClass = "text-sell animate-pulse";
-          else if (isLowMargin) valueColorClass = "text-sell";
+          if (isMarginLevelStat && isStopOutDanger) valueColorClass = "text-sell animate-pulse font-bold";
+          else if (isMarginLevelStat && isCriticalMargin) valueColorClass = "text-sell font-bold";
+          else if (isMarginLevelStat && isMarginCall) valueColorClass = "text-orange-500 font-bold";
           else if (isNegativeFreeMargin || (stat.label === "Bakiye" && isNegativeValue)) valueColorClass = "text-sell";
 
           return (
-            <div key={stat.label} className={`flex items-center justify-between h-[22px] ${isCriticalMargin ? "bg-sell/10 -mx-4 px-4 rounded" : ""}`}>
-              <span className={`text-[11px] ${isCriticalMargin ? "text-sell font-medium" : "text-muted-foreground"}`}>{stat.label}:</span>
+            <div key={stat.label} className={`flex items-center justify-between h-[22px] ${isMarginLevelStat && isCriticalMargin ? "bg-sell/10 -mx-4 px-4 rounded" : isMarginLevelStat && isMarginCall ? "bg-orange-500/10 -mx-4 px-4 rounded" : ""}`}>
+              <span className={`text-[11px] ${isMarginLevelStat && isCriticalMargin ? "text-sell font-medium" : isMarginLevelStat && isMarginCall ? "text-orange-500 font-medium" : "text-muted-foreground"}`}>{stat.label}:</span>
               <span className="text-[11px] font-mono font-medium text-foreground">
                 {isNegativeValue && <span className={`text-[11px] font-mono font-medium ${valueColorClass}`}>-</span>}
                 <AnimatedPrice value={Math.abs(stat.value)} live={false} formatFn={(v) => v === 0 ? "0" : v.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} className={`text-[11px] font-mono font-medium ${valueColorClass}`} />
