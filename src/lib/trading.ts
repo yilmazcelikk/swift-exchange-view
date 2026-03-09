@@ -7,23 +7,23 @@
 export function getContractSize(symbolName: string): number {
   const name = symbolName.toUpperCase();
   
-  // Precious metals (COMEX/NYMEX standard)
+  // Precious metals
   if (name === 'XAUUSD') return 100;        // 1 lot = 100 oz gold
   if (name === 'XAGUSD') return 5000;       // 1 lot = 5000 oz silver
-  if (name === 'XPTUSD') return 50;         // 1 lot = 50 oz platinum
-  if (name === 'XPDUSD') return 50;         // 1 lot = 50 oz palladium
+  if (name === 'XPTUSD') return 100;        // 1 lot = 100 oz platinum
+  if (name === 'XPDUSD') return 100;        // 1 lot = 100 oz palladium
   
-  // Energy (NYMEX/ICE standard)
+  // Energy
   if (name === 'USOIL' || name === 'UKOIL') return 1000;  // 1 lot = 1000 barrels
   if (name === 'NATGAS') return 10000;      // 1 lot = 10000 MMBtu
   
-  // Agriculture (CME/CBOT standard)
-  if (['CORN', 'WHEAT', 'SOYBEAN'].includes(name)) return 5000;  // 1 lot = 5000 bushels
-  if (name === 'COTTON') return 50000;      // 1 lot = 50000 lbs
-  if (name === 'SUGAR') return 112000;      // 1 lot = 112000 lbs
-  if (name === 'COFFEE') return 37500;      // 1 lot = 37500 lbs
-  if (name === 'COCOA') return 10;          // 1 lot = 10 metric tons
-  if (name === 'COPPER') return 25000;      // 1 lot = 25000 lbs
+  // Agriculture
+  if (['CORN', 'WHEAT', 'SOYBEAN'].includes(name)) return 50;  // bushels
+  if (name === 'COTTON') return 50000;      // lbs
+  if (name === 'SUGAR') return 112000;      // lbs
+  if (name === 'COFFEE') return 37500;      // lbs
+  if (name === 'COCOA') return 10;          // metric tons
+  if (name === 'COPPER') return 25000;      // lbs
   
   // Crypto - 1 lot = 1 unit of the base currency
   if (name.endsWith('USD') && [
