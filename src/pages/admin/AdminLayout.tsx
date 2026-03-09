@@ -82,6 +82,22 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ finance: 0, kyc: 0 });
+
+  useEffect(() => {
+    const loadBadges = async () => {
+      const [financeRes, kycRes] = await Promise.all([
+        supabase.from("transactions").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("documents").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
+      setPendingCounts({ finance: financeRes.count || 0, kyc: kycRes.count || 0 });
+    };
+    if (isAdmin) {
+      loadBadges();
+      const interval = setInterval(loadBadges, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin]);
 
   if (loading) {
     return (
@@ -94,6 +110,8 @@ const AdminLayout = () => {
   if (!isAdmin) {
     return <Navigate to="/login" replace />;
   }
+
+  const navSections = buildNavSections(pendingCounts);
 
   const renderContent = () => {
     switch (activeTab) {
