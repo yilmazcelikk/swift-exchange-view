@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,6 @@ import {
   LayoutDashboard,
   Users,
   TrendingUp,
-  ArrowDownToLine,
   FileText,
   LogOut,
   Menu,
@@ -28,46 +27,52 @@ import AdminBankAccounts from "./AdminBankAccounts";
 import AdminRisk from "./AdminRisk";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
+import { supabase } from "@/integrations/supabase/client";
 
-const navSections = [
+interface PendingCounts {
+  finance: number;
+  kyc: number;
+}
+
+const buildNavSections = (badges: PendingCounts) => [
   {
     title: "GENEL",
     items: [
-      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+      { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, badge: 0 },
     ],
   },
   {
     title: "İŞLEM YÖNETİMİ",
     items: [
-      { key: "positions", label: "Pozisyonlar", icon: TrendingUp },
-      { key: "risk", label: "Risk Yönetimi", icon: ShieldAlert },
-      { key: "products", label: "Ürünler", icon: ShoppingBag },
+      { key: "positions", label: "Pozisyonlar", icon: TrendingUp, badge: 0 },
+      { key: "risk", label: "Risk Yönetimi", icon: ShieldAlert, badge: 0 },
+      { key: "products", label: "Ürünler", icon: ShoppingBag, badge: 0 },
     ],
   },
   {
     title: "KULLANICI",
     items: [
-      { key: "users", label: "Kullanıcılar", icon: Users },
-      { key: "documents", label: "KYC", icon: FileText },
+      { key: "users", label: "Kullanıcılar", icon: Users, badge: 0 },
+      { key: "documents", label: "KYC", icon: FileText, badge: badges.kyc },
     ],
   },
   {
     title: "FİNANSAL",
     items: [
-      { key: "finance", label: "Finans Talepleri", icon: Landmark },
-      { key: "bank-accounts", label: "Banka Hesapları", icon: Landmark },
+      { key: "finance", label: "Finans Talepleri", icon: Landmark, badge: badges.finance },
+      { key: "bank-accounts", label: "Banka Hesapları", icon: Landmark, badge: 0 },
     ],
   },
   {
     title: "PAZARLAMA",
     items: [
-      { key: "referrals", label: "Referans Linkleri", icon: Landmark },
+      { key: "referrals", label: "Referans Linkleri", icon: Landmark, badge: 0 },
     ],
   },
   {
     title: "SİSTEM",
     items: [
-      { key: "settings", label: "Sistem Ayarları", icon: Settings },
+      { key: "settings", label: "Sistem Ayarları", icon: Settings, badge: 0 },
     ],
   },
 ];
@@ -77,6 +82,22 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ finance: 0, kyc: 0 });
+
+  useEffect(() => {
+    const loadBadges = async () => {
+      const [financeRes, kycRes] = await Promise.all([
+        supabase.from("transactions").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("documents").select("id", { count: "exact", head: true }).eq("status", "pending"),
+      ]);
+      setPendingCounts({ finance: financeRes.count || 0, kyc: kycRes.count || 0 });
+    };
+    if (isAdmin) {
+      loadBadges();
+      const interval = setInterval(loadBadges, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [isAdmin]);
 
   if (loading) {
     return (
@@ -89,6 +110,8 @@ const AdminLayout = () => {
   if (!isAdmin) {
     return <Navigate to="/login" replace />;
   }
+
+  const navSections = buildNavSections(pendingCounts);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -138,7 +161,12 @@ const AdminLayout = () => {
                     }`}
                   >
                     <item.icon className="h-4 w-4 shrink-0" />
-                    {item.label}
+                    <span className="flex-1 text-left">{item.label}</span>
+                    {item.badge > 0 && (
+                      <span className="h-5 min-w-5 px-1 rounded-full bg-warning text-[10px] font-bold text-warning-foreground flex items-center justify-center">
+                        {item.badge > 99 ? "99+" : item.badge}
+                      </span>
+                    )}
                   </button>
                 ))}
               </div>
