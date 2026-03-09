@@ -350,7 +350,6 @@ Deno.serve(async (req) => {
         if (!profile) continue;
 
         let totalPnl = 0;
-        let totalMargin = 0;
         const orderPnls: { order: typeof orders[0]; pnl: number; margin: number; currentPrice: number }[] = [];
 
         for (const order of orders) {
@@ -359,9 +358,17 @@ Deno.serve(async (req) => {
           const oLev = parseInt((order.leverage || "1:200").split(":")[1] || "200", 10);
           const margin = calculateMargin(order.symbol_name, Number(order.lots), Number(order.entry_price), oLev);
           totalPnl += pnl;
-          totalMargin += margin;
           orderPnls.push({ order, pnl, margin, currentPrice: cp });
         }
+
+        // Use net margin with hedge netting
+        const totalMargin = calculateNetMarginForOrders(orders.map(o => ({
+          symbol_name: o.symbol_name,
+          lots: Number(o.lots),
+          entry_price: Number(o.entry_price),
+          leverage: o.leverage || "1:200",
+          type: o.type,
+        })));
 
         const equity = Number(profile.balance) + Number(profile.credit) + totalPnl;
         const marginLevel = totalMargin > 0 ? (equity / totalMargin) * 100 : Infinity;
