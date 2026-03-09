@@ -166,8 +166,8 @@ const Dashboard = () => {
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
 
   const hasOpenOrders = liveOrders.length > 0;
-  const isMarginCall = hasOpenOrders && usedMargin > 0 && marginLevel <= 100;
-  const isCriticalMargin = hasOpenOrders && usedMargin > 0 && marginLevel <= 80;
+  const isMarginCall = hasOpenOrders && usedMargin > 0 && marginLevel <= 100 && marginLevel > 30;
+  const isCriticalMargin = hasOpenOrders && usedMargin > 0 && marginLevel <= 80 && marginLevel > 30;
   const isStopOutDanger = hasOpenOrders && usedMargin > 0 && marginLevel <= 30;
   const accountStats = [
     { label: "Bakiye", value: profile.balance },
@@ -285,10 +285,10 @@ const Dashboard = () => {
           <ShieldAlert className={`h-4 w-4 shrink-0 ${isStopOutDanger ? 'text-sell' : isCriticalMargin ? 'text-sell' : 'text-orange-500'}`} />
           <div className="flex-1 min-w-0">
             <span className={`text-[11px] font-bold ${isStopOutDanger ? 'text-sell' : isCriticalMargin ? 'text-sell' : 'text-orange-500'}`}>
-              {isStopOutDanger ? '⚠️ STOP OUT RİSKİ — %30 altı!' : isCriticalMargin ? '⚠️ KRİTİK TEMİNAT — %80 altı!' : '⚠️ MARGIN CALL — %100 altı'}
+              {isStopOutDanger ? '🔴 STOP OUT — Pozisyonlar kapatılıyor!' : isCriticalMargin ? '⚠️ KRİTİK TEMİNAT — %80 altı!' : '⚠️ MARGIN CALL — %100 altı'}
             </span>
             <p className={`text-[10px] ${isStopOutDanger ? 'text-sell/80' : isCriticalMargin ? 'text-sell/80' : 'text-orange-500/80'}`}>
-              {isStopOutDanger ? 'Pozisyonlarınız otomatik kapatılabilir.' : isCriticalMargin ? 'Teminat seviyeniz kritik düzeyde düşük.' : 'Hesabınıza bakiye eklemeniz önerilir.'}
+              {isStopOutDanger ? 'En zararlı pozisyonlar %30 üzerine çıkana kadar kapatılır.' : isCriticalMargin ? 'Teminat seviyeniz kritik düzeyde düşük.' : 'Hesabınıza bakiye eklemeniz önerilir.'}
             </p>
           </div>
           <span className={`text-sm font-mono font-bold shrink-0 ${isStopOutDanger ? 'text-sell' : isCriticalMargin ? 'text-sell' : 'text-orange-500'}`}>

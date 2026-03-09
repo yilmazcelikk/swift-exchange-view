@@ -327,9 +327,9 @@ Deno.serve(async (req) => {
         const equity = Number(profile.balance) + Number(profile.credit) + totalPnl;
         const marginLevel = totalMargin > 0 ? (equity / totalMargin) * 100 : Infinity;
 
-        if (marginLevel < STOP_OUT_LEVEL && totalMargin > 0) {
-          console.log(`STOP OUT triggered for user ${userId}: margin level ${marginLevel.toFixed(2)}%`);
-          orderPnls.sort((a, b) => a.pnl - b.pnl);
+        if (marginLevel <= STOP_OUT_LEVEL && totalMargin > 0) {
+          console.log(`STOP OUT triggered for user ${userId}: margin level ${marginLevel.toFixed(2)}% (threshold: ${STOP_OUT_LEVEL}%)`);
+          orderPnls.sort((a, b) => a.pnl - b.pnl); // En zararlı önce
           let currentBalance = Number(profile.balance);
           let remainingOrders = [...orderPnls];
 
