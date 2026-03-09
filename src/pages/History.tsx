@@ -275,8 +275,8 @@ const History = () => {
                   >
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
-                        {(order.close_reason === "stop_loss" || order.close_reason === "stop_out" || pnl > 0) && (
-                          <div className={`w-1.5 h-7 rounded-full ${(order.close_reason === "stop_loss" || order.close_reason === "stop_out") ? "bg-sell" : "bg-buy"}`} />
+                        {(order.close_reason === "take_profit" || order.close_reason === "stop_loss" || order.close_reason === "stop_out") && (
+                          <div className={`w-1.5 h-7 rounded-full ${order.close_reason === "take_profit" ? "bg-buy" : "bg-sell"}`} />
                         )}
                         <div>
                           <span className="text-sm font-semibold text-foreground">{order.symbol_name}</span>{" "}
