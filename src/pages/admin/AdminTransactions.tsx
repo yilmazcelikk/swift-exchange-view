@@ -104,21 +104,24 @@ const AdminTransactions = () => {
       }
     }
 
-    // Update transaction status and store exchange rate info
+    // Prepare update data and determine USD amount ONCE
     const updateData: any = { status };
+    let usdAmount = Number(tx.amount);
+    
     if (status === "approved" && tx.currency === "TRY") {
       const rate = await getUsdTryRate();
       updateData.exchange_rate = rate;
       updateData.original_amount = tx.amount;
       updateData.original_currency = tx.currency;
-      const usdAmount = Number((Number(tx.amount) / rate).toFixed(2));
+      usdAmount = Number((Number(tx.amount) / rate).toFixed(2));
       updateData.amount = usdAmount;
-      updateData.currency = 'USD'; // Currency'yi de USD olarak güncelle
+      updateData.currency = 'USD';
     }
 
     const { error } = await supabase.from("transactions").update(updateData).eq("id", id);
     if (error) { toast.error("Güncelleme başarısız"); return; }
 
+    // Update user balance if approved
     if (status === "approved" && tx) {
       const { data: profile } = await supabase
         .from("profiles")
@@ -127,26 +130,20 @@ const AdminTransactions = () => {
         .single();
 
       if (profile) {
-        let amount = Number(tx.amount);
-        if (tx.currency === "TRY") {
-          const rate = await getUsdTryRate();
-          amount = Number((amount / rate).toFixed(2));
-        }
-
+        // Use the already-calculated USD amount (no need to convert again)
         const sign = tx.type === "deposit" ? 1 : -1;
         await supabase.from("profiles").update({
-          balance: Number(profile.balance) + sign * amount,
-          equity: Number(profile.equity) + sign * amount,
-          free_margin: Number(profile.free_margin) + sign * amount,
+          balance: Number(profile.balance) + sign * usdAmount,
+          equity: Number(profile.equity) + sign * usdAmount,
+          free_margin: Number(profile.free_margin) + sign * usdAmount,
         }).eq("user_id", tx.user_id);
       }
     }
 
+    // Show success toast with conversion info if TRY
     if (status === "approved" && tx.currency === "TRY") {
       const rate = await getUsdTryRate();
-      let amount = Number(tx.amount);
-      const usdAmount = Number((amount / rate).toFixed(2));
-      toast.success(`Onaylandı - ${amount.toLocaleString("tr-TR")} TL → ${usdAmount.toFixed(2)} USD (Kur: ${rate.toFixed(2)})`);
+      toast.success(`Onaylandı - ${Number(tx.amount).toLocaleString("tr-TR")} TL → ${usdAmount.toFixed(2)} USD (Kur: ${rate.toFixed(2)})`);
     } else {
       toast.success(status === "approved" ? "Onaylandı" : "Reddedildi");
     }
