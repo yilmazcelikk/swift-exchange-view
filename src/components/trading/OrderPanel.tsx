@@ -95,6 +95,15 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       if (symData) symData.forEach((s: any) => { livePriceMap[s.id] = Number(s.current_price); });
     }
 
+    // Calculate unrealized PnL
+    let unrealizedPnl = 0;
+    for (const o of (openOrders || []) as any[]) {
+      const cs = getContractSize(o.symbol_name);
+      const liveP = livePriceMap[o.symbol_id] || Number(o.entry_price);
+      const diff = o.type === "buy" ? liveP - Number(o.entry_price) : Number(o.entry_price) - liveP;
+      unrealizedPnl += diff * Number(o.lots) * cs;
+    }
+
     // Calculate net margin with hedge netting
     const existingOrders = (openOrders || []).map((o: any) => ({
       symbol_name: o.symbol_name,
