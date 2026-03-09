@@ -26,6 +26,8 @@ interface TransactionRow {
   created_at: string;
   receipt_url?: string | null;
   user_name?: string;
+  account_holder?: string | null;
+  iban?: string | null;
 }
 
 type TabKey = "all" | "deposits" | "withdrawals";
@@ -258,6 +260,7 @@ const AdminTransactions = () => {
                   <tr className="border-b border-border bg-muted/30">
                     <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tür</th>
                     <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Kullanıcı</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Hesap Bilgileri</th>
                     <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tarih</th>
                     <th className="text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tutar</th>
                     <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Dekont</th>
@@ -284,6 +287,16 @@ const AdminTransactions = () => {
                           <p className="text-sm font-medium leading-tight">{tx.user_name}</p>
                           <p className="text-[10px] font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</p>
                         </div>
+                      </td>
+                      <td className="px-4 py-3.5">
+                        {tx.type === "withdrawal" ? (
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-medium leading-tight">{tx.account_holder || "—"}</p>
+                            <p className="text-[10px] font-mono text-muted-foreground">{tx.iban || "—"}</p>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
                       </td>
                       <td className="px-4 py-3.5">
                         <p className="text-sm">{new Date(tx.created_at).toLocaleDateString("tr-TR")}</p>
@@ -373,12 +386,33 @@ const AdminTransactions = () => {
             <AlertDialogTitle>
               {confirmAction?.status === "approved" ? "Talebi Onayla" : "Talebi Reddet"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmAction?.tx && (
-                <span>
-                  {confirmAction.tx.user_name} - {Number(confirmAction.tx.amount).toLocaleString("tr-TR")} {confirmAction.tx.currency} {confirmAction.tx.type === "deposit" ? "yatırma" : "çekme"} talebini {confirmAction.status === "approved" ? "onaylamak" : "reddetmek"} istediğinize emin misiniz?
-                </span>
-              )}
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                {confirmAction?.tx && (
+                  <>
+                    <p className="text-sm">
+                      {confirmAction.tx.user_name} - {Number(confirmAction.tx.amount).toLocaleString("tr-TR")} {confirmAction.tx.currency} {confirmAction.tx.type === "deposit" ? "yatırma" : "çekme"} talebini {confirmAction.status === "approved" ? "onaylamak" : "reddetmek"} istediğinize emin misiniz?
+                    </p>
+                    {confirmAction.tx.type === "withdrawal" && (confirmAction.tx.account_holder || confirmAction.tx.iban) && (
+                      <div className="p-3 rounded-lg bg-muted/50 space-y-1.5">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase">Hesap Bilgileri</p>
+                        {confirmAction.tx.account_holder && (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">Hesap Adı</p>
+                            <p className="text-sm font-medium">{confirmAction.tx.account_holder}</p>
+                          </div>
+                        )}
+                        {confirmAction.tx.iban && (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">IBAN</p>
+                            <p className="text-xs font-mono">{confirmAction.tx.iban}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
