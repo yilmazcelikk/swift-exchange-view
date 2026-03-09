@@ -386,12 +386,33 @@ const AdminTransactions = () => {
             <AlertDialogTitle>
               {confirmAction?.status === "approved" ? "Talebi Onayla" : "Talebi Reddet"}
             </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmAction?.tx && (
-                <span>
-                  {confirmAction.tx.user_name} - {Number(confirmAction.tx.amount).toLocaleString("tr-TR")} {confirmAction.tx.currency} {confirmAction.tx.type === "deposit" ? "yatırma" : "çekme"} talebini {confirmAction.status === "approved" ? "onaylamak" : "reddetmek"} istediğinize emin misiniz?
-                </span>
-              )}
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                {confirmAction?.tx && (
+                  <>
+                    <p className="text-sm">
+                      {confirmAction.tx.user_name} - {Number(confirmAction.tx.amount).toLocaleString("tr-TR")} {confirmAction.tx.currency} {confirmAction.tx.type === "deposit" ? "yatırma" : "çekme"} talebini {confirmAction.status === "approved" ? "onaylamak" : "reddetmek"} istediğinize emin misiniz?
+                    </p>
+                    {confirmAction.tx.type === "withdrawal" && (confirmAction.tx.account_holder || confirmAction.tx.iban) && (
+                      <div className="p-3 rounded-lg bg-muted/50 space-y-1.5">
+                        <p className="text-xs font-semibold text-muted-foreground uppercase">Hesap Bilgileri</p>
+                        {confirmAction.tx.account_holder && (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">Hesap Adı</p>
+                            <p className="text-sm font-medium">{confirmAction.tx.account_holder}</p>
+                          </div>
+                        )}
+                        {confirmAction.tx.iban && (
+                          <div>
+                            <p className="text-[10px] text-muted-foreground">IBAN</p>
+                            <p className="text-xs font-mono">{confirmAction.tx.iban}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
