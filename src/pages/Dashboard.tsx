@@ -166,6 +166,9 @@ const Dashboard = () => {
   const marginLevel = usedMargin > 0 ? (dynamicEquity / usedMargin) * 100 : 0;
 
   const hasOpenOrders = liveOrders.length > 0;
+  const isMarginCall = hasOpenOrders && usedMargin > 0 && marginLevel <= 100;
+  const isCriticalMargin = hasOpenOrders && usedMargin > 0 && marginLevel <= 80;
+  const isStopOutDanger = hasOpenOrders && usedMargin > 0 && marginLevel <= 30;
   const accountStats = [
     { label: "Bakiye", value: profile.balance },
     ...(profile.credit > 0 ? [{ label: "Kredi", value: profile.credit }] : []),
