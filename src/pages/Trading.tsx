@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSearchParams } from "react-router-dom";
@@ -6,19 +6,9 @@ import { ChevronLeft } from "lucide-react";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
 import { getMarketStatus } from "@/lib/marketHours";
-import { generateCandleData } from "@/data/mockData";
 import { SymbolList, type DBSymbol } from "@/components/trading/SymbolList";
-import { CandlestickChart, type Timeframe } from "@/components/trading/CandlestickChart";
+import { TradingViewChart } from "@/components/trading/TradingViewChart";
 import { OrderPanel } from "@/components/trading/OrderPanel";
-
-interface CandleRow {
-  bucket_time: string;
-  open: number;
-  high: number;
-  low: number;
-  close: number;
-  volume: number;
-}
 
 const Trading = () => {
   const { user: authUser } = useAuth();
@@ -28,13 +18,8 @@ const Trading = () => {
   const [loading, setLoading] = useState(true);
   const [leverage, setLeverage] = useState("1:200");
   const [accountType, setAccountType] = useState("standard");
-  const [timeframe, setTimeframe] = useState<Timeframe>("15m");
-  const [realCandles, setRealCandles] = useState<CandleRow[]>([]);
-  const [candlesLoading, setCandlesLoading] = useState(false);
-  const [chartVisibleCount, setChartVisibleCount] = useState(50);
-  const [chartOffset, setChartOffset] = useState(0);
 
-  // Load user leverage from profile
+  // Load user profile settings
   useEffect(() => {
     if (authUser) {
       supabase.from("profiles").select("leverage, account_type").eq("user_id", authUser.id).single().then(({ data }) => {
@@ -47,14 +32,10 @@ const Trading = () => {
   useEffect(() => {
     loadSymbols();
 
-    // Realtime subscription for symbols — no polling needed
+    // Realtime subscription for live price updates in symbol list
     const channel = supabase
       .channel('trading-symbols')
-      .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'symbols',
-      }, (payload) => {
+      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, (payload) => {
         if (payload.new) {
           const updated = payload.new as any;
           setSymbols(prev => prev.map(s => s.id === updated.id ? { ...s, ...updated } as DBSymbol : s));
@@ -83,7 +64,7 @@ const Trading = () => {
     setLoading(false);
   };
 
-  // Auto-select symbol from URL
+  // Auto-select symbol from URL param
   useEffect(() => {
     const symbolParam = searchParams.get("symbol");
     if (symbolParam && symbols.length > 0 && !selectedSymbol) {
@@ -95,55 +76,6 @@ const Trading = () => {
       }
     }
   }, [symbols, searchParams]);
-
-  // Fetch candle data
-  const loadCandles = useCallback(async (symbolId: string, tf: Timeframe) => {
-    setCandlesLoading(true);
-    const limits: Record<string, number> = { "1m": 120, "15m": 96, "1h": 168, "4h": 120, "1d": 90 };
-    const { data, error } = await supabase
-      .from("candles")
-      .select("bucket_time, open, high, low, close, volume")
-      .eq("symbol_id", symbolId)
-      .eq("timeframe", tf)
-      .order("bucket_time", { ascending: true })
-      .limit(limits[tf] || 100);
-    if (!error && data && data.length > 0) {
-      setRealCandles(data as CandleRow[]);
-    } else {
-      setRealCandles([]);
-    }
-    setCandlesLoading(false);
-  }, []);
-
-  useEffect(() => {
-    if (selectedSymbol) loadCandles(selectedSymbol.id, timeframe);
-  }, [selectedSymbol?.id, timeframe, loadCandles]);
-
-  // Realtime candles
-  useEffect(() => {
-    if (!selectedSymbol) return;
-    const channel = supabase
-      .channel(`candles-${selectedSymbol.id}-${timeframe}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'candles', filter: `symbol_id=eq.${selectedSymbol.id}` }, (payload) => {
-        if (payload.new) {
-          const newCandle = payload.new as any;
-          if (newCandle.timeframe !== timeframe) return;
-          setRealCandles(prev => {
-            const exists = prev.findIndex(c => c.bucket_time === newCandle.bucket_time);
-            if (exists >= 0) { const updated = [...prev]; updated[exists] = newCandle; return updated; }
-            return [...prev, newCandle].slice(-200);
-          });
-        }
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [selectedSymbol?.id, timeframe]);
-
-  const mockCandleData = useMemo(() => generateCandleData(selectedSymbol?.current_price || 100, 80), [selectedSymbol?.id]);
-
-  const candleData = realCandles.length > 0
-    ? realCandles.map(c => ({ time: c.bucket_time, open: Number(c.open), high: Number(c.high), low: Number(c.low), close: Number(c.close), volume: Number(c.volume) }))
-    : mockCandleData;
 
   const formatPrice = (price: number) => {
     if (!price || price === 0) return "—";
@@ -165,7 +97,7 @@ const Trading = () => {
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] animate-slide-up overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Compact Header */}
-      <div className="px-3 py-2.5 border-b border-border/60 flex items-center gap-2.5 bg-card">
+      <div className="px-3 py-2.5 border-b border-border/60 flex items-center gap-2.5 bg-card shrink-0">
         <button onClick={() => setSelectedSymbol(null)} className="p-1.5 -ml-1 hover:bg-muted rounded-lg transition-colors active:scale-95">
           <ChevronLeft className="h-4.5 w-4.5 text-foreground" />
         </button>
@@ -191,25 +123,12 @@ const Trading = () => {
         </div>
       </div>
 
-      {realCandles.length === 0 && !candlesLoading && (
-        <div className="px-3 py-1">
-          <span className="text-[10px] text-muted-foreground bg-muted/50 px-2 py-0.5 rounded">Tahmini grafik verisi</span>
-        </div>
-      )}
+      {/* TradingView Chart — takes all remaining space */}
+      <div className="flex-1 min-h-0 overflow-hidden">
+        <TradingViewChart symbolName={selectedSymbol.name} />
+      </div>
 
-      <CandlestickChart
-        candleData={candleData}
-        price={price}
-        isPositive={isPositive}
-        timeframe={timeframe}
-        onTimeframeChange={setTimeframe}
-        chartVisibleCount={chartVisibleCount}
-        setChartVisibleCount={setChartVisibleCount}
-        chartOffset={chartOffset}
-        setChartOffset={setChartOffset}
-        formatPrice={formatPrice}
-      />
-
+      {/* Order Panel */}
       <OrderPanel
         symbol={selectedSymbol}
         userId={authUser?.id || ""}
