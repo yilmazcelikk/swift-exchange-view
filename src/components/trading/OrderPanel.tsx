@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, ChevronDown } from "lucide-react";
-import { getSpread as calcSpread, calculateMargin, getContractSize } from "@/lib/trading";
+import { getSpread as calcSpread, calculateMargin, calculateNetMargin, getContractSize } from "@/lib/trading";
 import { getMarketStatus } from "@/lib/marketHours";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
