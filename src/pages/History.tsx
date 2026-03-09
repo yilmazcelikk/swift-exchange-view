@@ -296,7 +296,7 @@ const History = () => {
           <div key={row.label} className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">{row.label}</span>
             <span className={`text-sm font-mono font-bold ${row.color}`}>
-              {row.value < 0 ? "-" : ""}{formatNum(Math.abs(row.value))}
+              {row.value < 0 ? "-" : ""}{formatNum(Math.abs(row.value))} USD
             </span>
           </div>
         ))}
