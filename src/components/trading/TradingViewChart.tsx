@@ -115,15 +115,6 @@ export const TradingViewChart = memo(({ symbolName }: TradingViewChartProps) => 
             "paneProperties.legendProperties.showBarChange": false,
             "scalesProperties.showSymbolLabels": false,
           },
-            "paneProperties.legendProperties.showStudyArguments": false,
-            "paneProperties.legendProperties.showStudyTitles": false,
-            "paneProperties.legendProperties.showStudyValues": false,
-            "paneProperties.legendProperties.showSeriesTitle": false,
-            "paneProperties.legendProperties.showSeriesOHLC": false,
-            "paneProperties.legendProperties.showLegend": false,
-            "paneProperties.legendProperties.showBarChange": false,
-            "scalesProperties.showSymbolLabels": false,
-          },
           enabled_features: ["hide_left_toolbar_by_default"],
         });
       } catch (e) {
