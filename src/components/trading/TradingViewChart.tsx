@@ -17,36 +17,38 @@ export const TradingViewChart = memo(({ symbolName }: TradingViewChartProps) => 
     const tvSymbol = getTvSymbol(symbolName);
     const theme = resolvedTheme === "dark" ? "dark" : "light";
 
-    const params = new URLSearchParams({
+    // Use the TradingView advanced chart widget via iframe - this version doesn't show popups
+    const config = {
+      autosize: true,
       symbol: tvSymbol,
       interval: "15",
-      timezone: "Europe/Istanbul",
+      timezone: "Etc/UTC",
       theme,
       style: "1",
       locale: "tr",
-      enable_publishing: "0",
-      allow_symbol_change: "0",
-      hide_top_toolbar: "0",
-      hide_legend: "1",
-      save_image: "0",
-      withdateranges: "0",
-      hide_side_toolbar: "1",
-      hide_volume: "1",
-      studies: "[]",
-    });
-
-    const src = `https://s.tradingview.com/widgetembed/?hideideas=1&overrides={}&studies_overrides={}&${params.toString()}#{"utm_source":"","utm_medium":"widget_new","utm_campaign":"chart"}`;
+      allow_symbol_change: false,
+      save_image: false,
+      hide_volume: true,
+      hide_side_toolbar: true,
+      calendar: false,
+      support_host: "https://www.tradingview.com",
+    };
 
     container.innerHTML = "";
+
     const iframe = document.createElement("iframe");
-    iframe.src = src;
     iframe.style.width = "100%";
     iframe.style.height = "100%";
     iframe.style.border = "none";
     iframe.style.display = "block";
     iframe.setAttribute("allowtransparency", "true");
     iframe.setAttribute("frameborder", "0");
-    iframe.allow = "autoplay; encrypted-media";
+    iframe.setAttribute("sandbox", "allow-scripts allow-same-origin allow-popups");
+
+    // Build the advanced chart embed URL
+    const encodedConfig = encodeURIComponent(JSON.stringify(config));
+    iframe.src = `https://www.tradingview-widget.com/embed-widget/advanced-chart/?locale=tr#${encodedConfig}`;
+
     container.appendChild(iframe);
 
     return () => {
