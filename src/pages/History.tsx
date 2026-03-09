@@ -21,6 +21,7 @@ interface Transaction {
   id: string;
   type: string;
   amount: number;
+  currency: string;
   created_at: string;
   status: string;
   method: string | null;
