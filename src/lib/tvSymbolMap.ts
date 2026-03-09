@@ -166,7 +166,20 @@ export const TV_SYMBOL_MAP: Record<string, string> = {
   MELI: "NASDAQ:MELI", NU: "NYSE:NU", VALE: "NYSE:VALE",
 };
 
-export function getTvSymbol(symbolName: string): string {
+export function getTvSymbol(
+  symbolName: string,
+  opts?: { exchange?: string | null; category?: string | null }
+): string {
   const upper = symbolName.toUpperCase();
-  return TV_SYMBOL_MAP[upper] || `FX:${upper}`;
+  const mapped = TV_SYMBOL_MAP[upper];
+  if (mapped) return mapped;
+
+  const exchange = opts?.exchange?.toUpperCase();
+  const category = opts?.category?.toLowerCase();
+
+  // Best-effort fallbacks
+  if (exchange) return `${exchange}:${upper}`;
+  if (category === "stock") return `BIST:${upper}`;
+
+  return `FX:${upper}`;
 }
