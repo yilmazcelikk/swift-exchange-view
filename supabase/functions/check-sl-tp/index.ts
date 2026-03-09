@@ -414,11 +414,16 @@ Deno.serve(async (req) => {
             stopOutClosedCount++;
 
             let remPnl = 0;
-            let remMargin = 0;
             for (const ro of remainingOrders) {
               remPnl += ro.pnl;
-              remMargin += ro.margin;
             }
+            const remMargin = calculateNetMarginForOrders(remainingOrders.map(ro => ({
+              symbol_name: ro.order.symbol_name,
+              lots: Number(ro.order.lots),
+              entry_price: Number(ro.order.entry_price),
+              leverage: ro.order.leverage || "1:200",
+              type: ro.order.type,
+            })));
 
             const newEquity = currentBalance + Number(profile.credit) + remPnl;
             const newMarginLevel = remMargin > 0 ? (newEquity / remMargin) * 100 : Infinity;
