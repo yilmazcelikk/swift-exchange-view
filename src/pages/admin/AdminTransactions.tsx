@@ -113,6 +113,7 @@ const AdminTransactions = () => {
       updateData.original_currency = tx.currency;
       const usdAmount = Number((Number(tx.amount) / rate).toFixed(2));
       updateData.amount = usdAmount;
+      updateData.currency = 'USD'; // Currency'yi de USD olarak güncelle
     }
 
     const { error } = await supabase.from("transactions").update(updateData).eq("id", id);
