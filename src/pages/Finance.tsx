@@ -14,6 +14,15 @@ const paymentMethods = [
   { id: "bank", label: "Banka Transferi", icon: Building2 },
 ];
 
+const formatIban = (raw: string): string => {
+  const clean = raw.replace(/\s/g, "").toUpperCase();
+  const groups = [
+    clean.slice(0, 4), clean.slice(4, 8), clean.slice(8, 12),
+    clean.slice(12, 16), clean.slice(16, 20), clean.slice(20, 24), clean.slice(24, 26)
+  ];
+  return groups.filter(Boolean).join(" ");
+};
+
 const Finance = () => {
   const { user: authUser } = useAuth();
   const [transactions, setTransactions] = useState<any[]>([]);
