@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Upload, CheckCircle, Clock, XCircle, Copy,
-  ArrowDownToLine, ArrowUpFromLine, Building2, ShieldAlert,
+  ArrowDownToLine, ArrowUpFromLine, Building2, ShieldAlert, ClipboardPaste, Check,
 } from "lucide-react";
 
 const paymentMethods = [
