@@ -88,23 +88,20 @@ const History = () => {
   const [totalDeposit, setTotalDeposit] = useState(0);
   const [totalWithdrawal, setTotalWithdrawal] = useState(0);
   const [accountType, setAccountType] = useState("standard");
-  const [page, setPage] = useState(0);
-  const [hasMore, setHasMore] = useState(true);
-  const PAGE_SIZE = 50;
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (authUser?.id) {
-      loadHistory(0);
+      loadHistory();
 
       const ordersChannel = supabase
         .channel("history-orders")
-        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { setPage(0); loadHistory(0); })
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(); })
         .subscribe();
 
       const transactionsChannel = supabase
         .channel("history-transactions")
-        .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `user_id=eq.${authUser.id}` }, () => { setPage(0); loadHistory(0); })
+        .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(); })
         .subscribe();
 
       return () => { 
@@ -120,9 +117,7 @@ const History = () => {
     }
   }, [historyItems.length]);
 
-  const loadHistory = async (pageNum = 0) => {
-    const from = pageNum * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+  const loadHistory = async () => {
     const [ordersRes, profileRes, transactionsRes] = await Promise.all([
       supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
       supabase.from("profiles").select("balance, account_type").eq("user_id", authUser!.id).single(),
@@ -155,22 +150,14 @@ const History = () => {
       });
     }
 
-    // Sort by date (use closed_at for orders, created_at for transactions)
+    // Sort by date (use closed_at for orders, created_at for transactions) - ascending (oldest first)
     items.sort((a, b) => {
       const dateA = a.itemType === 'order' ? new Date(a.data.closed_at || a.data.created_at) : new Date(a.data.created_at);
       const dateB = b.itemType === 'order' ? new Date(b.data.closed_at || b.data.created_at) : new Date(b.data.created_at);
       return dateA.getTime() - dateB.getTime();
     });
 
-    // Apply pagination
-    const paginatedItems = items.slice(from, to + 1);
-    
-    if (pageNum === 0) {
-      setHistoryItems(paginatedItems);
-    } else {
-      setHistoryItems(prev => [...prev, ...paginatedItems]);
-    }
-    setHasMore(items.length > to + 1);
+    setHistoryItems(items);
 
     if (profileRes.data) {
       setBalance(Number(profileRes.data.balance));
@@ -309,14 +296,6 @@ const History = () => {
               }
             })}
           </div>
-        )}
-        {hasMore && historyItems.length > 0 && (
-          <button
-            onClick={() => { const next = page + 1; setPage(next); loadHistory(next); }}
-            className="w-full py-2 mt-2 text-xs text-primary font-medium hover:underline"
-          >
-            Daha fazla yükle...
-          </button>
         )}
       </div>
 
