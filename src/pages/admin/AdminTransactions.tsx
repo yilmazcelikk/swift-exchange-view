@@ -289,6 +289,16 @@ const AdminTransactions = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3.5">
+                        {tx.type === "withdrawal" ? (
+                          <div className="space-y-0.5">
+                            <p className="text-xs font-medium leading-tight">{tx.account_holder || "—"}</p>
+                            <p className="text-[10px] font-mono text-muted-foreground">{tx.iban || "—"}</p>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        )}
+                      </td>
+                      <td className="px-4 py-3.5">
                         <p className="text-sm">{new Date(tx.created_at).toLocaleDateString("tr-TR")}</p>
                         <p className="text-[10px] text-muted-foreground">{new Date(tx.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</p>
                       </td>
