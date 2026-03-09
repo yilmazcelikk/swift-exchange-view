@@ -7,12 +7,21 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   Upload, CheckCircle, Clock, XCircle, Copy,
-  ArrowDownToLine, ArrowUpFromLine, Building2, ShieldAlert,
+  ArrowDownToLine, ArrowUpFromLine, Building2, ShieldAlert, ClipboardPaste, Check,
 } from "lucide-react";
 
 const paymentMethods = [
   { id: "bank", label: "Banka Transferi", icon: Building2 },
 ];
+
+const formatIban = (raw: string): string => {
+  const clean = raw.replace(/\s/g, "").toUpperCase();
+  const groups = [
+    clean.slice(0, 4), clean.slice(4, 8), clean.slice(8, 12),
+    clean.slice(12, 16), clean.slice(16, 20), clean.slice(20, 24), clean.slice(24, 26)
+  ];
+  return groups.filter(Boolean).join(" ");
+};
 
 const Finance = () => {
   const { user: authUser } = useAuth();
@@ -339,12 +348,55 @@ const Finance = () => {
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">IBAN</label>
-              <Input
-                placeholder="TR00 0000 0000 0000 0000 0000 00"
-                value={withdrawIban}
-                onChange={(e) => setWithdrawIban(e.target.value)}
-                className="bg-muted/50 font-mono"
-              />
+              <div className="relative">
+                <Input
+                  placeholder="TR"
+                  value={formatIban(withdrawIban)}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\s/g, "").toUpperCase();
+                    if (raw.length <= 26) {
+                      setWithdrawIban(raw.startsWith("TR") ? raw : (raw ? "TR" + raw.replace(/^TR/i, "") : ""));
+                    }
+                  }}
+                  className={`bg-muted/50 font-mono pr-20 tracking-wider ${
+                    withdrawIban.length === 26 && /^TR\d{24}$/.test(withdrawIban)
+                      ? "border-buy/50 focus-visible:ring-buy/30"
+                      : withdrawIban.length > 0 && withdrawIban.length < 26
+                      ? "border-warning/50"
+                      : ""
+                  }`}
+                />
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {withdrawIban.length === 26 && /^TR\d{24}$/.test(withdrawIban) ? (
+                    <Check className="h-4 w-4 text-buy" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {withdrawIban.length || 0}/26
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const text = await navigator.clipboard.readText();
+                        const clean = text.replace(/\s/g, "").toUpperCase();
+                        if (clean.length <= 26) {
+                          setWithdrawIban(clean.startsWith("TR") ? clean : "TR" + clean.replace(/^TR/i, ""));
+                          toast.success("IBAN yapıştırıldı");
+                        }
+                      } catch {
+                        toast.error("Panodan okunamadı");
+                      }
+                    }}
+                    className="p-1.5 rounded hover:bg-muted transition-colors"
+                  >
+                    <ClipboardPaste className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                </div>
+              </div>
+              {withdrawIban.length > 0 && withdrawIban.length < 26 && (
+                <p className="text-xs text-warning mt-1">IBAN 26 karakter olmalıdır</p>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
