@@ -76,6 +76,58 @@ export function calculateMargin(
 }
 
 /**
+ * Calculate net used margin with hedge netting.
+ * For the same symbol, only the larger side's net lots are margined.
+ * Example: 1 lot buy + 0.5 lot sell = only 0.5 lot margin (buy side)
+ */
+export interface OrderForMargin {
+  symbol_name: string;
+  lots: number;
+  entry_price: number;
+  leverage: string;
+  type: string;
+}
+
+export function calculateNetMargin(orders: OrderForMargin[]): number {
+  // Group by symbol
+  const symbolGroups: Record<string, { buyLots: number; sellLots: number; avgBuyPrice: number; avgSellPrice: number; leverage: number }> = {};
+
+  for (const o of orders) {
+    const sym = o.symbol_name;
+    if (!symbolGroups[sym]) {
+      symbolGroups[sym] = { buyLots: 0, sellLots: 0, avgBuyPrice: 0, avgSellPrice: 0, leverage: 200 };
+    }
+    const lev = parseInt((o.leverage || "1:200").split(":")[1] || "200", 10);
+    symbolGroups[sym].leverage = lev;
+
+    if (o.type === "buy") {
+      const prevTotal = symbolGroups[sym].avgBuyPrice * symbolGroups[sym].buyLots;
+      symbolGroups[sym].buyLots += Number(o.lots);
+      symbolGroups[sym].avgBuyPrice = symbolGroups[sym].buyLots > 0
+        ? (prevTotal + Number(o.entry_price) * Number(o.lots)) / symbolGroups[sym].buyLots
+        : 0;
+    } else {
+      const prevTotal = symbolGroups[sym].avgSellPrice * symbolGroups[sym].sellLots;
+      symbolGroups[sym].sellLots += Number(o.lots);
+      symbolGroups[sym].avgSellPrice = symbolGroups[sym].sellLots > 0
+        ? (prevTotal + Number(o.entry_price) * Number(o.lots)) / symbolGroups[sym].sellLots
+        : 0;
+    }
+  }
+
+  let totalMargin = 0;
+  for (const [sym, group] of Object.entries(symbolGroups)) {
+    const netLots = Math.abs(group.buyLots - group.sellLots);
+    const netPrice = group.buyLots >= group.sellLots ? group.avgBuyPrice : group.avgSellPrice;
+    if (netLots > 0 && netPrice > 0) {
+      totalMargin += calculateMargin(sym, netLots, netPrice, group.leverage);
+    }
+  }
+
+  return totalMargin;
+}
+
+/**
  * Commission rates per account type
  * Users should NOT see these values
  */
