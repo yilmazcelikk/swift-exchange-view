@@ -46,8 +46,8 @@ export const TradingViewChart = memo(({ symbolName }: TradingViewChartProps) => 
     const theme = resolvedTheme === "dark" ? "dark" : "light";
     const containerId = `tv_${symbolName.replace(/[^a-zA-Z0-9]/g, "_")}_${Math.random().toString(36).slice(2, 7)}`;
 
-    // Clear previous content
-    container.innerHTML = `<div id="${containerId}" style="height:100%;width:100%"></div>`;
+    // Clear previous content and inject CSS to hide TradingView popups
+    container.innerHTML = `<style>.tv-alert-notification, .tv-dialog, .js-dialog, div[data-dialog-name="gopro"], div[data-dialog-name="notice"] { display: none !important; }</style><div id="${containerId}" style="height:100%;width:100%"></div>`;
 
     const createWidget = () => {
       if (!window.TradingView || !document.getElementById(containerId)) return;
