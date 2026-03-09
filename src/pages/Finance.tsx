@@ -354,8 +354,11 @@ const Finance = () => {
                   value={formatIban(withdrawIban)}
                   onChange={(e) => {
                     const raw = e.target.value.replace(/\s/g, "").toUpperCase();
-                    if (raw.length <= 26) {
-                      setWithdrawIban(raw.startsWith("TR") ? raw : (raw ? "TR" + raw.replace(/^TR/i, "") : ""));
+                    // TR prefix + only digits after
+                    const digitsOnly = raw.replace(/^TR/i, "").replace(/\D/g, "");
+                    const cleaned = "TR" + digitsOnly;
+                    if (cleaned.length <= 26) {
+                      setWithdrawIban(cleaned === "TR" && raw === "" ? "" : cleaned);
                     }
                   }}
                   className={`bg-muted/50 font-mono pr-20 tracking-wider ${
