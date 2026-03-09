@@ -21,14 +21,24 @@ const TIMEFRAMES = [
 
 type Timeframe = typeof TIMEFRAMES[number]["key"];
 
+interface OpenPosition {
+  id: string;
+  type: "buy" | "sell";
+  entry_price: number;
+  stop_loss: number | null;
+  take_profit: number | null;
+  lots: number;
+}
+
 interface BISTChartProps {
   symbolId: string;
   symbolName: string;
   currentPrice: number;
   isPositive: boolean;
+  positions?: OpenPosition[];
 }
 
-export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive }: BISTChartProps) => {
+export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive, positions = [] }: BISTChartProps) => {
   const [timeframe, setTimeframe] = useState<Timeframe>("15m");
   const [candleData, setCandleData] = useState<Candle[]>([]);
   const [loading, setLoading] = useState(true);
