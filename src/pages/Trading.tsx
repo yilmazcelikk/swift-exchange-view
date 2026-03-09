@@ -8,7 +8,20 @@ import { SymbolLogo } from "@/components/SymbolLogo";
 import { getMarketStatus } from "@/lib/marketHours";
 import { SymbolList, type DBSymbol } from "@/components/trading/SymbolList";
 import { TradingViewChart } from "@/components/trading/TradingViewChart";
+import { BISTChart } from "@/components/trading/BISTChart";
 import { OrderPanel } from "@/components/trading/OrderPanel";
+
+// BIST stock symbols that should use our custom chart
+const BIST_SYMBOLS = new Set([
+  "THYAO","GARAN","AKBNK","SISE","EREGL","KCHOL","SAHOL","TUPRS","YKBNK",
+  "ISCTR","ASELS","BIMAS","PGSUS","EKGYO","PETKM","TOASO","TAVHL","FROTO",
+  "TCELL","HALKB","VAKBN","DOHOL","ENKAI","ARCLK","VESTL","MGROS","SOKM",
+  "GUBRF","SASA","OYAKC","TTKOM","TSKB","AKSA","CIMSA","AEFES","ULKER",
+  "DOAS","OTKAR","ISGYO","KRDMD","GESAN","KONTR","ODAS","BRYAT","TTRAK",
+  "EUPWR","AGHOL","MAVI","LOGO","KOZAL","KOZAA","TKFEN","TURSG","SKBNK",
+  "ALBRK","CCOLA","ISMEN","HLGYO","ENJSA","AKENR","AKSEN","ECZYT","MPARK",
+  "ALARK","BERA",
+]);
 
 const Trading = () => {
   const { user: authUser } = useAuth();
@@ -93,6 +106,7 @@ const Trading = () => {
   const price = selectedSymbol.current_price || 0;
   const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
   const isPositive = (selectedSymbol.change_percent ?? 0) >= 0;
+  const isBISTStock = BIST_SYMBOLS.has(selectedSymbol.name) || selectedSymbol.exchange === "BIST";
 
   return (
     <div className="flex flex-col h-[calc(100vh-3.5rem)] animate-slide-up overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
@@ -123,9 +137,22 @@ const Trading = () => {
         </div>
       </div>
 
-      {/* TradingView Chart — takes all remaining space */}
+      {/* Chart — BIST stocks use custom chart, others use TradingView */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <TradingViewChart symbolName={selectedSymbol.name} exchange={selectedSymbol.exchange} category={selectedSymbol.category} />
+        {isBISTStock ? (
+          <BISTChart
+            symbolId={selectedSymbol.id}
+            symbolName={selectedSymbol.name}
+            currentPrice={price}
+            isPositive={isPositive}
+          />
+        ) : (
+          <TradingViewChart
+            symbolName={selectedSymbol.name}
+            exchange={selectedSymbol.exchange}
+            category={selectedSymbol.category}
+          />
+        )}
       </div>
 
       {/* Order Panel */}
