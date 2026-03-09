@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useRef, memo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ZoomIn, ZoomOut, Maximize2 } from "lucide-react";
+import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
 
 interface Candle {
   time: string;
@@ -42,10 +42,11 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
   const [timeframe, setTimeframe] = useState<Timeframe>("15m");
   const [candleData, setCandleData] = useState<Candle[]>([]);
   const [loading, setLoading] = useState(true);
-  const [chartVisibleCount, setChartVisibleCount] = useState(50);
+  const [chartVisibleCount, setChartVisibleCount] = useState(40);
   const [chartOffset, setChartOffset] = useState(0);
   const chartRef = useRef<HTMLDivElement>(null);
-  const touchStartRef = useRef<{ x: number; dist: number } | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number; dist: number; time: number } | null>(null);
+  const isDraggingRef = useRef(false);
 
   const formatPrice = (price: number) => {
     if (!price || price === 0) return "—";
@@ -76,7 +77,6 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
           volume: Number(c.volume),
         })));
       } else {
-        // Generate simulated data based on current price
         const simulated = generateSimulatedCandles(currentPrice, timeframe);
         setCandleData(simulated);
       }
@@ -86,7 +86,6 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
 
     loadCandles();
 
-    // Subscribe to realtime candle updates
     const channel = supabase
       .channel(`bist-candles-${symbolId}-${timeframe}`)
       .on('postgres_changes', {
@@ -127,12 +126,18 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
   }, [symbolId, timeframe, currentPrice]);
 
   const totalCandles = candleData.length;
-  const clampedOffset = Math.min(chartOffset, Math.max(0, totalCandles - chartVisibleCount));
+  const maxOffset = Math.max(0, totalCandles - chartVisibleCount);
+  const clampedOffset = Math.min(Math.max(0, chartOffset), maxOffset);
   const startIdx = Math.max(0, totalCandles - chartVisibleCount - clampedOffset);
-  const endIdx = startIdx + chartVisibleCount;
+  const endIdx = Math.min(startIdx + chartVisibleCount, totalCandles);
   const displayCandles = candleData.slice(startIdx, endIdx);
-  const chartHigh = displayCandles.length > 0 ? Math.max(...displayCandles.map(c => c.high)) : currentPrice * 1.01;
-  const chartLow = displayCandles.length > 0 ? Math.min(...displayCandles.map(c => c.low)) : currentPrice * 0.99;
+
+  // Calculate chart bounds with padding
+  const rawHigh = displayCandles.length > 0 ? Math.max(...displayCandles.map(c => c.high)) : currentPrice * 1.01;
+  const rawLow = displayCandles.length > 0 ? Math.min(...displayCandles.map(c => c.low)) : currentPrice * 0.99;
+  const padding = (rawHigh - rawLow) * 0.1 || currentPrice * 0.01;
+  const chartHigh = rawHigh + padding;
+  const chartLow = Math.max(0, rawLow - padding);
   const chartRange = chartHigh - chartLow || 1;
 
   const priceSteps = 5;
@@ -140,49 +145,81 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
     chartLow + (chartRange * i) / priceSteps
   );
 
-  const zoomIn = () => setChartVisibleCount(prev => Math.max(15, prev - 10));
-  const zoomOut = () => setChartVisibleCount(prev => Math.min(totalCandles, prev + 10));
-  const resetZoom = () => { setChartVisibleCount(50); setChartOffset(0); };
+  const zoomIn = useCallback(() => setChartVisibleCount(prev => Math.max(10, prev - 8)), []);
+  const zoomOut = useCallback(() => setChartVisibleCount(prev => Math.min(Math.max(totalCandles, 100), prev + 8)), [totalCandles]);
+  const resetZoom = useCallback(() => { setChartVisibleCount(40); setChartOffset(0); }, []);
 
-  const handleWheel = (e: React.WheelEvent) => {
+  const handleWheel = useCallback((e: React.WheelEvent) => {
     e.preventDefault();
+    e.stopPropagation();
     if (e.ctrlKey || e.metaKey) {
       if (e.deltaY > 0) zoomOut(); else zoomIn();
     } else if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      setChartOffset(prev => Math.max(0, Math.min(totalCandles - chartVisibleCount, prev + (e.deltaX > 0 ? -3 : 3))));
+      setChartOffset(prev => Math.max(0, Math.min(maxOffset, prev + (e.deltaX > 0 ? -2 : 2))));
     } else {
-      if (e.deltaY > 0) zoomOut(); else zoomIn();
+      setChartOffset(prev => Math.max(0, Math.min(maxOffset, prev + (e.deltaY > 0 ? -3 : 3))));
     }
-  };
+  }, [maxOffset, zoomIn, zoomOut]);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     if (e.touches.length === 1) {
-      touchStartRef.current = { x: e.touches[0].clientX, dist: 0 };
+      touchStartRef.current = { 
+        x: e.touches[0].clientX, 
+        y: e.touches[0].clientY,
+        dist: 0, 
+        time: Date.now() 
+      };
+      isDraggingRef.current = false;
     } else if (e.touches.length === 2) {
-      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
-      touchStartRef.current = { x: 0, dist };
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX, 
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      touchStartRef.current = { x: 0, y: 0, dist, time: Date.now() };
     }
-  };
+  }, []);
 
-  const handleTouchMove = (e: React.TouchEvent) => {
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
     if (!touchStartRef.current) return;
+    
     if (e.touches.length === 1 && touchStartRef.current.dist === 0) {
       const dx = e.touches[0].clientX - touchStartRef.current.x;
-      if (Math.abs(dx) > 10) {
-        const candlesMoved = Math.round(dx / 8);
-        setChartOffset(prev => Math.max(0, Math.min(totalCandles - chartVisibleCount, prev + candlesMoved)));
-        touchStartRef.current.x = e.touches[0].clientX;
+      const dy = e.touches[0].clientY - touchStartRef.current.y;
+      
+      // Determine if horizontal scrolling
+      if (!isDraggingRef.current && Math.abs(dx) > 8) {
+        isDraggingRef.current = true;
+        e.preventDefault();
+      }
+      
+      if (isDraggingRef.current && Math.abs(dx) > Math.abs(dy)) {
+        e.preventDefault();
+        const sensitivity = Math.max(4, chartVisibleCount / 12);
+        const candlesMoved = Math.round(dx / sensitivity);
+        if (candlesMoved !== 0) {
+          setChartOffset(prev => Math.max(0, Math.min(maxOffset, prev + candlesMoved)));
+          touchStartRef.current.x = e.touches[0].clientX;
+        }
       }
     } else if (e.touches.length === 2 && touchStartRef.current.dist > 0) {
-      const dist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+      e.preventDefault();
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX, 
+        e.touches[0].clientY - e.touches[1].clientY
+      );
       const diff = dist - touchStartRef.current.dist;
-      if (Math.abs(diff) > 15) {
-        if (diff > 0) setChartVisibleCount(prev => Math.max(15, prev - 5));
-        else setChartVisibleCount(prev => Math.min(totalCandles, prev + 5));
+      if (Math.abs(diff) > 20) {
+        if (diff > 0) zoomIn();
+        else zoomOut();
         touchStartRef.current.dist = dist;
       }
     }
-  };
+  }, [chartVisibleCount, maxOffset, zoomIn, zoomOut]);
+
+  const handleTouchEnd = useCallback(() => {
+    touchStartRef.current = null;
+    isDraggingRef.current = false;
+  }, []);
 
   const ohlcv = displayCandles.length > 0 ? displayCandles[displayCandles.length - 1] : null;
 
@@ -194,19 +231,21 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
     );
   }
 
+  const candleWidth = displayCandles.length > 0 ? 100 / displayCandles.length : 2;
+
   return (
-    <div className="flex flex-col h-full bg-background">
+    <div className="flex flex-col h-full bg-background select-none touch-none">
       {/* Timeframe + OHLC Info Bar */}
-      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border/40 bg-card/50 shrink-0">
-        <div className="flex gap-0.5">
+      <div className="flex items-center gap-1 px-2 py-1.5 border-b border-border/40 bg-card/50 shrink-0 overflow-x-auto">
+        <div className="flex gap-0.5 shrink-0">
           {TIMEFRAMES.map((tf) => (
             <button
               key={tf.key}
               onClick={() => setTimeframe(tf.key)}
-              className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all ${
+              className={`px-2 py-1 rounded-md text-[10px] md:text-[11px] font-semibold transition-all whitespace-nowrap ${
                 timeframe === tf.key
                   ? "bg-primary/15 text-primary"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50 active:bg-muted"
               }`}
             >
               {tf.label}
@@ -214,7 +253,7 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
           ))}
         </div>
         {ohlcv && (
-          <div className="ml-auto flex items-center gap-2.5 text-[10px] font-mono text-muted-foreground">
+          <div className="ml-auto flex items-center gap-1.5 md:gap-2.5 text-[9px] md:text-[10px] font-mono text-muted-foreground shrink-0">
             <span>A<span className="text-foreground/80 ml-0.5">{formatPrice(ohlcv.open)}</span></span>
             <span>Y<span className="text-buy/80 ml-0.5">{formatPrice(ohlcv.high)}</span></span>
             <span>D<span className="text-sell/80 ml-0.5">{formatPrice(ohlcv.low)}</span></span>
@@ -225,31 +264,43 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
 
       {/* Chart Area */}
       <div className="flex-1 relative min-h-0">
+        {/* Zoom controls */}
         <div className="absolute top-2 left-2 z-20 flex gap-1">
-          <button onClick={zoomIn} className="h-7 w-7 rounded-md bg-card/90 backdrop-blur-sm border border-border/40 flex items-center justify-center hover:bg-muted transition-colors active:scale-95">
-            <ZoomIn className="h-3.5 w-3.5 text-muted-foreground" />
+          <button 
+            onClick={zoomIn} 
+            className="h-8 w-8 md:h-7 md:w-7 rounded-lg bg-card/95 backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-muted transition-colors active:scale-90 shadow-sm"
+          >
+            <ZoomIn className="h-4 w-4 md:h-3.5 md:w-3.5 text-muted-foreground" />
           </button>
-          <button onClick={zoomOut} className="h-7 w-7 rounded-md bg-card/90 backdrop-blur-sm border border-border/40 flex items-center justify-center hover:bg-muted transition-colors active:scale-95">
-            <ZoomOut className="h-3.5 w-3.5 text-muted-foreground" />
+          <button 
+            onClick={zoomOut} 
+            className="h-8 w-8 md:h-7 md:w-7 rounded-lg bg-card/95 backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-muted transition-colors active:scale-90 shadow-sm"
+          >
+            <ZoomOut className="h-4 w-4 md:h-3.5 md:w-3.5 text-muted-foreground" />
           </button>
-          <button onClick={resetZoom} className="h-7 w-7 rounded-md bg-card/90 backdrop-blur-sm border border-border/40 flex items-center justify-center hover:bg-muted transition-colors active:scale-95">
-            <Maximize2 className="h-3.5 w-3.5 text-muted-foreground" />
+          <button 
+            onClick={resetZoom} 
+            className="h-8 w-8 md:h-7 md:w-7 rounded-lg bg-card/95 backdrop-blur-sm border border-border/50 flex items-center justify-center hover:bg-muted transition-colors active:scale-90 shadow-sm"
+          >
+            <RotateCcw className="h-4 w-4 md:h-3.5 md:w-3.5 text-muted-foreground" />
           </button>
         </div>
 
         <div className="h-full flex">
           <div
             ref={chartRef}
-            className="flex-1 relative overflow-hidden bg-background cursor-crosshair"
+            className="flex-1 relative overflow-hidden bg-background"
             onWheel={handleWheel}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            style={{ touchAction: 'none' }}
           >
             {/* Grid lines */}
             {priceLevels.map((_, i) => (
               <div
                 key={i}
-                className="absolute left-0 right-0 border-t border-border/10"
+                className="absolute left-0 right-0 border-t border-border/15"
                 style={{ bottom: `${(i / priceSteps) * 100}%` }}
               />
             ))}
@@ -264,41 +315,43 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
               return (
                 <div key={pos.id}>
                   {/* Entry Price Line */}
-                  <div
-                    className="absolute left-0 right-0 z-8 border-t border-solid"
-                    style={{
-                      bottom: `${Math.min(Math.max(entryPct, 0), 100)}%`,
-                      borderColor: isBuy ? 'hsl(var(--buy))' : 'hsl(var(--sell))',
-                    }}
-                  >
-                    <span
-                      className={`absolute left-0 text-[8px] font-mono px-1 py-0.5 rounded-r translate-y-[-50%] ${
-                        isBuy ? "bg-buy/80 text-buy-foreground" : "bg-sell/80 text-sell-foreground"
-                      }`}
+                  {entryPct >= -5 && entryPct <= 105 && (
+                    <div
+                      className="absolute left-0 right-0 z-8 border-t-2 border-solid"
+                      style={{
+                        bottom: `${Math.min(Math.max(entryPct, 0), 100)}%`,
+                        borderColor: isBuy ? 'hsl(var(--buy))' : 'hsl(var(--sell))',
+                      }}
                     >
-                      {isBuy ? "AL" : "SAT"} {formatPrice(pos.entry_price)}
-                    </span>
-                  </div>
+                      <span
+                        className={`absolute left-0 text-[9px] font-mono font-medium px-1.5 py-0.5 rounded-r translate-y-[-50%] ${
+                          isBuy ? "bg-buy/90 text-buy-foreground" : "bg-sell/90 text-sell-foreground"
+                        }`}
+                      >
+                        {isBuy ? "AL" : "SAT"} {formatPrice(pos.entry_price)}
+                      </span>
+                    </div>
+                  )}
 
                   {/* Stop Loss Line */}
-                  {slPct !== null && (
+                  {slPct !== null && slPct >= -5 && slPct <= 105 && (
                     <div
-                      className="absolute left-0 right-0 z-7 border-t border-dotted border-sell/70"
+                      className="absolute left-0 right-0 z-7 border-t border-dashed border-sell/80"
                       style={{ bottom: `${Math.min(Math.max(slPct, 0), 100)}%` }}
                     >
-                      <span className="absolute left-0 text-[7px] font-mono px-1 py-0.5 rounded-r translate-y-[-50%] bg-sell/60 text-sell-foreground">
+                      <span className="absolute left-0 text-[8px] font-mono px-1 py-0.5 rounded-r translate-y-[-50%] bg-sell/70 text-sell-foreground">
                         SL {formatPrice(pos.stop_loss!)}
                       </span>
                     </div>
                   )}
 
                   {/* Take Profit Line */}
-                  {tpPct !== null && (
+                  {tpPct !== null && tpPct >= -5 && tpPct <= 105 && (
                     <div
-                      className="absolute left-0 right-0 z-7 border-t border-dotted border-buy/70"
+                      className="absolute left-0 right-0 z-7 border-t border-dashed border-buy/80"
                       style={{ bottom: `${Math.min(Math.max(tpPct, 0), 100)}%` }}
                     >
-                      <span className="absolute left-0 text-[7px] font-mono px-1 py-0.5 rounded-r translate-y-[-50%] bg-buy/60 text-buy-foreground">
+                      <span className="absolute left-0 text-[8px] font-mono px-1 py-0.5 rounded-r translate-y-[-50%] bg-buy/70 text-buy-foreground">
                         TP {formatPrice(pos.take_profit!)}
                       </span>
                     </div>
@@ -308,41 +361,64 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
             })}
 
             {/* Current price line */}
-            <div
-              className="absolute left-0 right-0 z-10 border-t-2 border-dashed"
-              style={{
-                bottom: `${Math.min(Math.max(((currentPrice - chartLow) / chartRange) * 100, 1), 99)}%`,
-                borderColor: isPositive ? 'hsl(var(--buy))' : 'hsl(var(--sell))',
-              }}
-            >
-              <span
-                className={`absolute right-0 text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded-l translate-y-[-50%] ${
-                  isPositive ? "bg-buy text-buy-foreground" : "bg-sell text-sell-foreground"
-                }`}
-              >
-                {formatPrice(currentPrice)}
-              </span>
-            </div>
+            {(() => {
+              const pricePct = ((currentPrice - chartLow) / chartRange) * 100;
+              if (pricePct < -10 || pricePct > 110) return null;
+              return (
+                <div
+                  className="absolute left-0 right-0 z-10 border-t-2 border-dashed"
+                  style={{
+                    bottom: `${Math.min(Math.max(pricePct, 1), 99)}%`,
+                    borderColor: isPositive ? 'hsl(var(--buy))' : 'hsl(var(--sell))',
+                  }}
+                >
+                  <span
+                    className={`absolute right-0 text-[10px] font-mono font-bold px-2 py-0.5 rounded-l translate-y-[-50%] shadow-lg ${
+                      isPositive ? "bg-buy text-buy-foreground" : "bg-sell text-sell-foreground"
+                    }`}
+                  >
+                    {formatPrice(currentPrice)}
+                  </span>
+                </div>
+              );
+            })()}
 
             {/* Candlesticks */}
-            <div className="absolute inset-0 flex items-end px-1 gap-[1px]">
+            <div className="absolute inset-0 flex items-end px-0.5">
               {displayCandles.map((candle, i) => {
                 const isGreen = candle.close >= candle.open;
                 const bodyTop = ((Math.max(candle.open, candle.close) - chartLow) / chartRange) * 100;
                 const bodyBottom = ((Math.min(candle.open, candle.close) - chartLow) / chartRange) * 100;
                 const wickTop = ((candle.high - chartLow) / chartRange) * 100;
                 const wickBottom = ((candle.low - chartLow) / chartRange) * 100;
-                const bodyHeight = Math.max(bodyTop - bodyBottom, 0.5);
+                const bodyHeight = Math.max(bodyTop - bodyBottom, 0.3);
 
                 return (
-                  <div key={i} className="relative flex-1" style={{ height: "100%", minWidth: "3px" }}>
+                  <div 
+                    key={i} 
+                    className="relative h-full"
+                    style={{ 
+                      width: `${candleWidth}%`,
+                      minWidth: '2px',
+                    }}
+                  >
+                    {/* Wick */}
                     <div
-                      className={`absolute left-1/2 -translate-x-1/2 ${isGreen ? "bg-buy/70" : "bg-sell/70"}`}
-                      style={{ bottom: `${wickBottom}%`, height: `${wickTop - wickBottom}%`, width: "1px" }}
+                      className={`absolute left-1/2 -translate-x-1/2 ${isGreen ? "bg-buy/60" : "bg-sell/60"}`}
+                      style={{ 
+                        bottom: `${Math.max(wickBottom, 0)}%`, 
+                        height: `${Math.max(wickTop - wickBottom, 0.2)}%`, 
+                        width: '1px' 
+                      }}
                     />
+                    {/* Body */}
                     <div
-                      className={`absolute left-[15%] right-[15%] rounded-[1px] ${isGreen ? "bg-buy" : "bg-sell"}`}
-                      style={{ bottom: `${bodyBottom}%`, height: `${bodyHeight}%` }}
+                      className={`absolute left-[10%] right-[10%] rounded-sm ${isGreen ? "bg-buy" : "bg-sell"}`}
+                      style={{ 
+                        bottom: `${Math.max(bodyBottom, 0)}%`, 
+                        height: `${bodyHeight}%`,
+                        minHeight: '1px',
+                      }}
                     />
                   </div>
                 );
@@ -351,9 +427,9 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
           </div>
 
           {/* Y-axis price labels */}
-          <div className="w-14 shrink-0 border-l border-border/20 flex flex-col justify-between py-2 bg-background">
+          <div className="w-12 md:w-14 shrink-0 border-l border-border/30 flex flex-col justify-between py-1.5 bg-background/95">
             {[...priceLevels].reverse().map((p, i) => (
-              <span key={i} className="text-[9px] font-mono text-muted-foreground/80 text-right pr-1.5 leading-none">
+              <span key={i} className="text-[8px] md:text-[9px] font-mono text-muted-foreground/80 text-right pr-1 leading-none">
                 {formatPrice(p)}
               </span>
             ))}
@@ -368,10 +444,10 @@ BISTChart.displayName = "BISTChart";
 
 // Generate simulated candle data for when DB has no data yet
 function generateSimulatedCandles(basePrice: number, timeframe: Timeframe): Candle[] {
-  const count = 100;
+  const count = 80;
   const candles: Candle[] = [];
-  let price = basePrice * 0.95; // Start slightly lower
-  const volatility = basePrice * 0.005; // 0.5% volatility
+  let price = basePrice * 0.97;
+  const volatility = basePrice * 0.004;
 
   const now = new Date();
   let interval: number;
@@ -386,18 +462,17 @@ function generateSimulatedCandles(basePrice: number, timeframe: Timeframe): Cand
 
   for (let i = 0; i < count; i++) {
     const time = new Date(now.getTime() - (count - i) * interval);
-    const change = (Math.random() - 0.48) * volatility; // Slight upward bias
+    const change = (Math.random() - 0.47) * volatility;
     const open = price;
-    price = Math.max(price + change, basePrice * 0.8);
+    price = Math.max(price + change, basePrice * 0.85);
     const close = price;
-    const high = Math.max(open, close) + Math.random() * volatility * 0.5;
-    const low = Math.min(open, close) - Math.random() * volatility * 0.5;
+    const high = Math.max(open, close) + Math.random() * volatility * 0.4;
+    const low = Math.min(open, close) - Math.random() * volatility * 0.4;
     const volume = Math.floor(Math.random() * 10000 + 1000);
 
     candles.push({ time: time.toISOString(), open, high, low, close, volume });
   }
 
-  // Make sure the last candle's close is close to current price
   if (candles.length > 0) {
     const lastCandle = candles[candles.length - 1];
     lastCandle.close = basePrice;
