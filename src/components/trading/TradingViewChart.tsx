@@ -104,6 +104,8 @@ export const TradingViewChart = memo(({ symbolName }: TradingViewChartProps) => 
             "snapshot_trading_drawings",
             "bottom_toolbar",
             "volume_force_overlay",
+            "create_volume_indicator_by_default",
+            "create_volume_indicator_by_default_once",
           ],
           overrides: {
             "paneProperties.legendProperties.showStudyArguments": false,
