@@ -117,9 +117,7 @@ const History = () => {
     }
   }, [historyItems.length]);
 
-  const loadHistory = async (pageNum = 0) => {
-    const from = pageNum * PAGE_SIZE;
-    const to = from + PAGE_SIZE - 1;
+  const loadHistory = async () => {
     const [ordersRes, profileRes, transactionsRes] = await Promise.all([
       supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
       supabase.from("profiles").select("balance, account_type").eq("user_id", authUser!.id).single(),
@@ -152,22 +150,14 @@ const History = () => {
       });
     }
 
-    // Sort by date (use closed_at for orders, created_at for transactions)
+    // Sort by date (use closed_at for orders, created_at for transactions) - ascending (oldest first)
     items.sort((a, b) => {
       const dateA = a.itemType === 'order' ? new Date(a.data.closed_at || a.data.created_at) : new Date(a.data.created_at);
       const dateB = b.itemType === 'order' ? new Date(b.data.closed_at || b.data.created_at) : new Date(b.data.created_at);
       return dateA.getTime() - dateB.getTime();
     });
 
-    // Apply pagination
-    const paginatedItems = items.slice(from, to + 1);
-    
-    if (pageNum === 0) {
-      setHistoryItems(paginatedItems);
-    } else {
-      setHistoryItems(prev => [...prev, ...paginatedItems]);
-    }
-    setHasMore(items.length > to + 1);
+    setHistoryItems(items);
 
     if (profileRes.data) {
       setBalance(Number(profileRes.data.balance));
