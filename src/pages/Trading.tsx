@@ -125,7 +125,7 @@ const Trading = () => {
 
       {/* TradingView Chart — takes all remaining space */}
       <div className="flex-1 min-h-0 overflow-hidden">
-        <TradingViewChart symbolName={selectedSymbol.name} />
+        <TradingViewChart symbolName={selectedSymbol.name} exchange={selectedSymbol.exchange} category={selectedSymbol.category} />
       </div>
 
       {/* Order Panel */}
