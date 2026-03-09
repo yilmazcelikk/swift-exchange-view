@@ -235,7 +235,7 @@ const History = () => {
                       </div>
                       <div className="text-right">
                         <span className={`text-sm font-mono font-bold ${isDeposit ? "text-buy" : "text-sell"}`}>
-                          {isDeposit ? "+" : "-"}{formatNum(Number(txn.amount))} USD
+                          {isDeposit ? "+" : "-"}{formatNum(getTxnUsdAmount(txn))} USD
                         </span>
                       </div>
                     </div>
