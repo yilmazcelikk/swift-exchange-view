@@ -26,6 +26,8 @@ interface TransactionRow {
   created_at: string;
   receipt_url?: string | null;
   user_name?: string;
+  account_holder?: string | null;
+  iban?: string | null;
 }
 
 type TabKey = "all" | "deposits" | "withdrawals";
