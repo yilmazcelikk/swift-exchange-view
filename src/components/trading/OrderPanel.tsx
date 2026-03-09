@@ -113,7 +113,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
     const realFreeMargin = realEquity - currentUsedMargin;
 
     if (requiredMargin > realFreeMargin) {
-      toast.error(`Yetersiz serbest teminat. Gerekli: $${requiredMargin.toFixed(2)}, Mevcut: $${realFreeMargin.toFixed(2)}`);
+      toast.error("Yetersiz bakiye. Lütfen hesabınıza para yatırın.");
       return;
     }
 
