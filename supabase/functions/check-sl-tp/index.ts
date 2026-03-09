@@ -99,6 +99,45 @@ function calculateMargin(symbolName: string, lots: number, entryPrice: number, l
   return (lots * contractSize * entryPrice) / leverageRatio;
 }
 
+// Net margin calculation with hedge netting
+function calculateNetMarginForOrders(orders: { symbol_name: string; lots: number; entry_price: number; leverage: string; type: string }[]): number {
+  const symbolGroups: Record<string, { buyLots: number; sellLots: number; avgBuyPrice: number; avgSellPrice: number; leverage: number }> = {};
+
+  for (const o of orders) {
+    const sym = o.symbol_name;
+    if (!symbolGroups[sym]) {
+      symbolGroups[sym] = { buyLots: 0, sellLots: 0, avgBuyPrice: 0, avgSellPrice: 0, leverage: 200 };
+    }
+    const lev = parseInt((o.leverage || "1:200").split(":")[1] || "200", 10);
+    symbolGroups[sym].leverage = lev;
+
+    if (o.type === "buy") {
+      const prevTotal = symbolGroups[sym].avgBuyPrice * symbolGroups[sym].buyLots;
+      symbolGroups[sym].buyLots += Number(o.lots);
+      symbolGroups[sym].avgBuyPrice = symbolGroups[sym].buyLots > 0
+        ? (prevTotal + Number(o.entry_price) * Number(o.lots)) / symbolGroups[sym].buyLots
+        : 0;
+    } else {
+      const prevTotal = symbolGroups[sym].avgSellPrice * symbolGroups[sym].sellLots;
+      symbolGroups[sym].sellLots += Number(o.lots);
+      symbolGroups[sym].avgSellPrice = symbolGroups[sym].sellLots > 0
+        ? (prevTotal + Number(o.entry_price) * Number(o.lots)) / symbolGroups[sym].sellLots
+        : 0;
+    }
+  }
+
+  let totalMargin = 0;
+  for (const [sym, group] of Object.entries(symbolGroups)) {
+    const netLots = Math.abs(group.buyLots - group.sellLots);
+    const netPrice = group.buyLots >= group.sellLots ? group.avgBuyPrice : group.avgSellPrice;
+    if (netLots > 0 && netPrice > 0) {
+      totalMargin += calculateMargin(sym, netLots, netPrice, group.leverage);
+    }
+  }
+
+  return totalMargin;
+}
+
 function calculateSwap(symbolName: string, lots: number, daysHeld: number): number {
   const name = symbolName.toUpperCase();
   let rate = -0.5;
@@ -311,7 +350,6 @@ Deno.serve(async (req) => {
         if (!profile) continue;
 
         let totalPnl = 0;
-        let totalMargin = 0;
         const orderPnls: { order: typeof orders[0]; pnl: number; margin: number; currentPrice: number }[] = [];
 
         for (const order of orders) {
@@ -320,9 +358,17 @@ Deno.serve(async (req) => {
           const oLev = parseInt((order.leverage || "1:200").split(":")[1] || "200", 10);
           const margin = calculateMargin(order.symbol_name, Number(order.lots), Number(order.entry_price), oLev);
           totalPnl += pnl;
-          totalMargin += margin;
           orderPnls.push({ order, pnl, margin, currentPrice: cp });
         }
+
+        // Use net margin with hedge netting
+        const totalMargin = calculateNetMarginForOrders(orders.map(o => ({
+          symbol_name: o.symbol_name,
+          lots: Number(o.lots),
+          entry_price: Number(o.entry_price),
+          leverage: o.leverage || "1:200",
+          type: o.type,
+        })));
 
         const equity = Number(profile.balance) + Number(profile.credit) + totalPnl;
         const marginLevel = totalMargin > 0 ? (equity / totalMargin) * 100 : Infinity;
@@ -368,11 +414,16 @@ Deno.serve(async (req) => {
             stopOutClosedCount++;
 
             let remPnl = 0;
-            let remMargin = 0;
             for (const ro of remainingOrders) {
               remPnl += ro.pnl;
-              remMargin += ro.margin;
             }
+            const remMargin = calculateNetMarginForOrders(remainingOrders.map(ro => ({
+              symbol_name: ro.order.symbol_name,
+              lots: Number(ro.order.lots),
+              entry_price: Number(ro.order.entry_price),
+              leverage: ro.order.leverage || "1:200",
+              type: ro.order.type,
+            })));
 
             const newEquity = currentBalance + Number(profile.credit) + remPnl;
             const newMarginLevel = remMargin > 0 ? (newEquity / remMargin) * 100 : Infinity;
