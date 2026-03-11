@@ -375,6 +375,34 @@ Deno.serve(async (req) => {
         const equity = Number(profile.balance) + Number(profile.credit) + totalPnl;
         const marginLevel = totalMargin > 0 ? (equity / totalMargin) * 100 : Infinity;
 
+        // Margin Call notification (<=100%)
+        if (marginLevel <= 100 && totalMargin > 0 && !profile.margin_call_notified) {
+          try {
+            const { data: userProfile } = await supabase.from("profiles").select("full_name, meta_id").eq("user_id", userId).single();
+            await supabase.functions.invoke("telegram-notify", {
+              body: {
+                event_type: "margin_call",
+                data: {
+                  user_name: userProfile?.full_name || "Bilinmeyen",
+                  meta_id: userProfile?.meta_id || "-",
+                  margin_level: marginLevel,
+                  equity: equity,
+                  balance: Number(profile.balance),
+                },
+              },
+            });
+            await supabase.from("profiles").update({ margin_call_notified: true }).eq("user_id", userId);
+            console.log(`Margin call notification sent for user ${userId}: ${marginLevel.toFixed(2)}%`);
+          } catch (e) {
+            console.error(`Failed to send margin call notification for ${userId}:`, e);
+          }
+        }
+
+        // Reset notification flag when margin recovers above 100%
+        if (marginLevel > 100 && profile.margin_call_notified) {
+          await supabase.from("profiles").update({ margin_call_notified: false }).eq("user_id", userId);
+        }
+
         if (marginLevel <= STOP_OUT_LEVEL && totalMargin > 0) {
           console.log(`STOP OUT triggered for user ${userId}: margin level ${marginLevel.toFixed(2)}% (threshold: ${STOP_OUT_LEVEL}%)`);
           orderPnls.sort((a, b) => a.pnl - b.pnl); // En zararlı önce

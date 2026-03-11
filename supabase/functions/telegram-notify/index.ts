@@ -66,6 +66,21 @@ serve(async (req) => {
           `📅 Tarih: ${formatDate(new Date())}`;
         break;
       }
+      case 'margin_call': {
+        const userName = data.user_name || 'Bilinmeyen';
+        const metaId = data.meta_id || '-';
+        const marginLvl = Number(data.margin_level).toFixed(2);
+        const equity = Number(data.equity).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+        const balance = Number(data.balance).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
+        message = `🔴 *MARGIN CALL \\- Teminat Seviyesi Düşük\\!*\n\n` +
+          `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
+          `🆔 Meta ID: ${metaId}\n` +
+          `📊 Teminat Seviyesi: %${marginLvl}\n` +
+          `💰 Varlık: $${equity}\n` +
+          `💵 Bakiye: $${balance}\n` +
+          `📅 Tarih: ${formatDate(new Date())}`;
+        break;
+      }
       default:
         message = `🔔 Bilinmeyen bildirim: ${event_type}`;
     }
