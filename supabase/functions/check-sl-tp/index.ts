@@ -342,7 +342,7 @@ Deno.serve(async (req) => {
     if (userIds.length > 0) {
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, balance, credit, account_type")
+        .select("user_id, balance, credit, account_type, margin_call_notified")
         .in("user_id", userIds);
 
       const profileMap = new Map(profiles?.map(p => [p.user_id, p]) || []);
