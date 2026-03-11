@@ -213,6 +213,7 @@ export type Database = {
           id: string
           is_banned: boolean
           leverage: string
+          margin_call_notified: boolean
           meta_id: number
           phone: string | null
           referral_code: string | null
@@ -235,6 +236,7 @@ export type Database = {
           id?: string
           is_banned?: boolean
           leverage?: string
+          margin_call_notified?: boolean
           meta_id?: number
           phone?: string | null
           referral_code?: string | null
@@ -257,6 +259,7 @@ export type Database = {
           id?: string
           is_banned?: boolean
           leverage?: string
+          margin_call_notified?: boolean
           meta_id?: number
           phone?: string | null
           referral_code?: string | null

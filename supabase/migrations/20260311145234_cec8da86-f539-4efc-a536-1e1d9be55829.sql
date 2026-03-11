@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN margin_call_notified boolean NOT NULL DEFAULT false;
