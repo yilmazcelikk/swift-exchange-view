@@ -98,11 +98,13 @@ const Dashboard = () => {
     const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
     if (data) {
       const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
-      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, name, category").in("id", symbolIds);
+      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, name, category, exchange").in("id", symbolIds);
       const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
       const catMap: Record<string, string> = {};
-      symbolsData?.forEach(s => { catMap[s.id] = s.category; });
+      const exchMap: Record<string, string | null> = {};
+      symbolsData?.forEach(s => { catMap[s.id] = s.category; exchMap[s.id] = s.exchange; });
       setSymbolCategories(prev => ({ ...prev, ...catMap }));
+      setSymbolExchanges(prev => ({ ...prev, ...exchMap }));
       setOrders(data.map((o: any) => {
         const symbolInfo = priceMap.get(o.symbol_id);
         return {
