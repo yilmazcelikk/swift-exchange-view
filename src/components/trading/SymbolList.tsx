@@ -102,7 +102,7 @@ export function SymbolList({ symbols, loading, onSelectSymbol }: SymbolListProps
           <div className="text-center py-16 text-sm text-muted-foreground">Enstrüman bulunamadı.</div>
         ) : (
           filteredSymbols.map((symbol) => {
-            const marketStatus = getMarketStatus(symbol.name, symbol.category);
+            const marketStatus = getMarketStatus(symbol.name, symbol.category, symbol.exchange);
             return (
               <button
                 key={symbol.id}
