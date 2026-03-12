@@ -39,7 +39,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
   const spread = calcSpread(symbol.name, price, accountType);
   const bid = price - spread / 2;
   const ask = price + spread / 2;
-  const currentMarketStatus = getMarketStatus(symbol.name, symbol.category);
+  const currentMarketStatus = getMarketStatus(symbol.name, symbol.category, symbol.exchange);
 
   // Parse leverage ratio
   const leverageRatio = parseInt(leverage.split(":")[1] || "200", 10);
