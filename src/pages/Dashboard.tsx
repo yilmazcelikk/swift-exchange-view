@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [symbolCategories, setSymbolCategories] = useState<Record<string, string>>({});
+  const [symbolExchanges, setSymbolExchanges] = useState<Record<string, string | null>>({});
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
   const [editMode, setEditMode] = useState(false);
@@ -97,11 +98,13 @@ const Dashboard = () => {
     const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
     if (data) {
       const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
-      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, name, category").in("id", symbolIds);
+      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, name, category, exchange").in("id", symbolIds);
       const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
       const catMap: Record<string, string> = {};
-      symbolsData?.forEach(s => { catMap[s.id] = s.category; });
+      const exchMap: Record<string, string | null> = {};
+      symbolsData?.forEach(s => { catMap[s.id] = s.category; exchMap[s.id] = s.exchange; });
       setSymbolCategories(prev => ({ ...prev, ...catMap }));
+      setSymbolExchanges(prev => ({ ...prev, ...exchMap }));
       setOrders(data.map((o: any) => {
         const symbolInfo = priceMap.get(o.symbol_id);
         return {
@@ -120,10 +123,12 @@ const Dashboard = () => {
     if (pendData) {
       const pendSymbolIds = [...new Set(pendData.map((o: any) => o.symbol_id))];
       if (pendSymbolIds.length > 0) {
-        const { data: pendSymbolsData } = await supabase.from("symbols").select("id, current_price, category").in("id", pendSymbolIds);
+        const { data: pendSymbolsData } = await supabase.from("symbols").select("id, current_price, category, exchange").in("id", pendSymbolIds);
         const catMap: Record<string, string> = {};
-        pendSymbolsData?.forEach(s => { catMap[s.id] = s.category; });
+        const exchMap: Record<string, string | null> = {};
+        pendSymbolsData?.forEach(s => { catMap[s.id] = s.category; exchMap[s.id] = s.exchange; });
         setSymbolCategories(prev => ({ ...prev, ...catMap }));
+        setSymbolExchanges(prev => ({ ...prev, ...exchMap }));
       }
       setPendingOrders(pendData);
     } else {
@@ -137,7 +142,8 @@ const Dashboard = () => {
     for (const o of openOrders) {
       if (!map[o.symbolId]) {
         const cat = symbolCategories[o.symbolId] || "";
-        const status = getMarketStatus(o.symbolName, cat);
+        const exch = symbolExchanges[o.symbolId] || null;
+        const status = getMarketStatus(o.symbolName, cat, exch);
         map[o.symbolId] = { price: o.currentPrice, changePercent: 0, marketOpen: status.isOpen };
       } else {
         map[o.symbolId].price = o.currentPrice;
@@ -206,7 +212,8 @@ const Dashboard = () => {
   // Atomic position close using DB function
   const handleClosePosition = async (order: Order) => {
     const cat = symbolCategories[order.symbolId] || "";
-    const mStatus = getMarketStatus(order.symbolName, cat);
+    const exch = symbolExchanges[order.symbolId] || null;
+    const mStatus = getMarketStatus(order.symbolName, cat, exch);
     if (!mStatus.isOpen) {
       toast.error("Piyasa kapalı. Kapalı piyasalarda pozisyon kapatılamaz.");
       return;

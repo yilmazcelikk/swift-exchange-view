@@ -13,6 +13,7 @@ interface DBSymbol {
   name: string;
   display_name: string;
   category: string;
+  exchange?: string | null;
   current_price: number;
 }
 
@@ -39,7 +40,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
   const spread = calcSpread(symbol.name, price, accountType);
   const bid = price - spread / 2;
   const ask = price + spread / 2;
-  const currentMarketStatus = getMarketStatus(symbol.name, symbol.category);
+  const currentMarketStatus = getMarketStatus(symbol.name, symbol.category, symbol.exchange);
 
   // Parse leverage ratio
   const leverageRatio = parseInt(leverage.split(":")[1] || "200", 10);
@@ -62,7 +63,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       if (orderType === "sell_stop" && pendingTargetPrice >= midPrice) { toast.error("Sell Stop fiyatı güncel fiyatın altında olmalıdır."); return; }
     }
 
-    const status = getMarketStatus(symbol.name, symbol.category);
+    const status = getMarketStatus(symbol.name, symbol.category, symbol.exchange);
     if (!status.isOpen) {
       toast.error("Piyasa kapalı. Bu enstrümanda şu an işlem açılamaz.", { description: status.scheduleLabel });
       return;

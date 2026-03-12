@@ -127,7 +127,7 @@ const Trading = () => {
   }
 
   const price = selectedSymbol.current_price || 0;
-  const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category);
+  const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category, selectedSymbol.exchange);
   const isPositive = (selectedSymbol.change_percent ?? 0) >= 0;
   const isBISTStock = BIST_SYMBOLS.has(selectedSymbol.name) || selectedSymbol.exchange === "BIST";
 
