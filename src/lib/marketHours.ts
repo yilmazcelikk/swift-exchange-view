@@ -101,25 +101,15 @@ const SCHEDULES: Record<string, MarketSchedule> = {
 };
 
 // Map symbol names to their schedule
-function getScheduleKey(symbolName: string, category: string): string {
+function getScheduleKey(symbolName: string, category: string, exchange?: string | null): string {
   const name = symbolName.toUpperCase();
 
   // Crypto - always open
   if (category === "crypto") return "crypto";
 
-  // BIST stocks
+  // Stocks - detect by exchange field
   if (category === "stock") {
-    // Check if BIST exchange
-    const bistSymbols = [
-      "THYAO", "GARAN", "AKBNK", "SISE", "EREGL", "KCHOL", "SAHOL", "TUPRS",
-      "YKBNK", "ISCTR", "ASELS", "BIMAS", "PGSUS", "EKGYO", "PETKM", "TOASO",
-      "TAVHL", "KOZAL", "KOZAA", "FROTO", "TCELL", "HALKB", "VAKBN", "DOHOL",
-      "ENKAI", "ARCLK", "VESTL", "MGROS", "SOKM", "GUBRF", "SASA", "OYAKC",
-      "TTKOM", "TSKB", "AKSA", "CIMSA", "AEFES", "ULKER", "DOAS", "OTKAR",
-      "ISGYO", "KRDMD", "GESAN", "KONTR", "ODAS", "BRYAT", "TTRAK", "EUPWR",
-      "AGHOL", "MAVI", "LOGO",
-    ];
-    if (bistSymbols.includes(name)) return "bist";
+    if (exchange === "BIST") return "bist";
     return "us_stock";
   }
 
