@@ -148,8 +148,8 @@ export interface MarketStatus {
   scheduleLabel: string;
 }
 
-export function getMarketStatus(symbolName: string, category: string): MarketStatus {
-  const key = getScheduleKey(symbolName, category);
+export function getMarketStatus(symbolName: string, category: string, exchange?: string | null): MarketStatus {
+  const key = getScheduleKey(symbolName, category, exchange);
   const schedule = SCHEDULES[key];
 
   if (!schedule) {
