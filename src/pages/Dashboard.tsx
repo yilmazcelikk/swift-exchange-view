@@ -23,6 +23,7 @@ const Dashboard = () => {
   const [orders, setOrders] = useState<Order[]>([]);
   const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [symbolCategories, setSymbolCategories] = useState<Record<string, string>>({});
+  const [symbolExchanges, setSymbolExchanges] = useState<Record<string, string | null>>({});
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [closingOrder, setClosingOrder] = useState<Order | null>(null);
   const [editMode, setEditMode] = useState(false);
