@@ -55,8 +55,8 @@ export function SymbolList({ symbols, loading, onSelectSymbol }: SymbolListProps
       const bHasLogo = resolveLogoUrl(b.name, b.category) ? 0 : 1;
       if (aHasLogo !== bHasLogo) return aHasLogo - bHasLogo;
       if (selectedCategory === "all" || selectedCategory === "stock") {
-        const aIsBist = a.category === "stock" && BIST_NAMES.has(a.name) ? 0 : 1;
-        const bIsBist = b.category === "stock" && BIST_NAMES.has(b.name) ? 0 : 1;
+        const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
+        const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
         if (aIsBist !== bIsBist) return aIsBist - bIsBist;
       }
       if (selectedCategory === "all" || selectedCategory === "commodity") {
