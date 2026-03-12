@@ -27,14 +27,7 @@ const categories = [
   { key: "crypto", label: "Kripto", icon: Bitcoin },
 ];
 
-const BIST_NAMES = new Set([
-  "THYAO","GARAN","AKBNK","SISE","EREGL","KCHOL","SAHOL","TUPRS","YKBNK",
-  "ISCTR","ASELS","BIMAS","PGSUS","EKGYO","PETKM","TOASO","TAVHL","FROTO",
-  "TCELL","HALKB","VAKBN","DOHOL","ENKAI","ARCLK","VESTL","MGROS","SOKM",
-  "GUBRF","SASA","OYAKC","TTKOM","TSKB","AKSA","CIMSA","AEFES","ULKER",
-  "DOAS","OTKAR","ISGYO","KRDMD","GESAN","KONTR","ODAS","BRYAT","TTRAK",
-  "EUPWR","AGHOL","MAVI","LOGO",
-]);
+// BIST detection now uses exchange field from DB
 
 interface SymbolListProps {
   symbols: DBSymbol[];
