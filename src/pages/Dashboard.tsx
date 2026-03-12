@@ -140,7 +140,8 @@ const Dashboard = () => {
     for (const o of openOrders) {
       if (!map[o.symbolId]) {
         const cat = symbolCategories[o.symbolId] || "";
-        const status = getMarketStatus(o.symbolName, cat);
+        const exch = symbolExchanges[o.symbolId] || null;
+        const status = getMarketStatus(o.symbolName, cat, exch);
         map[o.symbolId] = { price: o.currentPrice, changePercent: 0, marketOpen: status.isOpen };
       } else {
         map[o.symbolId].price = o.currentPrice;
