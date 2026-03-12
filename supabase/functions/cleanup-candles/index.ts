@@ -6,15 +6,12 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-// Retention policy: how many days to keep each timeframe
+// Retention: days to keep per timeframe
 const RETENTION_DAYS: Record<string, number> = {
   "1m": 3,
   "15m": 14,
   "1h": 60,
 };
-
-const BATCH_SIZE = 5000;
-const MAX_BATCHES = 50; // safety limit per invocation
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -22,39 +19,33 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const dbUrl = Deno.env.get("SUPABASE_DB_URL")!;
-    const { default: postgres } = await import("https://deno.land/x/postgresjs@v3.4.5/mod.js");
-    const sql = postgres(dbUrl, { max: 1 });
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabase = createClient(supabaseUrl, serviceKey);
 
     const results: Record<string, number> = {};
 
     for (const [timeframe, days] of Object.entries(RETENTION_DAYS)) {
       const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString();
-      let totalDeleted = 0;
+      
+      // Daily maintenance: only a few thousand rows per timeframe
+      const { count, error } = await supabase
+        .from("candles")
+        .delete({ count: "exact" })
+        .eq("timeframe", timeframe)
+        .lt("bucket_time", cutoff);
 
-      for (let i = 0; i < MAX_BATCHES; i++) {
-        const deleted = await sql`
-          DELETE FROM candles
-          WHERE id IN (
-            SELECT id FROM candles
-            WHERE timeframe = ${timeframe} AND bucket_time < ${cutoff}
-            LIMIT ${BATCH_SIZE}
-          )
-        `;
-        const count = deleted.count ?? 0;
-        totalDeleted += count;
-        console.log(`${timeframe} batch ${i + 1}: deleted ${count}`);
-        if (count < BATCH_SIZE) break;
+      if (error) {
+        console.error(`Error cleaning ${timeframe}:`, error.message);
+        results[timeframe] = -1;
+      } else {
+        results[timeframe] = count || 0;
+        console.log(`${timeframe}: deleted ${count} rows`);
       }
-
-      results[timeframe] = totalDeleted;
-      console.log(`${timeframe} total: ${totalDeleted} rows deleted (cutoff: ${cutoff})`);
     }
 
-    await sql.end();
-
-    const total = Object.values(results).reduce((a, b) => a + b, 0);
-    console.log(`Grand total deleted: ${total}`);
+    const total = Object.values(results).filter(v => v > 0).reduce((a, b) => a + b, 0);
+    console.log(`Total deleted: ${total}`);
 
     return new Response(JSON.stringify({ success: true, deleted: results, total }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
