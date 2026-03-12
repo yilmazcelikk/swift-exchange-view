@@ -123,10 +123,12 @@ const Dashboard = () => {
     if (pendData) {
       const pendSymbolIds = [...new Set(pendData.map((o: any) => o.symbol_id))];
       if (pendSymbolIds.length > 0) {
-        const { data: pendSymbolsData } = await supabase.from("symbols").select("id, current_price, category").in("id", pendSymbolIds);
+        const { data: pendSymbolsData } = await supabase.from("symbols").select("id, current_price, category, exchange").in("id", pendSymbolIds);
         const catMap: Record<string, string> = {};
-        pendSymbolsData?.forEach(s => { catMap[s.id] = s.category; });
+        const exchMap: Record<string, string | null> = {};
+        pendSymbolsData?.forEach(s => { catMap[s.id] = s.category; exchMap[s.id] = s.exchange; });
         setSymbolCategories(prev => ({ ...prev, ...catMap }));
+        setSymbolExchanges(prev => ({ ...prev, ...exchMap }));
       }
       setPendingOrders(pendData);
     } else {

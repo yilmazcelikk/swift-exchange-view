@@ -62,7 +62,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       if (orderType === "sell_stop" && pendingTargetPrice >= midPrice) { toast.error("Sell Stop fiyatı güncel fiyatın altında olmalıdır."); return; }
     }
 
-    const status = getMarketStatus(symbol.name, symbol.category);
+    const status = getMarketStatus(symbol.name, symbol.category, symbol.exchange);
     if (!status.isOpen) {
       toast.error("Piyasa kapalı. Bu enstrümanda şu an işlem açılamaz.", { description: status.scheduleLabel });
       return;
