@@ -210,7 +210,8 @@ const Dashboard = () => {
   // Atomic position close using DB function
   const handleClosePosition = async (order: Order) => {
     const cat = symbolCategories[order.symbolId] || "";
-    const mStatus = getMarketStatus(order.symbolName, cat);
+    const exch = symbolExchanges[order.symbolId] || null;
+    const mStatus = getMarketStatus(order.symbolName, cat, exch);
     if (!mStatus.isOpen) {
       toast.error("Piyasa kapalı. Kapalı piyasalarda pozisyon kapatılamaz.");
       return;
