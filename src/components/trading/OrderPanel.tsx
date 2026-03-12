@@ -13,6 +13,7 @@ interface DBSymbol {
   name: string;
   display_name: string;
   category: string;
+  exchange?: string | null;
   current_price: number;
 }
 
