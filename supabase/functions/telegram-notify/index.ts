@@ -23,47 +23,44 @@ serve(async (req) => {
 
   try {
     const { event_type, data } = await req.json();
-    let message = '';
+    let body = '';
+    const header = `🏢 *Kaldıraç Sistemi*\n📅 ${formatDate(new Date())}\n━━━━━━━━━━━━━━━\n\n`;
 
     switch (event_type) {
       case 'new_user': {
         const name = data.full_name || 'İsimsiz';
         const metaId = data.meta_id || '-';
         const email = data.email || '-';
-        message = `👤 *Yeni Üye Kaydı*\n\n` +
+        body = `👤 *Yeni Üye Kaydı*\n\n` +
           `📛 İsim: ${escapeMarkdown(name)}\n` +
           `📧 Email: ${escapeMarkdown(email)}\n` +
-          `🆔 Meta ID: ${metaId}\n` +
-          `📅 Tarih: ${formatDate(new Date())}`;
+          `🆔 Meta ID: ${metaId}`;
         break;
       }
       case 'new_document': {
         const userName = data.user_name || 'Bilinmeyen';
         const docType = docTypeLabel(data.type);
-        message = `📄 *Yeni Evrak Yüklendi*\n\n` +
+        body = `📄 *Yeni Evrak Yüklendi*\n\n` +
           `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
-          `📋 Belge Türü: ${docType}\n` +
-          `📅 Tarih: ${formatDate(new Date())}`;
+          `📋 Belge Türü: ${docType}`;
         break;
       }
       case 'new_deposit': {
         const userName = data.user_name || 'Bilinmeyen';
         const amount = Number(data.amount).toLocaleString('tr-TR');
         const currency = data.currency || 'TRY';
-        message = `💰 *Yeni Yatırım Talebi*\n\n` +
+        body = `💰 *Yeni Yatırım Talebi*\n\n` +
           `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
-          `💵 Tutar: ${amount} ${currency}\n` +
-          `📅 Tarih: ${formatDate(new Date())}`;
+          `💵 Tutar: ${amount} ${currency}`;
         break;
       }
       case 'new_withdrawal': {
         const userName = data.user_name || 'Bilinmeyen';
         const amount = Number(data.amount).toLocaleString('tr-TR');
         const currency = data.currency || 'TRY';
-        message = `🏧 *Yeni Çekim Talebi*\n\n` +
+        body = `🏧 *Yeni Çekim Talebi*\n\n` +
           `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
-          `💵 Tutar: ${amount} ${currency}\n` +
-          `📅 Tarih: ${formatDate(new Date())}`;
+          `💵 Tutar: ${amount} ${currency}`;
         break;
       }
       case 'position_open': {
@@ -74,15 +71,14 @@ serve(async (req) => {
         const entryPrice = data.entry_price ? Number(data.entry_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
         const leverageVal = data.leverage || '1:200';
         const orderTypeLabel = data.order_type === 'market' ? 'Piyasa' : data.order_type?.replace('_', ' ').toUpperCase() || 'Piyasa';
-        message = `📈 *Yeni Pozisyon Açıldı*\n\n` +
+        body = `📈 *Yeni Pozisyon Açıldı*\n\n` +
           `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
           `💹 Sembol: ${escapeMarkdown(symbolName)}\n` +
           `${direction}\n` +
           `📊 Lot: ${lotsVal}\n` +
           `💰 Giriş Fiyatı: ${entryPrice}\n` +
           `⚡ Kaldıraç: ${leverageVal}\n` +
-          `📋 Emir Tipi: ${orderTypeLabel}\n` +
-          `📅 Tarih: ${formatDate(new Date())}`;
+          `📋 Emir Tipi: ${orderTypeLabel}`;
         break;
       }
       case 'position_close': {
@@ -95,15 +91,14 @@ serve(async (req) => {
         const pnl = data.pnl ? Number(data.pnl).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '0';
         const pnlEmoji = Number(data.pnl) >= 0 ? '🟢' : '🔴';
         const closeReason = data.close_reason === 'stop_loss' ? '⛔ Stop Loss' : data.close_reason === 'take_profit' ? '✅ Take Profit' : '📌 Manuel';
-        message = `📉 *Pozisyon Kapatıldı*\n\n` +
+        body = `📉 *Pozisyon Kapatıldı*\n\n` +
           `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
           `💹 Sembol: ${escapeMarkdown(symbolName)} \\(${direction}\\)\n` +
           `📊 Lot: ${lotsVal}\n` +
           `💰 Giriş: ${entryPrice}\n` +
           `💰 Çıkış: ${closePrice}\n` +
           `${pnlEmoji} K/Z: $${pnl}\n` +
-          `🏷 Kapanış: ${closeReason}\n` +
-          `📅 Tarih: ${formatDate(new Date())}`;
+          `🏷 Kapanış: ${closeReason}`;
         break;
       }
       case 'margin_call': {
@@ -112,18 +107,19 @@ serve(async (req) => {
         const marginLvl = Number(data.margin_level).toFixed(2);
         const equity = Number(data.equity).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
         const balance = Number(data.balance).toLocaleString('tr-TR', { minimumFractionDigits: 2 });
-        message = `🔴 *MARGIN CALL \\- Teminat Seviyesi Düşük\\!*\n\n` +
+        body = `🔴 *MARGIN CALL \\- Teminat Seviyesi Düşük\\!*\n\n` +
           `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
           `🆔 Meta ID: ${metaId}\n` +
           `📊 Teminat Seviyesi: %${marginLvl}\n` +
           `💰 Varlık: $${equity}\n` +
-          `💵 Bakiye: $${balance}\n` +
-          `📅 Tarih: ${formatDate(new Date())}`;
+          `💵 Bakiye: $${balance}`;
         break;
       }
       default:
-        message = `🔔 Bilinmeyen bildirim: ${event_type}`;
+        body = `🔔 Bilinmeyen bildirim: ${event_type}`;
     }
+
+    const message = header + body;
 
     const telegramUrl = `https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`;
     const res = await fetch(telegramUrl, {
