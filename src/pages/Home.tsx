@@ -278,7 +278,7 @@ export default function Home() {
           <motion.div
             initial="hidden"
             whileInView="visible"
-            viewport={{ once: true, margin: "-100px" }}
+            viewport={{ once: true, margin: "100px" }}
             className="text-center mb-16"
           >
             <motion.p variants={fadeUp} custom={0} className="text-xs uppercase tracking-[0.2em] text-blue-400 font-medium mb-3">
