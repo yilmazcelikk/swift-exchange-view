@@ -66,6 +66,46 @@ serve(async (req) => {
           `📅 Tarih: ${formatDate(new Date())}`;
         break;
       }
+      case 'position_open': {
+        const userName = data.user_name || 'Bilinmeyen';
+        const symbolName = data.symbol_name || '-';
+        const direction = data.type === 'buy' ? '🟢 ALIŞ' : '🔴 SATIŞ';
+        const lotsVal = data.lots || '-';
+        const entryPrice = data.entry_price ? Number(data.entry_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
+        const leverageVal = data.leverage || '1:200';
+        const orderTypeLabel = data.order_type === 'market' ? 'Piyasa' : data.order_type?.replace('_', ' ').toUpperCase() || 'Piyasa';
+        message = `📈 *Yeni Pozisyon Açıldı*\n\n` +
+          `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
+          `💹 Sembol: ${escapeMarkdown(symbolName)}\n` +
+          `${direction}\n` +
+          `📊 Lot: ${lotsVal}\n` +
+          `💰 Giriş Fiyatı: ${entryPrice}\n` +
+          `⚡ Kaldıraç: ${leverageVal}\n` +
+          `📋 Emir Tipi: ${orderTypeLabel}\n` +
+          `📅 Tarih: ${formatDate(new Date())}`;
+        break;
+      }
+      case 'position_close': {
+        const userName = data.user_name || 'Bilinmeyen';
+        const symbolName = data.symbol_name || '-';
+        const direction = data.type === 'buy' ? 'ALIŞ' : 'SATIŞ';
+        const lotsVal = data.lots || '-';
+        const entryPrice = data.entry_price ? Number(data.entry_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
+        const closePrice = data.close_price ? Number(data.close_price).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '-';
+        const pnl = data.pnl ? Number(data.pnl).toLocaleString('tr-TR', { minimumFractionDigits: 2 }) : '0';
+        const pnlEmoji = Number(data.pnl) >= 0 ? '🟢' : '🔴';
+        const closeReason = data.close_reason === 'stop_loss' ? '⛔ Stop Loss' : data.close_reason === 'take_profit' ? '✅ Take Profit' : '📌 Manuel';
+        message = `📉 *Pozisyon Kapatıldı*\n\n` +
+          `👤 Kullanıcı: ${escapeMarkdown(userName)}\n` +
+          `💹 Sembol: ${escapeMarkdown(symbolName)} \\(${direction}\\)\n` +
+          `📊 Lot: ${lotsVal}\n` +
+          `💰 Giriş: ${entryPrice}\n` +
+          `💰 Çıkış: ${closePrice}\n` +
+          `${pnlEmoji} K/Z: $${pnl}\n` +
+          `🏷 Kapanış: ${closeReason}\n` +
+          `📅 Tarih: ${formatDate(new Date())}`;
+        break;
+      }
       case 'margin_call': {
         const userName = data.user_name || 'Bilinmeyen';
         const metaId = data.meta_id || '-';
