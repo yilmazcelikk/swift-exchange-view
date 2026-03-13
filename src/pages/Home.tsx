@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { ArrowRight, Zap, Shield, BarChart3, TrendingUp, ChevronRight, Globe, Lock, Activity } from "lucide-react";
+import { ArrowRight, Zap, Shield, BarChart3, Headphones, ChevronRight, Globe, Lock, Activity, Phone, Mail, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
