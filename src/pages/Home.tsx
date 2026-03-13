@@ -27,9 +27,9 @@ const features = [
     iconColor: "text-blue-400",
   },
   {
-    icon: TrendingUp,
-    title: "Kaldıraçlı İşlem",
-    desc: "Esnek kaldıraç seçenekleri ile yatırım fırsatlarını maksimize edin.",
+    icon: Headphones,
+    title: "7/24 Destek",
+    desc: "Uzman ekibimiz her an yanınızda, sorularınıza anında çözüm üretin.",
     gradient: "from-purple-500/20 to-pink-500/20",
     iconColor: "text-purple-400",
   },
