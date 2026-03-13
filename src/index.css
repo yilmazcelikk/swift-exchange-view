@@ -185,3 +185,14 @@
     text-shadow: 0 0 8px hsl(var(--sell) / 0.4);
   }
 }
+
+/* CSS-only ticker animation for Home page */
+@keyframes ticker-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.ticker-track {
+  animation: ticker-scroll 25s linear infinite;
+  will-change: transform;
+}
