@@ -359,7 +359,6 @@ export default function Home() {
               <div className="flex flex-col gap-2.5">
                 <Link to="/login" className="text-white/30 text-xs hover:text-white/60 transition-colors">Giriş Yap</Link>
                 <Link to="/register" className="text-white/30 text-xs hover:text-white/60 transition-colors">Kayıt Ol</Link>
-                <a href="https://www.marbasmenkul.com" target="_blank" rel="noopener noreferrer" className="text-white/30 text-xs hover:text-white/60 transition-colors">Kurumsal Web Sitesi</a>
               </div>
             </div>
 
