@@ -545,34 +545,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Step 4: Delete symbols that are NOT in TV_SYMBOL_MAP (orphaned in DB)
-    const validNames = Object.keys(TV_SYMBOL_MAP);
-    const { data: allDbSymbols } = await supabase.from("symbols").select("name");
-    const orphanedNames = (allDbSymbols || [])
-      .map(s => s.name)
-      .filter(n => !validNames.includes(n));
-
+    // Step 5: Orphan cleanup — only every 10 minutes to save queries
     let deletedCount = 0;
-    if (orphanedNames.length > 0) {
-      const { error: delErr, count } = await supabase
-        .from("symbols")
-        .delete({ count: "exact" })
-        .in("name", orphanedNames);
-      if (delErr) console.error("Delete orphaned symbols error:", delErr.message);
-      else deletedCount = count || 0;
-    }
-
-    // Step 5: Delete symbols that got no data from TV after update (price still 0)
-    const noDataNames = allNames.filter(n => !tvData[n]);
-    let noDataDeleted = 0;
-    if (noDataNames.length > 0) {
-      const { error: ndErr, count } = await supabase
-        .from("symbols")
-        .delete({ count: "exact" })
-        .in("name", noDataNames)
-        .or("current_price.eq.0,current_price.is.null");
-      if (ndErr) console.error("Delete no-data symbols error:", ndErr.message);
-      else noDataDeleted = count || 0;
+    if (minute % 10 === 0) {
+      const validNames = Object.keys(TV_SYMBOL_MAP);
+      const { data: allDbSymbols } = await supabase.from("symbols").select("name");
+      const orphanedNames = (allDbSymbols || [])
+        .map(s => s.name)
+        .filter(n => !validNames.includes(n));
+      if (orphanedNames.length > 0) {
+        const { count } = await supabase
+          .from("symbols")
+          .delete({ count: "exact" })
+          .in("name", orphanedNames);
+        deletedCount = count || 0;
+      }
     }
 
     // Step 6: Check SL/TP levels and auto-close orders
@@ -596,9 +583,8 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         updated: updatedNames.length,
-        total: allNames.length,
+        active_symbols: namesToUpdate.length,
         deleted_orphaned: deletedCount,
-        deleted_no_data: noDataDeleted,
         sl_tp_closed: slTpClosed,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
