@@ -8,7 +8,6 @@ const corsHeaders = {
 
 // Retention: days to keep per timeframe
 const RETENTION_DAYS: Record<string, number> = {
-  "1m": 3,
   "15m": 14,
   "1h": 60,
 };

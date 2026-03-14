@@ -465,6 +465,16 @@ async function fetchTradingViewData(symbols: string[]): Promise<Record<string, a
   return results;
 }
 
+// Popular symbols that are always updated (for the symbol list UI)
+const ALWAYS_UPDATE_SYMBOLS = new Set([
+  "EURUSD", "GBPUSD", "USDJPY", "USDTRY", "EURTRY",
+  "XAUUSD", "XAGUSD", "USOIL", "NATGAS",
+  "BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "BNBUSD",
+  "US500", "US30", "USTEC", "DE40", "UK100", "XU100",
+  "THYAO", "GARAN", "AKBNK", "EREGL", "SISE", "KCHOL",
+  "AAPL", "TSLA", "MSFT", "NVDA", "GOOGL", "AMZN", "META",
+]);
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -477,29 +487,44 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Step 1: Ensure all symbols from the map exist in DB (auto-create missing)
-    const allSymbolRows = Object.entries(TV_SYMBOL_MAP).map(([name, tvTicker]) => ({
-      name,
-      display_name: DISPLAY_NAMES[name] || name,
-      category: inferCategory(tvTicker),
-      is_active: true,
-    }));
+    // Step 1: Ensure all symbols from the map exist in DB (auto-create missing) — only run occasionally
+    const minute = new Date().getMinutes();
+    if (minute % 10 === 0) {
+      const allSymbolRows = Object.entries(TV_SYMBOL_MAP).map(([name, tvTicker]) => ({
+        name,
+        display_name: DISPLAY_NAMES[name] || name,
+        category: inferCategory(tvTicker),
+        is_active: true,
+      }));
+      const { error: upsertErr } = await supabase
+        .from("symbols")
+        .upsert(allSymbolRows, { onConflict: "name", ignoreDuplicates: true });
+      if (upsertErr) console.error("Symbol upsert error:", upsertErr.message);
+    }
 
-    const { error: upsertErr } = await supabase
-      .from("symbols")
-      .upsert(allSymbolRows, { onConflict: "name", ignoreDuplicates: true });
+    // Step 2: Determine which symbols need price updates
+    // Get symbols with open/pending orders
+    const { data: orderSymbols } = await supabase
+      .from("orders")
+      .select("symbol_name")
+      .in("status", ["open", "pending"]);
+    
+    const activeSymbols = new Set<string>(ALWAYS_UPDATE_SYMBOLS);
+    for (const o of orderSymbols || []) {
+      activeSymbols.add(o.symbol_name);
+    }
+    
+    const namesToUpdate = [...activeSymbols].filter(n => TV_SYMBOL_MAP[n]);
+    console.log(`Updating ${namesToUpdate.length} symbols (of ${Object.keys(TV_SYMBOL_MAP).length} total)`);
 
-    if (upsertErr) console.error("Symbol upsert error:", upsertErr.message);
-
-    // Step 2: Fetch price data from TradingView
-    const allNames = Object.keys(TV_SYMBOL_MAP);
-    const tvData = await fetchTradingViewData(allNames);
+    // Step 3: Fetch price data from TradingView (only active symbols)
+    const tvData = await fetchTradingViewData(namesToUpdate);
     const updatedNames: string[] = [];
     const now = new Date().toISOString();
 
-    // Step 3: Batch update prices
+    // Step 4: Batch update prices
     const entries = Object.entries(tvData);
-    const updateBatchSize = 30;
+    const updateBatchSize = 50;
 
     for (let i = 0; i < entries.length; i += updateBatchSize) {
       const batch = entries.slice(i, i + updateBatchSize);
@@ -520,34 +545,21 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Step 4: Delete symbols that are NOT in TV_SYMBOL_MAP (orphaned in DB)
-    const validNames = Object.keys(TV_SYMBOL_MAP);
-    const { data: allDbSymbols } = await supabase.from("symbols").select("name");
-    const orphanedNames = (allDbSymbols || [])
-      .map(s => s.name)
-      .filter(n => !validNames.includes(n));
-
+    // Step 5: Orphan cleanup — only every 10 minutes to save queries
     let deletedCount = 0;
-    if (orphanedNames.length > 0) {
-      const { error: delErr, count } = await supabase
-        .from("symbols")
-        .delete({ count: "exact" })
-        .in("name", orphanedNames);
-      if (delErr) console.error("Delete orphaned symbols error:", delErr.message);
-      else deletedCount = count || 0;
-    }
-
-    // Step 5: Delete symbols that got no data from TV after update (price still 0)
-    const noDataNames = allNames.filter(n => !tvData[n]);
-    let noDataDeleted = 0;
-    if (noDataNames.length > 0) {
-      const { error: ndErr, count } = await supabase
-        .from("symbols")
-        .delete({ count: "exact" })
-        .in("name", noDataNames)
-        .or("current_price.eq.0,current_price.is.null");
-      if (ndErr) console.error("Delete no-data symbols error:", ndErr.message);
-      else noDataDeleted = count || 0;
+    if (minute % 10 === 0) {
+      const validNames = Object.keys(TV_SYMBOL_MAP);
+      const { data: allDbSymbols } = await supabase.from("symbols").select("name");
+      const orphanedNames = (allDbSymbols || [])
+        .map(s => s.name)
+        .filter(n => !validNames.includes(n));
+      if (orphanedNames.length > 0) {
+        const { count } = await supabase
+          .from("symbols")
+          .delete({ count: "exact" })
+          .in("name", orphanedNames);
+        deletedCount = count || 0;
+      }
     }
 
     // Step 6: Check SL/TP levels and auto-close orders
@@ -571,9 +583,8 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         updated: updatedNames.length,
-        total: allNames.length,
+        active_symbols: namesToUpdate.length,
         deleted_orphaned: deletedCount,
-        deleted_no_data: noDataDeleted,
         sl_tp_closed: slTpClosed,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
