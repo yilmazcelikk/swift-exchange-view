@@ -1,7 +1,7 @@
 {
-  "name": "Marbaş Menkul Değerler",
-  "short_name": "Marbaş Yatırım",
-  "description": "Marbaş Menkul Değerler - Güvenilir Yatırım Ortağınız",
+  "name": "Fiba Yatırım",
+  "short_name": "Fiba Yatırım",
+  "description": "Fiba Yatırım - Güvenilir Yatırım Ortağınız",
   "start_url": "/login",
   "display": "standalone",
   "background_color": "#0a0e27",

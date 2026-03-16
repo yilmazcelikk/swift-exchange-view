@@ -136,7 +136,7 @@ const AdminLayout = () => {
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="h-14 flex items-center justify-between px-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-8 w-auto" />
+            <img src="/marbas-logo.png" alt="Fiba Yatırım" className="h-8 w-auto" />
           </div>
           <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSidebarOpen(false)}>
             <X className="h-4 w-4" />
