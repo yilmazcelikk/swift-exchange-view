@@ -79,12 +79,12 @@ const Login = () => {
         </div>
         <div className="relative z-10 space-y-8 w-full max-w-lg text-center">
           <div className="flex justify-center mb-6">
-            <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-40 w-40 object-contain rounded-full" />
+            <img src="/marbas-logo.png" alt="Fiba Yatırım" className="h-40 w-40 object-contain rounded-full" />
           </div>
-          <h2 className="text-2xl font-bold text-white/90" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>Marbaş Menkul Değerler</h2>
+          <h2 className="text-2xl font-bold text-white/90" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>Fiba Yatırım</h2>
           <div className="space-y-4 text-white/75 text-sm leading-relaxed" style={{ fontFamily: "'IBM Plex Sans', sans-serif" }}>
-            <p>Marbaş Menkul Değerler A.Ş., Türk sermaye piyasalarının güvenilir aracı kurumlarından biri olarak yerli ve yabancı bireysel ve kurumsal yatırımcılara hizmet vermektedir.</p>
-            <p>SPK lisanslı yapısıyla yatırımcılarına güvenli, hızlı ve şeffaf bir yatırım deneyimi sunmayı hedefleyen Marbaş Menkul Değerler, teknolojik altyapısını sürekli geliştirerek müşterilerine en iyi hizmeti vermeye odaklanmaktadır.</p>
+            <p>Fiba Yatırım A.Ş., Türk sermaye piyasalarının güvenilir aracı kurumlarından biri olarak yerli ve yabancı bireysel ve kurumsal yatırımcılara hizmet vermektedir.</p>
+            <p>SPK lisanslı yapısıyla yatırımcılarına güvenli, hızlı ve şeffaf bir yatırım deneyimi sunmayı hedefleyen Fiba Yatırım, teknolojik altyapısını sürekli geliştirerek müşterilerine en iyi hizmeti vermeye odaklanmaktadır.</p>
           </div>
           <div className="grid grid-cols-3 gap-3 pt-4">
             {[{ label: "Lisans", value: "SPK" }, { label: "Hizmet", value: "Borsa İstanbul" }, { label: "Güvenlik", value: "A+" }].map((s) => (
