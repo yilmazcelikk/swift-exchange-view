@@ -8,7 +8,7 @@ import { ThemeProvider } from "next-themes";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
-import { WhatsAppButton } from "@/components/WhatsAppButton";
+
 
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
