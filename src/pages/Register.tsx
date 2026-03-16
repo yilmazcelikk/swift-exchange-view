@@ -198,7 +198,7 @@ const Register = () => {
                           Kişisel Verilerin Saklanması ve Kullanım Koşulları ve haklarınız ile ilgili bilgilendirme yapmak amacıyla erişiminize sunulmuştur.
                         </p>
                         <p>
-                          İşbu bilgilendirme ve aydınlatma duyurusu 6698 sayılı "Kişisel Verilerin Korunması Kanunu" (KVKK) 10. maddesi gereği hazırlanmış olup, bu beyan; kişisel verilerinizin işlenmesine ve aktarılmasına ilişkin yöntem, amaç, hukuki sebepleri içermektedir. Aynı zamanda kişisel verilerinizin korunmasına ilişkin haklarınız hakkında Veri Sorumlusu sıfatlıyla Marbaş Menkul Değerler A.Ş. internet sitesi/siteleri aracılığıyla tarafınızı aydınlatma ve bilgilendirmeyi amaçlamaktadır.
+                          İşbu bilgilendirme ve aydınlatma duyurusu 6698 sayılı "Kişisel Verilerin Korunması Kanunu" (KVKK) 10. maddesi gereği hazırlanmış olup, bu beyan; kişisel verilerinizin işlenmesine ve aktarılmasına ilişkin yöntem, amaç, hukuki sebepleri içermektedir. Aynı zamanda kişisel verilerinizin korunmasına ilişkin haklarınız hakkında Veri Sorumlusu sıfatlıyla Fiba Yatırım A.Ş. internet sitesi/siteleri aracılığıyla tarafınızı aydınlatma ve bilgilendirmeyi amaçlamaktadır.
                         </p>
                       </div>
                     </ScrollArea>
