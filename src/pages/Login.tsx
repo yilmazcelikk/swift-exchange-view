@@ -101,7 +101,7 @@ const Login = () => {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-8">
           <div className="lg:hidden flex justify-center mb-4">
-            <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-20 w-20 object-contain rounded-full" />
+            <img src="/marbas-logo.png" alt="Fiba Yatırım" className="h-20 w-20 object-contain rounded-full" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">Giriş Yap</h2>

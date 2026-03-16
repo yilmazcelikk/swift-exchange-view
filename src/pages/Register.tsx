@@ -217,7 +217,7 @@ const Register = () => {
                       <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
                         <h3 className="font-semibold text-foreground">Bilgilerinizin Gizliliği Güvende</h3>
                         <p>
-                          Marbaş Menkul Değerler'in işlettiği web sitelerini kullanarak bu sitelere münhasır "Kullanım ve Gizlilik Politikası'nı" kabul etmiş bulunmaktasınız. Marbaş Menkul Değerler, kendi istek ve kararları doğrultusunda bu sitelerde yer alan program ve metinlerde ve bunlara ilişkin politikalarda her zaman değişiklik, ekleme veya çıkartma yapma hakkını saklı tuttuğunu açıkça beyan eder.
+                          Fiba Yatırım'ın işlettiği web sitelerini kullanarak bu sitelere münhasır "Kullanım ve Gizlilik Politikası'nı" kabul etmiş bulunmaktasınız. Fiba Yatırım, kendi istek ve kararları doğrultusunda bu sitelerde yer alan program ve metinlerde ve bunlara ilişkin politikalarda her zaman değişiklik, ekleme veya çıkartma yapma hakkını saklı tuttuğunu açıkça beyan eder.
                         </p>
                         <p>
                           Burada belirtilen tüm hüküm ve şartları kabul etmeniz halinde, web sitelerimizi kullanmaya devam etmeniz sonrasında, yukarıda belirtilen olası değişiklikleri de kabul ettiğiniz anlamına gelecektir.
