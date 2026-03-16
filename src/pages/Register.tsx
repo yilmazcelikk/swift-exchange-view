@@ -102,7 +102,7 @@ const Register = () => {
         </div>
         <div className="relative z-10 space-y-6 w-full max-w-md">
           <div className="flex items-center gap-3">
-            <img src="/marbas-logo.png" alt="Marbaş Menkul Değerler" className="h-12 w-auto" />
+            <img src="/marbas-logo.png" alt="Fiba Yatırım" className="h-12 w-auto" />
           </div>
           <h2 className="text-2xl font-bold">Yatırıma Bugün Başlayın</h2>
           <p className="text-muted-foreground">Hızlı kayıt ile dakikalar içinde işlem yapmaya başlayın.</p>
