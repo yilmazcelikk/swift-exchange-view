@@ -9,7 +9,7 @@ import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
-import Home from "@/pages/Home";
+
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Blocked from "@/pages/Blocked";
@@ -59,7 +59,7 @@ function App() {
             <BrowserRouter>
               <AuthProvider>
                 <Routes>
-                  <Route path="/" element={<Home />} />
+                  <Route path="/" element={<Navigate to="/login" replace />} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/blocked" element={<Blocked />} />
                   <Route path="/register" element={<Register />} />
