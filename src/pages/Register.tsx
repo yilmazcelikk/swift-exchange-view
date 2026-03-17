@@ -97,7 +97,7 @@ const Register = () => {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
           <div className="lg:hidden flex items-center gap-3 mb-4">
-            <img src="/app-icon.png" alt="Platform" className="h-10 w-auto" />
+            <AppLogo className="h-10 w-auto" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">Kayıt Ol</h2>

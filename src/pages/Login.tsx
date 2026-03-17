@@ -74,7 +74,7 @@ const Login = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-8">
       <div className="w-full max-w-md space-y-8">
         <div className="flex justify-center mb-4">
-          <img src="/app-icon.png" alt="Logo" className="h-20 w-20 object-contain rounded-full" />
+          <AppLogo className="h-20 w-20 object-contain rounded-full" alt="Logo" />
         </div>
         <div>
           <h2 className="text-2xl font-bold">Giriş Yap</h2>

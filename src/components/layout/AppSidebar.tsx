@@ -52,9 +52,9 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" className="border-r border-sidebar-border">
       <div className="h-10 flex items-center justify-center border-b border-sidebar-border px-3">
         {!collapsed ? (
-          <img src="/app-icon.png" alt="Platform" className="h-8 w-auto object-contain" />
+          <AppLogo className="h-8 w-auto object-contain" />
         ) : (
-          <img src="/app-icon.png" alt="Platform" className="h-7 w-7 object-cover rounded-sm" />
+          <AppLogo className="h-7 w-7 object-cover rounded-sm" />
         )}
       </div>
 
