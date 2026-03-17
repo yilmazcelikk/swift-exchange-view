@@ -19,6 +19,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar";
 import { useAuth } from "@/contexts/AuthContext";
+import AppLogo from "@/components/AppLogo";
 import { useNavigate } from "react-router-dom";
 
 const navItems = [
