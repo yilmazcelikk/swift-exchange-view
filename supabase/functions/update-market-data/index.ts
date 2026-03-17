@@ -465,16 +465,6 @@ async function fetchTradingViewData(symbols: string[]): Promise<Record<string, a
   return results;
 }
 
-// Popular symbols that are always updated (for the symbol list UI)
-const ALWAYS_UPDATE_SYMBOLS = new Set([
-  "EURUSD", "GBPUSD", "USDJPY", "USDTRY", "EURTRY",
-  "XAUUSD", "XAGUSD", "USOIL", "NATGAS",
-  "BTCUSD", "ETHUSD", "SOLUSD", "XRPUSD", "BNBUSD",
-  "US500", "US30", "USTEC", "DE40", "UK100", "XU100",
-  "THYAO", "GARAN", "AKBNK", "EREGL", "SISE", "KCHOL",
-  "AAPL", "TSLA", "MSFT", "NVDA", "GOOGL", "AMZN", "META",
-]);
-
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -502,19 +492,15 @@ Deno.serve(async (req) => {
       if (upsertErr) console.error("Symbol upsert error:", upsertErr.message);
     }
 
-    // Step 2: Determine which symbols need price updates
-    // Get symbols with open/pending orders
-    const { data: orderSymbols } = await supabase
-      .from("orders")
-      .select("symbol_name")
-      .in("status", ["open", "pending"]);
+    // Step 2: Fetch ALL active symbols from DB that have a TV mapping
+    const { data: activeDbSymbols } = await supabase
+      .from("symbols")
+      .select("name")
+      .eq("is_active", true);
     
-    const activeSymbols = new Set<string>(ALWAYS_UPDATE_SYMBOLS);
-    for (const o of orderSymbols || []) {
-      activeSymbols.add(o.symbol_name);
-    }
-    
-    const namesToUpdate = [...activeSymbols].filter(n => TV_SYMBOL_MAP[n]);
+    const namesToUpdate = (activeDbSymbols || [])
+      .map(s => s.name)
+      .filter(n => TV_SYMBOL_MAP[n]);
     console.log(`Updating ${namesToUpdate.length} symbols (of ${Object.keys(TV_SYMBOL_MAP).length} total)`);
 
     // Step 3: Fetch price data from TradingView (only active symbols)
