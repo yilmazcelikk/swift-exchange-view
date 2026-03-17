@@ -94,34 +94,6 @@ const Register = () => {
 
   return (
     <div className="min-h-screen flex bg-background">
-      {/* Left Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-primary/20 via-background to-buy/10 flex-col justify-center items-center p-12 relative overflow-hidden">
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute top-20 left-10 w-72 h-72 bg-primary rounded-full blur-3xl" />
-          <div className="absolute bottom-20 right-10 w-96 h-96 bg-buy rounded-full blur-3xl" />
-        </div>
-        <div className="relative z-10 space-y-6 w-full max-w-md">
-          <div className="flex items-center gap-3">
-            <img src="/app-icon.png" alt="Platform" className="h-12 w-auto" />
-          </div>
-          <h2 className="text-2xl font-bold">Yatırıma Bugün Başlayın</h2>
-          <p className="text-muted-foreground">Hızlı kayıt ile dakikalar içinde işlem yapmaya başlayın.</p>
-          <div className="grid grid-cols-3 gap-4 pt-4">
-            {[
-              { label: "Aktif Kullanıcı", value: "50K+" },
-              { label: "Günlük İşlem", value: "$2M+" },
-              { label: "Ülke", value: "30+" },
-            ].map((s) => (
-              <div key={s.label} className="text-center p-3 rounded-xl bg-card/60 backdrop-blur">
-                <p className="text-lg font-bold text-primary">{s.value}</p>
-                <p className="text-xs text-muted-foreground">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Right Form */}
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
           <div className="lg:hidden flex items-center gap-3 mb-4">
