@@ -158,7 +158,7 @@ const AdminReferrals = () => {
           <div className="space-y-4">
             <div>
               <label className="text-sm font-medium mb-1 block">Kod</label>
-              <Input placeholder="Örn: MARBAS2025" value={newCode} onChange={(e) => setNewCode(e.target.value.toUpperCase())} className="bg-muted/50 font-mono" />
+              <Input placeholder="Örn: REF2025" value={newCode} onChange={(e) => setNewCode(e.target.value.toUpperCase())} className="bg-muted/50 font-mono" />
             </div>
             <div>
               <label className="text-sm font-medium mb-1 block">Açıklama (opsiyonel)</label>

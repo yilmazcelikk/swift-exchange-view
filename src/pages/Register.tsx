@@ -102,7 +102,7 @@ const Register = () => {
         </div>
         <div className="relative z-10 space-y-6 w-full max-w-md">
           <div className="flex items-center gap-3">
-            <img src="/marbas-logo.png" alt="Fiba Yatırım" className="h-12 w-auto" />
+            <img src="/app-icon.png" alt="Platform" className="h-12 w-auto" />
           </div>
           <h2 className="text-2xl font-bold">Yatırıma Bugün Başlayın</h2>
           <p className="text-muted-foreground">Hızlı kayıt ile dakikalar içinde işlem yapmaya başlayın.</p>
@@ -125,7 +125,7 @@ const Register = () => {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
           <div className="lg:hidden flex items-center gap-3 mb-4">
-            <img src="/marbas-logo.png" alt="Fiba Yatırım" className="h-10 w-auto" />
+            <img src="/app-icon.png" alt="Platform" className="h-10 w-auto" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">Kayıt Ol</h2>
@@ -198,7 +198,7 @@ const Register = () => {
                           Kişisel Verilerin Saklanması ve Kullanım Koşulları ve haklarınız ile ilgili bilgilendirme yapmak amacıyla erişiminize sunulmuştur.
                         </p>
                         <p>
-                          İşbu bilgilendirme ve aydınlatma duyurusu 6698 sayılı "Kişisel Verilerin Korunması Kanunu" (KVKK) 10. maddesi gereği hazırlanmış olup, bu beyan; kişisel verilerinizin işlenmesine ve aktarılmasına ilişkin yöntem, amaç, hukuki sebepleri içermektedir. Aynı zamanda kişisel verilerinizin korunmasına ilişkin haklarınız hakkında Veri Sorumlusu sıfatlıyla Fiba Yatırım A.Ş. internet sitesi/siteleri aracılığıyla tarafınızı aydınlatma ve bilgilendirmeyi amaçlamaktadır.
+                          İşbu bilgilendirme ve aydınlatma duyurusu 6698 sayılı "Kişisel Verilerin Korunması Kanunu" (KVKK) 10. maddesi gereği hazırlanmış olup, bu beyan; kişisel verilerinizin işlenmesine ve aktarılmasına ilişkin yöntem, amaç, hukuki sebepleri içermektedir. Aynı zamanda kişisel verilerinizin korunmasına ilişkin haklarınız hakkında Veri Sorumlusu sıfatıyla platform internet sitesi/siteleri aracılığıyla tarafınızı aydınlatma ve bilgilendirmeyi amaçlamaktadır.
                         </p>
                       </div>
                     </ScrollArea>
@@ -217,7 +217,7 @@ const Register = () => {
                       <div className="space-y-4 text-sm text-muted-foreground leading-relaxed">
                         <h3 className="font-semibold text-foreground">Bilgilerinizin Gizliliği Güvende</h3>
                         <p>
-                          Fiba Yatırım'ın işlettiği web sitelerini kullanarak bu sitelere münhasır "Kullanım ve Gizlilik Politikası'nı" kabul etmiş bulunmaktasınız. Fiba Yatırım, kendi istek ve kararları doğrultusunda bu sitelerde yer alan program ve metinlerde ve bunlara ilişkin politikalarda her zaman değişiklik, ekleme veya çıkartma yapma hakkını saklı tuttuğunu açıkça beyan eder.
+                          Platform tarafından işletilen web sitelerini kullanarak bu sitelere münhasır "Kullanım ve Gizlilik Politikası'nı" kabul etmiş bulunmaktasınız. Platform, kendi istek ve kararları doğrultusunda bu sitelerde yer alan program ve metinlerde ve bunlara ilişkin politikalarda her zaman değişiklik, ekleme veya çıkartma yapma hakkını saklı tuttuğunu açıkça beyan eder.
                         </p>
                         <p>
                           Burada belirtilen tüm hüküm ve şartları kabul etmeniz halinde, web sitelerimizi kullanmaya devam etmeniz sonrasında, yukarıda belirtilen olası değişiklikleri de kabul ettiğiniz anlamına gelecektir.
