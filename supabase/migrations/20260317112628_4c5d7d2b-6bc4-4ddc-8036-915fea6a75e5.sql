@@ -1,0 +1,1 @@
+UPDATE public.symbols SET is_active = false WHERE (current_price IS NULL OR current_price = 0) AND is_active = true;
