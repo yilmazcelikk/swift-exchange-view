@@ -51,12 +51,21 @@ export function SymbolList({ symbols, loading, onSelectSymbol }: SymbolListProps
     .sort((a, b) => {
       if (a.name === "BIMAS" && b.name !== "BIMAS") return 1;
       if (b.name === "BIMAS" && a.name !== "BIMAS") return -1;
+
+      // "Tümü" sekmesinde: önce BIST hisseleri, sonra diğerleri
+      if (selectedCategory === "all") {
+        const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
+        const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
+        if (aIsBist !== bIsBist) return aIsBist - bIsBist;
+      }
+
       const aHasLogo = resolveLogoUrl(a.name, a.category) ? 0 : 1;
       const bHasLogo = resolveLogoUrl(b.name, b.category) ? 0 : 1;
       if (aHasLogo !== bHasLogo) return aHasLogo - bHasLogo;
-      if (selectedCategory === "all" || selectedCategory === "stock") {
-        const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
-        const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
+
+      if (selectedCategory === "stock") {
+        const aIsBist = a.exchange === "BIST" ? 0 : 1;
+        const bIsBist = b.exchange === "BIST" ? 0 : 1;
         if (aIsBist !== bIsBist) return aIsBist - bIsBist;
       }
       if (selectedCategory === "all" || selectedCategory === "commodity") {
