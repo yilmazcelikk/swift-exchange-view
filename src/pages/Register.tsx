@@ -5,6 +5,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import AppLogo from "@/components/AppLogo";
 import {
   Dialog,
   DialogContent,
@@ -97,7 +98,7 @@ const Register = () => {
       <div className="flex-1 flex items-center justify-center p-8">
         <div className="w-full max-w-md space-y-6">
           <div className="lg:hidden flex items-center gap-3 mb-4">
-            <img src="/app-icon.png" alt="Platform" className="h-10 w-auto" />
+            <AppLogo className="h-10 w-auto" />
           </div>
           <div>
             <h2 className="text-2xl font-bold">Kayıt Ol</h2>
