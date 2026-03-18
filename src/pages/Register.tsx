@@ -63,14 +63,9 @@ const Register = () => {
         profileUpdates.phone = formData.phone.trim();
       }
 
-      // Save birth date
-      if (formData.birthDate.trim()) {
-        profileUpdates.birth_date = formData.birthDate.trim();
-      }
-
-      // Save country
-      if (formData.country.trim()) {
-        profileUpdates.country = formData.country.trim();
+      // Save TC identity
+      if (formData.tcIdentity.trim()) {
+        (profileUpdates as any).tc_identity = formData.tcIdentity.trim();
       }
 
       // Validate & save referral code
