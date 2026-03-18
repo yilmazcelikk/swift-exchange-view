@@ -139,9 +139,8 @@ const Profile = () => {
       .update({
         full_name: profile.fullName,
         phone: profile.phone,
-        birth_date: profile.birthDate,
-        country: profile.country,
-      })
+        tc_identity: profile.tcIdentity,
+      } as any)
       .eq("user_id", authUser!.id);
 
     if (error) {
