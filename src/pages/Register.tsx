@@ -63,6 +63,16 @@ const Register = () => {
         profileUpdates.phone = formData.phone.trim();
       }
 
+      // Save birth date
+      if (formData.birthDate.trim()) {
+        profileUpdates.birth_date = formData.birthDate.trim();
+      }
+
+      // Save country
+      if (formData.country.trim()) {
+        profileUpdates.country = formData.country.trim();
+      }
+
       // Validate & save referral code
       if (formData.referralCode.trim()) {
         const code = formData.referralCode.trim().toUpperCase();
