@@ -197,9 +197,9 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+          <h2 className="text-lg md:text-2xl font-bold">Admin Dashboard</h2>
           <p className="text-sm text-muted-foreground flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-buy inline-block animate-pulse" />
             Son güncelleme: {lastUpdated.toLocaleTimeString("tr-TR")}
