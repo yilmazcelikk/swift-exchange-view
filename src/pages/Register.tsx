@@ -28,6 +28,18 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast.error("Ad ve soyad zorunludur");
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast.error("E-posta adresi zorunludur");
+      return;
+    }
+    if (!formData.phone.trim() || formData.phone.length < 10) {
+      toast.error("Geçerli bir telefon numarası girin");
+      return;
+    }
     if (formData.tcIdentity.length !== 11) {
       toast.error("TC Kimlik numarası 11 haneli olmalıdır");
       return;
