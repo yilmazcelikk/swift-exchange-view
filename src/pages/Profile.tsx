@@ -60,8 +60,7 @@ const Profile = () => {
     fullName: "",
     email: "",
     phone: "",
-    birthDate: "",
-    country: "",
+    tcIdentity: "",
     metaId: 0,
     accountType: "standard",
   });
