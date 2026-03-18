@@ -172,10 +172,10 @@ const AdminTransactions = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Finans Talepleri</h2>
-          <p className="text-sm text-muted-foreground">Para yatırma ve çekme taleplerini yönetin</p>
+          <h2 className="text-lg md:text-2xl font-bold">Finans Talepleri</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">Para yatırma ve çekme taleplerini yönetin</p>
         </div>
         <Button variant="outline" size="sm" onClick={load} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1.5 ${loading ? "animate-spin" : ""}`} />
