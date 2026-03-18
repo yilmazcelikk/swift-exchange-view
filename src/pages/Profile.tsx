@@ -319,7 +319,7 @@ const Profile = () => {
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{field.label}</p>
                       {isEditing && field.editable ? (
                         <Input
-                          type={field.type || "text"}
+                          type={"text"}
                           value={field.value}
                           onChange={(e) => setProfile({ ...profile, [field.key]: e.target.value })}
                           className="mt-1 h-8 text-sm bg-muted/50 border-border"
