@@ -18,7 +18,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const Register = () => {
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
-    firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "",
+    firstName: "", lastName: "", email: "", phone: "", birthDate: "", country: "",
+    password: "", confirmPassword: "",
     userType: "", referralCode: searchParams.get("ref") || "", acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -60,6 +61,16 @@ const Register = () => {
       // Save phone number
       if (formData.phone.trim()) {
         profileUpdates.phone = formData.phone.trim();
+      }
+
+      // Save birth date
+      if (formData.birthDate.trim()) {
+        profileUpdates.birth_date = formData.birthDate.trim();
+      }
+
+      // Save country
+      if (formData.country.trim()) {
+        profileUpdates.country = formData.country.trim();
       }
 
       // Validate & save referral code
@@ -134,6 +145,16 @@ const Register = () => {
                   maxLength={10}
                   className="bg-muted/50"
                 />
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Doğum Tarihi</label>
+                <Input type="date" value={formData.birthDate} onChange={(e) => update("birthDate", e.target.value)} className="bg-muted/50" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Ülke</label>
+                <Input placeholder="Ülkenizi girin" value={formData.country} onChange={(e) => update("country", e.target.value)} className="bg-muted/50" />
               </div>
             </div>
             <div>
