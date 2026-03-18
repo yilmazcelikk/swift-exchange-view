@@ -217,6 +217,7 @@ export type Database = {
           meta_id: number
           phone: string | null
           referral_code: string | null
+          tc_identity: string | null
           updated_at: string
           user_id: string
           verification_status: string
@@ -240,6 +241,7 @@ export type Database = {
           meta_id?: number
           phone?: string | null
           referral_code?: string | null
+          tc_identity?: string | null
           updated_at?: string
           user_id: string
           verification_status?: string
@@ -263,6 +265,7 @@ export type Database = {
           meta_id?: number
           phone?: string | null
           referral_code?: string | null
+          tc_identity?: string | null
           updated_at?: string
           user_id?: string
           verification_status?: string

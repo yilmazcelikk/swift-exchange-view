@@ -60,8 +60,7 @@ const Profile = () => {
     fullName: "",
     email: "",
     phone: "",
-    birthDate: "",
-    country: "",
+    tcIdentity: "",
     metaId: 0,
     accountType: "standard",
   });
@@ -126,8 +125,7 @@ const Profile = () => {
         fullName: data.full_name || "",
         email: authUser?.email || "",
         phone: data.phone || "",
-        birthDate: data.birth_date || "",
-        country: data.country || "",
+        tcIdentity: (data as any).tc_identity || "",
         metaId: data.meta_id || 0,
         accountType: (data as any).account_type || "standard",
       });
@@ -141,9 +139,8 @@ const Profile = () => {
       .update({
         full_name: profile.fullName,
         phone: profile.phone,
-        birth_date: profile.birthDate,
-        country: profile.country,
-      })
+        tc_identity: profile.tcIdentity,
+      } as any)
       .eq("user_id", authUser!.id);
 
     if (error) {
@@ -247,8 +244,7 @@ const Profile = () => {
     { icon: User, label: "Ad Soyad", value: profile.fullName, key: "fullName" as const, editable: true },
     { icon: Mail, label: "E-posta", value: profile.email, key: "email" as const, editable: false },
     { icon: Phone, label: "Telefon", value: profile.phone, key: "phone" as const, editable: true },
-    { icon: Calendar, label: "Doğum Tarihi", value: profile.birthDate, key: "birthDate" as const, editable: true, type: "date" },
-    { icon: MapPin, label: "Ülke", value: profile.country, key: "country" as const, editable: true },
+    { icon: ShieldCheck, label: "TC Kimlik No", value: profile.tcIdentity, key: "tcIdentity" as const, editable: true },
   ];
 
   return (
@@ -323,7 +319,7 @@ const Profile = () => {
                       <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-medium">{field.label}</p>
                       {isEditing && field.editable ? (
                         <Input
-                          type={field.type || "text"}
+                          type={"text"}
                           value={field.value}
                           onChange={(e) => setProfile({ ...profile, [field.key]: e.target.value })}
                           className="mt-1 h-8 text-sm bg-muted/50 border-border"

@@ -18,7 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const Register = () => {
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
-    firstName: "", lastName: "", email: "", phone: "", birthDate: "", country: "",
+    firstName: "", lastName: "", email: "", phone: "", tcIdentity: "",
     password: "", confirmPassword: "",
     userType: "", referralCode: searchParams.get("ref") || "", acceptTerms: false,
   });
@@ -63,14 +63,9 @@ const Register = () => {
         profileUpdates.phone = formData.phone.trim();
       }
 
-      // Save birth date
-      if (formData.birthDate.trim()) {
-        profileUpdates.birth_date = formData.birthDate.trim();
-      }
-
-      // Save country
-      if (formData.country.trim()) {
-        profileUpdates.country = formData.country.trim();
+      // Save TC identity
+      if (formData.tcIdentity.trim()) {
+        (profileUpdates as any).tc_identity = formData.tcIdentity.trim();
       }
 
       // Validate & save referral code
@@ -147,15 +142,18 @@ const Register = () => {
                 />
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Doğum Tarihi</label>
-                <Input type="date" value={formData.birthDate} onChange={(e) => update("birthDate", e.target.value)} className="bg-muted/50" />
-              </div>
-              <div>
-                <label className="text-sm font-medium mb-1.5 block">Ülke</label>
-                <Input placeholder="Ülkenizi girin" value={formData.country} onChange={(e) => update("country", e.target.value)} className="bg-muted/50" />
-              </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">TC Kimlik No</label>
+              <Input
+                placeholder="TC Kimlik numaranızı girin"
+                value={formData.tcIdentity}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                  update("tcIdentity", val);
+                }}
+                maxLength={11}
+                className="bg-muted/50 font-mono"
+              />
             </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Referans Kodu (opsiyonel)</label>
