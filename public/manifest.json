@@ -1,6 +1,6 @@
 {
-  "name": "Yatırım Platformu",
-  "short_name": "Yatırım",
+  "name": "Fiba Mobil",
+  "short_name": "Fiba Mobil",
   "description": "Güvenilir Yatırım Platformu",
   "start_url": "/login",
   "display": "standalone",
