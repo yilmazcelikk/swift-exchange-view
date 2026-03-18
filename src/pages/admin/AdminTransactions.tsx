@@ -258,14 +258,14 @@ const AdminTransactions = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tür</th>
-                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Kullanıcı</th>
-                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Hesap Bilgileri</th>
-                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tarih</th>
-                    <th className="text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Tutar</th>
-                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Dekont</th>
-                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Durum</th>
-                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">İşlem</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">Tür</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">Kullanıcı</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3 hidden md:table-cell">Hesap Bilgileri</th>
+                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3 hidden sm:table-cell">Tarih</th>
+                    <th className="text-right text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">Tutar</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3 hidden lg:table-cell">Dekont</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">Durum</th>
+                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-3 md:px-4 py-3">İşlem</th>
                   </tr>
                 </thead>
                 <tbody>
