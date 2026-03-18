@@ -182,12 +182,12 @@ const AdminDocuments = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Kullanıcı</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Belge Türü</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Tarih</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Görüntüle</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">Kullanıcı</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">Belge Türü</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3 hidden sm:table-cell">Tarih</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">Durum</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">Görüntüle</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">İşlem</th>
                   </tr>
                 </thead>
                 <tbody>
