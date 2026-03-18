@@ -244,8 +244,7 @@ const Profile = () => {
     { icon: User, label: "Ad Soyad", value: profile.fullName, key: "fullName" as const, editable: true },
     { icon: Mail, label: "E-posta", value: profile.email, key: "email" as const, editable: false },
     { icon: Phone, label: "Telefon", value: profile.phone, key: "phone" as const, editable: true },
-    { icon: Calendar, label: "Doğum Tarihi", value: profile.birthDate, key: "birthDate" as const, editable: true, type: "date" },
-    { icon: MapPin, label: "Ülke", value: profile.country, key: "country" as const, editable: true },
+    { icon: ShieldCheck, label: "TC Kimlik No", value: profile.tcIdentity, key: "tcIdentity" as const, editable: true },
   ];
 
   return (
