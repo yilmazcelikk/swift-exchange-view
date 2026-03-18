@@ -147,6 +147,16 @@ const Register = () => {
                 />
               </div>
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Doğum Tarihi</label>
+                <Input type="date" value={formData.birthDate} onChange={(e) => update("birthDate", e.target.value)} className="bg-muted/50" />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Ülke</label>
+                <Input placeholder="Ülkenizi girin" value={formData.country} onChange={(e) => update("country", e.target.value)} className="bg-muted/50" />
+              </div>
+            </div>
             <div>
               <label className="text-sm font-medium mb-1.5 block">Referans Kodu (opsiyonel)</label>
               <Input placeholder="Varsa referans kodunuzu girin" value={formData.referralCode} onChange={(e) => update("referralCode", e.target.value.toUpperCase())} className="bg-muted/50 font-mono" />
