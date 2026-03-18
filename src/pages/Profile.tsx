@@ -8,7 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
   UserCircle, Upload, CheckCircle, Clock, ShieldCheck,
-  XCircle, Pencil, Sun, Moon, LogOut, Mail, Phone, MapPin, Calendar, User, Lock, KeyRound, Crown, Gem, Star,
+  XCircle, Pencil, Sun, Moon, LogOut, Mail, Phone, User, Lock, KeyRound, Crown, Gem, Star,
 } from "lucide-react";
 import { ACCOUNT_TYPE_LABELS } from "@/lib/trading";
 import { useNavigate } from "react-router-dom";

@@ -28,6 +28,18 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast.error("Ad ve soyad zorunludur");
+      return;
+    }
+    if (!formData.email.trim()) {
+      toast.error("E-posta adresi zorunludur");
+      return;
+    }
+    if (!formData.phone.trim() || formData.phone.length < 10) {
+      toast.error("Geçerli bir telefon numarası girin");
+      return;
+    }
     if (formData.tcIdentity.length !== 11) {
       toast.error("TC Kimlik numarası 11 haneli olmalıdır");
       return;
@@ -178,8 +190,8 @@ const Register = () => {
               <label className="text-sm font-medium mb-1.5 block">Şifre Tekrar</label>
               <Input type="password" placeholder="Şifrenizi tekrar girin" value={formData.confirmPassword} onChange={(e) => update("confirmPassword", e.target.value)} className="bg-muted/50" />
             </div>
-            <label className="flex items-start gap-2 text-sm">
-              <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => update("acceptTerms", e.target.checked)} className="rounded border-border mt-0.5" />
+            <div className="flex items-start gap-2 text-sm">
+              <input type="checkbox" checked={formData.acceptTerms} onChange={(e) => update("acceptTerms", e.target.checked)} className="rounded border-border mt-1" />
               <span>
                 <Dialog>
                   <DialogTrigger asChild>
@@ -229,7 +241,7 @@ const Register = () => {
                 </Dialog>
                 'nı kabul ediyorum.
               </span>
-            </label>
+            </div>
             <Button type="submit" className="w-full h-11 font-semibold" disabled={loading}>
               {loading ? "Kayıt yapılıyor..." : "Kayıt Ol"}
             </Button>
