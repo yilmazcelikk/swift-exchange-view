@@ -18,7 +18,8 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 const Register = () => {
   const [searchParams] = useSearchParams();
   const [formData, setFormData] = useState({
-    firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "",
+    firstName: "", lastName: "", email: "", phone: "", birthDate: "", country: "",
+    password: "", confirmPassword: "",
     userType: "", referralCode: searchParams.get("ref") || "", acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
