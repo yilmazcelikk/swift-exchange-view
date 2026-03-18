@@ -156,6 +156,8 @@ const Register = () => {
                   update("tcIdentity", val);
                 }}
                 maxLength={11}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="bg-muted/50 font-mono"
               />
             </div>
