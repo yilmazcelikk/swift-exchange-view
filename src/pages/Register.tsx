@@ -86,7 +86,7 @@ const Register = () => {
     }
 
     setLoading(false);
-    toast.success("Kayıt başarılı! E-posta adresinize gönderilen doğrulama bağlantısını onayladıktan sonra giriş yapabilirsiniz.");
+    toast.success("Kayıt başarılı! Giriş yapabilirsiniz.");
     navigate("/login");
   };
 
