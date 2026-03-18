@@ -28,6 +28,10 @@ const Register = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (formData.tcIdentity.length !== 11) {
+      toast.error("TC Kimlik numarası 11 haneli olmalıdır");
+      return;
+    }
     if (formData.password.length < 8) {
       toast.error("Şifre en az 8 karakter olmalıdır");
       return;
@@ -152,6 +156,8 @@ const Register = () => {
                   update("tcIdentity", val);
                 }}
                 maxLength={11}
+                inputMode="numeric"
+                pattern="[0-9]*"
                 className="bg-muted/50 font-mono"
               />
             </div>

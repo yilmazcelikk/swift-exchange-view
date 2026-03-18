@@ -321,7 +321,16 @@ const Profile = () => {
                         <Input
                           type={"text"}
                           value={field.value}
-                          onChange={(e) => setProfile({ ...profile, [field.key]: e.target.value })}
+                          onChange={(e) => {
+                            if (field.key === "tcIdentity") {
+                              const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                              setProfile({ ...profile, [field.key]: val });
+                            } else {
+                              setProfile({ ...profile, [field.key]: e.target.value });
+                            }
+                          }}
+                          maxLength={field.key === "tcIdentity" ? 11 : undefined}
+                          inputMode={field.key === "tcIdentity" ? "numeric" : undefined}
                           className="mt-1 h-8 text-sm bg-muted/50 border-border"
                         />
                       ) : (
