@@ -75,10 +75,10 @@ const AdminBankAccounts = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Banka Hesapları</h2>
-          <p className="text-sm text-muted-foreground">Kullanıcılara gösterilen banka hesaplarını yönetin</p>
+          <h2 className="text-lg md:text-2xl font-bold">Banka Hesapları</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">Kullanıcılara gösterilen banka hesaplarını yönetin</p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={load} disabled={loading}>

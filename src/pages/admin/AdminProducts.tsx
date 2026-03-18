@@ -111,9 +111,9 @@ const AdminProducts = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Ürünler / Enstrümanlar</h2>
+          <h2 className="text-lg md:text-2xl font-bold">Ürünler / Enstrümanlar</h2>
           <p className="text-sm text-muted-foreground">
             Toplam {symbols.length} enstrüman • {symbols.filter((s) => s.is_active).length} aktif
           </p>

@@ -134,17 +134,17 @@ const AdminLayout = () => {
   return (
     <div className="h-screen flex bg-background overflow-hidden">
       {/* Sidebar */}
-      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="h-14 flex items-center justify-between px-4 border-b border-border">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-60 bg-card border-r border-border transform transition-transform md:relative md:translate-x-0 ${sidebarOpen ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="h-12 md:h-14 flex items-center justify-between px-3 md:px-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <AppLogo className="h-8 w-auto" alt="Admin Panel" />
+            <AppLogo className="h-7 md:h-8 w-auto" alt="Admin Panel" />
           </div>
           <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSidebarOpen(false)}>
             <X className="h-4 w-4" />
           </Button>
         </div>
 
-        <nav className="p-3 space-y-4 overflow-y-auto max-h-[calc(100vh-7rem)]">
+        <nav className="p-2 md:p-3 space-y-3 overflow-y-auto max-h-[calc(100vh-7rem)]">
           {navSections.map((section) => (
             <div key={section.title}>
               <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider px-3 mb-1">
@@ -175,7 +175,7 @@ const AdminLayout = () => {
           ))}
         </nav>
 
-        <div className="absolute bottom-0 left-0 right-0 p-3 border-t border-border">
+        <div className="absolute bottom-0 left-0 right-0 p-2 md:p-3 border-t border-border">
           <button
             onClick={async () => { await signOut(); navigate("/login", { replace: true }); }}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-muted hover:text-destructive transition-colors"
@@ -193,18 +193,18 @@ const AdminLayout = () => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 border-b border-border bg-card flex items-center justify-between px-4">
+        <header className="h-12 md:h-14 border-b border-border bg-card flex items-center justify-between px-3 md:px-4">
           <Button variant="ghost" size="icon" className="md:hidden h-8 w-8" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="flex items-center gap-2 ml-auto">
+          <div className="flex items-center gap-1.5 md:gap-2 ml-auto">
             <AdminNotifications />
             <ThemeToggle />
-            <span className="text-xs text-muted-foreground bg-primary/10 text-primary px-2 py-1 rounded-full font-medium">Admin</span>
+            <span className="text-[10px] md:text-xs text-muted-foreground bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 md:py-1 rounded-full font-medium">Admin</span>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-auto p-3 md:p-6">
           {renderContent()}
         </main>
       </div>

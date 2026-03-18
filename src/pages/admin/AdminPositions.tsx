@@ -267,7 +267,7 @@ const AdminPositions = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Açık Pozisyonlar</h2>
+          <h2 className="text-lg md:text-2xl font-bold">Açık Pozisyonlar</h2>
           <p className="text-sm text-muted-foreground">{orders.length} pozisyon • {uniqueUsers} kullanıcı • Canlı güncelleme</p>
         </div>
         <div className="flex items-center gap-2">

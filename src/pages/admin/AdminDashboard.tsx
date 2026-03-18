@@ -197,9 +197,9 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between flex-wrap gap-3">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Admin Dashboard</h2>
+          <h2 className="text-lg md:text-2xl font-bold">Admin Dashboard</h2>
           <p className="text-sm text-muted-foreground flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-buy inline-block animate-pulse" />
             Son güncelleme: {lastUpdated.toLocaleTimeString("tr-TR")}
@@ -242,7 +242,7 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
       )}
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2 md:gap-3">
         {kpiCards.map((card) => (
           <Card
             key={card.label}
@@ -273,7 +273,7 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
             <DollarSign className="h-4 w-4 text-muted-foreground" />
             <span className="text-sm font-semibold">Platform Finansal Özeti</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
             <div>
               <p className="text-[10px] text-muted-foreground">Toplam Onaylı Yatırım</p>
               <p className="text-base font-bold font-mono text-buy">${stats.totalDepositApproved.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>

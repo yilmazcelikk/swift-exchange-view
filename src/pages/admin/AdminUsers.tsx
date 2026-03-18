@@ -369,10 +369,10 @@ const AdminUsers = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Kullanıcı Yönetimi</h2>
-          <p className="text-sm text-muted-foreground">Müşteri listesi ve yönetim işlemleri</p>
+          <h2 className="text-lg md:text-2xl font-bold">Kullanıcı Yönetimi</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">Müşteri listesi ve yönetim işlemleri</p>
         </div>
         <div className="flex items-center gap-2">
           <span className="text-xs bg-success/10 text-success px-2.5 py-1 rounded-full font-medium">

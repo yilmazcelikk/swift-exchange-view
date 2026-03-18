@@ -125,10 +125,10 @@ const AdminDocuments = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Evrak Yönetimi</h2>
-          <p className="text-sm text-muted-foreground">Kullanıcı kimlik doğrulama belgelerini inceleyin</p>
+          <h2 className="text-lg md:text-2xl font-bold">Evrak Yönetimi</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">Kullanıcı kimlik doğrulama belgelerini inceleyin</p>
         </div>
         <Button variant="outline" size="sm" onClick={loadDocs} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
@@ -182,36 +182,33 @@ const AdminDocuments = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border">
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Kullanıcı</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Belge Türü</th>
-                    <th className="text-left text-xs font-semibold text-muted-foreground px-4 py-3">Tarih</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Durum</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">Görüntüle</th>
-                    <th className="text-center text-xs font-semibold text-muted-foreground px-4 py-3">İşlem</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">Kullanıcı</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">Belge Türü</th>
+                    <th className="text-left text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3 hidden sm:table-cell">Tarih</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">Durum</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">Görüntüle</th>
+                    <th className="text-center text-xs font-semibold text-muted-foreground px-3 md:px-4 py-3">İşlem</th>
                   </tr>
                 </thead>
                 <tbody>
                   {paginatedDocs.map((doc) => (
                     <tr key={doc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
+                      <td className="px-3 md:px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 rounded-lg bg-primary/10">
+                          <div className="p-1 md:p-1.5 rounded-lg bg-primary/10 hidden sm:block">
                             <User className="h-4 w-4 text-primary" />
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold">{doc.user_name}</p>
-                            <p className="text-[10px] text-muted-foreground font-mono">{doc.user_id.slice(0, 8)}...</p>
+                          <div className="min-w-0">
+                            <p className="text-xs md:text-sm font-semibold truncate">{doc.user_name}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono hidden sm:block">{doc.user_id.slice(0, 8)}...</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{docTypeLabel(doc.type)}</span>
-                        </div>
+                      <td className="px-3 md:px-4 py-3">
+                        <span className="text-xs md:text-sm font-medium">{docTypeLabel(doc.type)}</span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {new Date(doc.created_at).toLocaleDateString("tr-TR")} {new Date(doc.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                      <td className="px-3 md:px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">
+                        {new Date(doc.created_at).toLocaleDateString("tr-TR")}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${

@@ -180,8 +180,8 @@ const AdminRisk = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold flex items-center gap-2">
-            <ShieldAlert className="h-6 w-6 text-primary" />
+          <h2 className="text-lg md:text-2xl font-bold flex items-center gap-2">
+            <ShieldAlert className="h-5 md:h-6 w-5 md:w-6 text-primary" />
             Risk Yönetimi
           </h2>
           <p className="text-sm text-muted-foreground">{orders.length} açık pozisyon • {userRisk.length} kullanıcı • Canlı izleme</p>
