@@ -193,25 +193,22 @@ const AdminDocuments = () => {
                 <tbody>
                   {paginatedDocs.map((doc) => (
                     <tr key={doc.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
+                      <td className="px-3 md:px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="p-1.5 rounded-lg bg-primary/10">
+                          <div className="p-1 md:p-1.5 rounded-lg bg-primary/10 hidden sm:block">
                             <User className="h-4 w-4 text-primary" />
                           </div>
-                          <div>
-                            <p className="text-sm font-semibold">{doc.user_name}</p>
-                            <p className="text-[10px] text-muted-foreground font-mono">{doc.user_id.slice(0, 8)}...</p>
+                          <div className="min-w-0">
+                            <p className="text-xs md:text-sm font-semibold truncate">{doc.user_name}</p>
+                            <p className="text-[10px] text-muted-foreground font-mono hidden sm:block">{doc.user_id.slice(0, 8)}...</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-muted-foreground" />
-                          <span className="text-sm font-medium">{docTypeLabel(doc.type)}</span>
-                        </div>
+                      <td className="px-3 md:px-4 py-3">
+                        <span className="text-xs md:text-sm font-medium">{docTypeLabel(doc.type)}</span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
-                        {new Date(doc.created_at).toLocaleDateString("tr-TR")} {new Date(doc.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                      <td className="px-3 md:px-4 py-3 text-xs text-muted-foreground hidden sm:table-cell">
+                        {new Date(doc.created_at).toLocaleDateString("tr-TR")}
                       </td>
                       <td className="px-4 py-3 text-center">
                         <span className={`text-xs px-2 py-0.5 rounded-full ${

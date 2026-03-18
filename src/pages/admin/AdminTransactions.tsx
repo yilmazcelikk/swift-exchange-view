@@ -271,24 +271,24 @@ const AdminTransactions = () => {
                 <tbody>
                   {paginatedTx.map((tx) => (
                     <tr key={tx.id} className="border-b border-border last:border-0 hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3.5">
-                        <div className="flex items-center gap-2.5">
-                          <div className={`p-1.5 rounded-lg ${tx.type === "deposit" ? "bg-buy/10" : "bg-sell/10"}`}>
+                      <td className="px-3 md:px-4 py-3">
+                        <div className="flex items-center gap-2">
+                          <div className={`p-1 md:p-1.5 rounded-lg ${tx.type === "deposit" ? "bg-buy/10" : "bg-sell/10"}`}>
                             {tx.type === "deposit"
-                              ? <ArrowDownToLine className="h-4 w-4 text-buy" />
-                              : <ArrowUpFromLine className="h-4 w-4 text-sell" />
+                              ? <ArrowDownToLine className="h-3.5 md:h-4 w-3.5 md:w-4 text-buy" />
+                              : <ArrowUpFromLine className="h-3.5 md:h-4 w-3.5 md:w-4 text-sell" />
                             }
                           </div>
-                          <span className="text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</span>
+                          <span className="text-xs md:text-sm font-medium">{tx.type === "deposit" ? "Yatırma" : "Çekme"}</span>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 md:px-4 py-3">
                         <div>
-                          <p className="text-sm font-medium leading-tight">{tx.user_name}</p>
-                          <p className="text-[10px] font-mono text-muted-foreground">{tx.user_id.slice(0, 8)}...</p>
+                          <p className="text-xs md:text-sm font-medium leading-tight truncate max-w-[100px] md:max-w-none">{tx.user_name}</p>
+                          <p className="text-[10px] font-mono text-muted-foreground hidden sm:block">{tx.user_id.slice(0, 8)}...</p>
                         </div>
                       </td>
-                      <td className="px-4 py-3.5">
+                      <td className="px-3 md:px-4 py-3 hidden md:table-cell">
                         {tx.type === "withdrawal" ? (
                           <div className="space-y-0.5">
                             <p className="text-xs font-medium leading-tight">{tx.account_holder || "—"}</p>
@@ -298,16 +298,16 @@ const AdminTransactions = () => {
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5">
-                        <p className="text-sm">{new Date(tx.created_at).toLocaleDateString("tr-TR")}</p>
+                      <td className="px-3 md:px-4 py-3 hidden sm:table-cell">
+                        <p className="text-xs md:text-sm">{new Date(tx.created_at).toLocaleDateString("tr-TR")}</p>
                         <p className="text-[10px] text-muted-foreground">{new Date(tx.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}</p>
                       </td>
-                      <td className="px-4 py-3.5 text-right">
-                        <span className={`text-sm font-mono font-bold ${tx.type === "deposit" ? "text-buy" : "text-sell"}`}>
+                      <td className="px-3 md:px-4 py-3 text-right">
+                        <span className={`text-xs md:text-sm font-mono font-bold ${tx.type === "deposit" ? "text-buy" : "text-sell"}`}>
                           {tx.type === "deposit" ? "+" : "-"}{Number(tx.amount).toLocaleString("tr-TR")} {tx.currency}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="px-3 md:px-4 py-3 text-center hidden lg:table-cell">
                         {tx.receipt_url ? (
                           <Button
                             size="icon"
@@ -329,8 +329,8 @@ const AdminTransactions = () => {
                           <span className="text-xs text-muted-foreground">—</span>
                         )}
                       </td>
-                      <td className="px-4 py-3.5 text-center">
-                        <span className={`inline-flex items-center text-xs font-medium px-2.5 py-1 rounded-full ${
+                      <td className="px-3 md:px-4 py-3 text-center">
+                        <span className={`inline-flex items-center text-[10px] md:text-xs font-medium px-1.5 md:px-2.5 py-0.5 md:py-1 rounded-full ${
                           tx.status === "approved" ? "bg-buy/15 text-buy" :
                           tx.status === "pending" ? "bg-warning/15 text-warning" :
                           "bg-sell/15 text-sell"
@@ -338,14 +338,14 @@ const AdminTransactions = () => {
                           {tx.status === "approved" ? "Onaylı" : tx.status === "pending" ? "Bekliyor" : "Reddedildi"}
                         </span>
                       </td>
-                      <td className="px-4 py-3.5 text-center">
+                      <td className="px-3 md:px-4 py-3 text-center">
                         {tx.status === "pending" ? (
-                          <div className="flex justify-center gap-1">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-buy hover:bg-buy/10 rounded-lg" onClick={() => setConfirmAction({ id: tx.id, status: "approved", tx })}>
-                              <CheckCircle className="h-4 w-4" />
+                          <div className="flex justify-center gap-0.5 md:gap-1">
+                            <Button size="icon" variant="ghost" className="h-7 w-7 md:h-8 md:w-8 text-buy hover:bg-buy/10 rounded-lg" onClick={() => setConfirmAction({ id: tx.id, status: "approved", tx })}>
+                              <CheckCircle className="h-3.5 md:h-4 w-3.5 md:w-4" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 text-sell hover:bg-sell/10 rounded-lg" onClick={() => setConfirmAction({ id: tx.id, status: "rejected", tx })}>
-                              <XCircle className="h-4 w-4" />
+                            <Button size="icon" variant="ghost" className="h-7 w-7 md:h-8 md:w-8 text-sell hover:bg-sell/10 rounded-lg" onClick={() => setConfirmAction({ id: tx.id, status: "rejected", tx })}>
+                              <XCircle className="h-3.5 md:h-4 w-3.5 md:w-4" />
                             </Button>
                           </div>
                         ) : (

@@ -81,10 +81,10 @@ const AdminReferrals = () => {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-2xl font-bold">Referans Linkleri</h2>
-          <p className="text-sm text-muted-foreground">Referans kodları oluşturun ve yönetin</p>
+          <h2 className="text-lg md:text-2xl font-bold">Referans Linkleri</h2>
+          <p className="text-xs md:text-sm text-muted-foreground">Referans kodları oluşturun ve yönetin</p>
         </div>
         <div className="flex items-center gap-2">
           <Button variant="outline" size="sm" onClick={loadCodes} disabled={loading}>
