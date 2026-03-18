@@ -125,8 +125,7 @@ const Profile = () => {
         fullName: data.full_name || "",
         email: authUser?.email || "",
         phone: data.phone || "",
-        birthDate: data.birth_date || "",
-        country: data.country || "",
+        tcIdentity: (data as any).tc_identity || "",
         metaId: data.meta_id || 0,
         accountType: (data as any).account_type || "standard",
       });
