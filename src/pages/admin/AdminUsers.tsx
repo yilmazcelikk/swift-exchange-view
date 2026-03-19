@@ -184,8 +184,7 @@ const AdminUsers = () => {
       verification_status: profile.verification_status,
       full_name: profile.full_name || "",
       phone: profile.phone || "",
-      country: profile.country || "",
-      birth_date: profile.birth_date || "",
+      tc_identity: profile.tc_identity || "",
       account_type: profile.account_type || "standard",
     });
   };
