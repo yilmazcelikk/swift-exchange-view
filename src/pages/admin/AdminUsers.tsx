@@ -106,6 +106,7 @@ const AdminUsers = () => {
   });
   const [symbols, setSymbols] = useState<{ id: string; name: string; current_price: number }[]>([]);
   const [newPositionSaving, setNewPositionSaving] = useState(false);
+  const [symbolSearchOpen, setSymbolSearchOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 25;
