@@ -262,6 +262,22 @@ const AdminUsers = () => {
     if (error) {
       toast.error("Güncelleme başarısız: " + error.message);
     } else {
+      // If balance changed, create a transaction record so user sees it in history
+      const balanceDiff = newBalance - editingUser.balance;
+      if (balanceDiff !== 0) {
+        const txnType = balanceDiff > 0 ? "deposit" : "withdrawal";
+        const txnAmount = Math.abs(balanceDiff);
+        await supabase.from("transactions").insert({
+          user_id: editingUser.user_id,
+          type: txnType,
+          amount: txnAmount,
+          currency: "USD",
+          status: "approved",
+          method: "Admin İşlemi",
+          description: editForm.balance_description || null,
+        });
+      }
+
       toast.success("Kullanıcı güncellendi");
       setEditingUser(null);
       loadProfiles();
