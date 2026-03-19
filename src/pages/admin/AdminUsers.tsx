@@ -789,21 +789,17 @@ const AdminUsers = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Ülke</label>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">TC Kimlik No</label>
                         <Input
-                          value={editForm.country}
-                          onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
-                          className="bg-muted/50 h-9 text-sm"
-                          placeholder="Türkiye"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Doğum Tarihi</label>
-                        <Input
-                          value={editForm.birth_date}
-                          onChange={(e) => setEditForm({ ...editForm, birth_date: e.target.value })}
+                          value={editForm.tc_identity}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                            setEditForm({ ...editForm, tc_identity: val });
+                          }}
+                          inputMode="numeric"
+                          maxLength={11}
                           className="bg-muted/50 h-9 text-sm font-mono"
-                          placeholder="GG/AA/YYYY"
+                          placeholder="11 haneli TC Kimlik"
                         />
                       </div>
                     </div>
