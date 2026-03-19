@@ -80,8 +80,7 @@ const AdminUsers = () => {
     verification_status: "",
     full_name: "",
     phone: "",
-    country: "",
-    birth_date: "",
+    tc_identity: "",
     account_type: "standard",
   });
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
