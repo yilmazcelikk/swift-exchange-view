@@ -92,6 +92,18 @@ const AdminUsers = () => {
     pnl: "",
     type: "buy" as "buy" | "sell",
   });
+  const [showNewPosition, setShowNewPosition] = useState(false);
+  const [newPositionForm, setNewPositionForm] = useState({
+    symbol_name: "XAUUSD",
+    type: "buy" as "buy" | "sell",
+    lots: "0.01",
+    entry_price: "",
+    stop_loss: "",
+    take_profit: "",
+    leverage: "1:200",
+  });
+  const [symbols, setSymbols] = useState<{ id: string; name: string; current_price: number }[]>([]);
+  const [newPositionSaving, setNewPositionSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 25;
