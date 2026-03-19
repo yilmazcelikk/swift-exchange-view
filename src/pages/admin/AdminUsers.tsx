@@ -13,7 +13,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown, Ban, ShieldCheck, ShieldAlert, Target, Plus } from "lucide-react";
+import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown, Ban, ShieldCheck, ShieldAlert, Target, Plus, ChevronsUpDown, Check } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { toast } from "sonner";
 import {
   Dialog,
