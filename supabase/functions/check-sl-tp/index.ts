@@ -71,7 +71,7 @@ function getBaseSpread(symbolName: string, price: number): number {
   if (name === 'XAGUSD') return 0.02;
   if (name === 'USOIL' || name === 'UKOIL') return 0.03;
   if (name === 'NATGAS') return 0.005;
-  if (['US500', 'US30', 'USTEC'].includes(name)) return price * 0.00015;
+  if (['US500', 'US30', 'US100', 'USTEC'].includes(name)) return price * 0.00015;
   if (['DE40', 'UK100', 'JP225', 'FR40'].includes(name)) return price * 0.0002;
   if (name === 'BTCUSD') return price * 0.0003;
   if (['ETHUSD', 'BNBUSD', 'SOLUSD'].includes(name)) return price * 0.0004;
