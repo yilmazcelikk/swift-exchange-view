@@ -340,6 +340,68 @@ const AdminUsers = () => {
     setLoadingAllOrders(false);
   };
 
+  const openNewPositionDialog = () => {
+    if (!selectedUser) return;
+    const defaultSymbol = symbols.length > 0 ? symbols[0] : null;
+    setNewPositionForm({
+      symbol_name: defaultSymbol?.name || "XAUUSD",
+      type: "buy",
+      lots: "0.01",
+      entry_price: defaultSymbol ? String(defaultSymbol.current_price) : "",
+      stop_loss: "",
+      take_profit: "",
+      leverage: selectedUser.leverage || "1:200",
+    });
+    setShowNewPosition(true);
+  };
+
+  const handleOpenPosition = async () => {
+    if (!selectedUser) return;
+    setNewPositionSaving(true);
+    try {
+      const sym = symbols.find(s => s.name === newPositionForm.symbol_name);
+      if (!sym) { toast.error("Sembol bulunamadı"); setNewPositionSaving(false); return; }
+      
+      const entryPrice = parseFloat(newPositionForm.entry_price) || sym.current_price;
+      const lots = parseFloat(newPositionForm.lots) || 0.01;
+      const leverageRatio = parseInt(newPositionForm.leverage.split(":")[1] || "200", 10);
+      const margin = calculateMargin(newPositionForm.symbol_name, lots, entryPrice, leverageRatio);
+
+      const { error } = await supabase.from("orders").insert({
+        user_id: selectedUser.user_id,
+        symbol_id: sym.id,
+        symbol_name: sym.name,
+        type: newPositionForm.type,
+        order_type: "market",
+        lots,
+        entry_price: entryPrice,
+        current_price: sym.current_price,
+        stop_loss: newPositionForm.stop_loss ? parseFloat(newPositionForm.stop_loss) : null,
+        take_profit: newPositionForm.take_profit ? parseFloat(newPositionForm.take_profit) : null,
+        leverage: newPositionForm.leverage,
+        status: "open",
+        pnl: 0,
+        swap: 0,
+      });
+
+      if (error) {
+        toast.error("Pozisyon açılamadı: " + error.message);
+      } else {
+        const newFreeMargin = selectedUser.free_margin - margin;
+        await supabase.from("profiles").update({
+          free_margin: Math.max(0, newFreeMargin),
+        }).eq("user_id", selectedUser.user_id);
+
+        toast.success(`${sym.name} ${newPositionForm.type === "buy" ? "ALIŞ" : "SATIŞ"} pozisyon açıldı (${lots} lot)`);
+        setShowNewPosition(false);
+        loadUserOrders(selectedUser.user_id, true);
+        loadProfiles();
+      }
+    } finally {
+      setNewPositionSaving(false);
+    }
+  };
+
   const handleBanToggle = async (profile: Profile, banType?: string) => {
     if (profile.is_banned) {
       // Unban
