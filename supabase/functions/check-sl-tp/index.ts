@@ -32,7 +32,7 @@ function getContractSize(symbolName: string): number {
     "AABORUSD","JUPUSD","PEPE1000USD","TONUSD","SUIUSD","WIFUSD",
   ];
   if (cryptoPairs.includes(name)) return 1;
-  if (["US500","US30","USTEC","DE40","UK100","JP225","FR40","AU200","HK50"].includes(name)) return 1;
+  if (["US500","US30","US100","USTEC","DE40","UK100","JP225","FR40","AU200","HK50"].includes(name)) return 1;
   const bistStocks = [
     "THYAO","GARAN","AKBNK","EREGL","SISE","KCHOL","SAHOL","TUPRS","PETKM","BIMAS",
     "YKBNK","ISCTR","ASELS","PGSUS","EKGYO","TOASO","TAVHL","FROTO","TCELL","HALKB",
