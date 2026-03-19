@@ -995,7 +995,173 @@ const AdminUsers = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Order Edit Dialog */}
+      {/* New Position Dialog */}
+      <Dialog open={showNewPosition} onOpenChange={setShowNewPosition}>
+        <DialogContent className="max-w-md p-0 overflow-hidden" aria-describedby={undefined}>
+          <div className="px-5 py-4 bg-primary/5 border-b border-border">
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Pozisyon Aç — {selectedUser?.full_name || "Kullanıcı"}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">MTID: {selectedUser?.meta_id}</p>
+          </div>
+          <div className="px-5 py-4 space-y-4">
+            {/* Symbol */}
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Sembol</label>
+              <Select
+                value={newPositionForm.symbol_name}
+                onValueChange={(v) => {
+                  const sym = symbols.find(s => s.name === v);
+                  setNewPositionForm(prev => ({
+                    ...prev,
+                    symbol_name: v,
+                    entry_price: sym ? String(sym.current_price) : prev.entry_price,
+                  }));
+                }}
+              >
+                <SelectTrigger className="bg-muted/50 h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {symbols.map(s => (
+                    <SelectItem key={s.id} value={s.name}>
+                      {s.name} — ${s.current_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Direction */}
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Yön</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setNewPositionForm(prev => ({ ...prev, type: "buy" }))}
+                  className={`flex-1 text-sm font-bold py-2.5 rounded-lg transition-all ${newPositionForm.type === "buy" ? "bg-buy text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                >
+                  ALIŞ (BUY)
+                </button>
+                <button
+                  onClick={() => setNewPositionForm(prev => ({ ...prev, type: "sell" }))}
+                  className={`flex-1 text-sm font-bold py-2.5 rounded-lg transition-all ${newPositionForm.type === "sell" ? "bg-sell text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                >
+                  SATIŞ (SELL)
+                </button>
+              </div>
+            </div>
+
+            {/* Lots & Entry Price */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Lot</label>
+                <Input
+                  type="number"
+                  value={newPositionForm.lots}
+                  onChange={(e) => setNewPositionForm(prev => ({ ...prev, lots: e.target.value }))}
+                  className="bg-muted/50 font-mono h-9 text-sm"
+                  step="0.01"
+                  min="0.01"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Giriş Fiyatı</label>
+                <Input
+                  type="number"
+                  value={newPositionForm.entry_price}
+                  onChange={(e) => setNewPositionForm(prev => ({ ...prev, entry_price: e.target.value }))}
+                  className="bg-muted/50 font-mono h-9 text-sm"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* SL & TP */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold text-sell uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <ShieldAlert className="h-3 w-3" /> Zarar Durdur
+                </label>
+                <Input
+                  type="number"
+                  value={newPositionForm.stop_loss}
+                  onChange={(e) => setNewPositionForm(prev => ({ ...prev, stop_loss: e.target.value }))}
+                  className="bg-muted/50 font-mono h-9 text-sm border-sell/20"
+                  placeholder="Opsiyonel"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-buy uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <Target className="h-3 w-3" /> Kâr Al
+                </label>
+                <Input
+                  type="number"
+                  value={newPositionForm.take_profit}
+                  onChange={(e) => setNewPositionForm(prev => ({ ...prev, take_profit: e.target.value }))}
+                  className="bg-muted/50 font-mono h-9 text-sm border-buy/20"
+                  placeholder="Opsiyonel"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* Leverage */}
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Kaldıraç</label>
+              <Select value={newPositionForm.leverage} onValueChange={(v) => setNewPositionForm(prev => ({ ...prev, leverage: v }))}>
+                <SelectTrigger className="bg-muted/50 h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {["1:10", "1:50", "1:100", "1:200", "1:500"].map(l => (
+                    <SelectItem key={l} value={l}>{l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Margin Info */}
+            {(() => {
+              const lots = parseFloat(newPositionForm.lots) || 0;
+              const price = parseFloat(newPositionForm.entry_price) || 0;
+              const lev = parseInt(newPositionForm.leverage.split(":")[1] || "200", 10);
+              const margin = lots > 0 && price > 0 ? calculateMargin(newPositionForm.symbol_name, lots, price, lev) : 0;
+              return margin > 0 ? (
+                <div className="p-3 rounded-lg bg-muted/30 border border-border text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Gerekli Teminat:</span>
+                    <span className="font-mono font-bold">${margin.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Serbest Teminat:</span>
+                    <span className="font-mono font-bold">${selectedUser?.free_margin.toFixed(2)}</span>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            <Button
+              onClick={handleOpenPosition}
+              disabled={newPositionSaving}
+              className={`w-full h-11 font-semibold ${newPositionForm.type === "buy" ? "bg-buy hover:bg-buy/90" : "bg-sell hover:bg-sell/90"} text-white`}
+            >
+              {newPositionSaving ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Plus className="h-4 w-4 mr-2" />
+              )}
+              {newPositionForm.type === "buy" ? "ALIŞ" : "SATIŞ"} Pozisyon Aç
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+};
+
+export default AdminUsers;
       <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
         <DialogContent className="max-w-md p-0 overflow-hidden" aria-describedby={undefined}>
           {editingOrder && (() => {
