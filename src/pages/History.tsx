@@ -25,6 +25,7 @@ interface Transaction {
   created_at: string;
   status: string;
   method: string | null;
+  description: string | null;
   original_amount?: number | null;
   original_currency?: string | null;
   exchange_rate?: number | null;
