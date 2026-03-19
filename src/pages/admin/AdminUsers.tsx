@@ -454,7 +454,7 @@ const AdminUsers = () => {
           <span className="text-xs bg-success/10 text-success px-2.5 py-1 rounded-full font-medium">
             {profiles.length} kullanıcı
           </span>
-          <Button variant="outline" size="sm" onClick={loadProfiles} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => loadProfiles(true)} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>
