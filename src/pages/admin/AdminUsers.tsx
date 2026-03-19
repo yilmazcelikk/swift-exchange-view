@@ -208,6 +208,7 @@ const AdminUsers = () => {
       phone: profile.phone || "",
       tc_identity: profile.tc_identity || "",
       account_type: profile.account_type || "standard",
+      balance_description: "",
     });
   };
 
