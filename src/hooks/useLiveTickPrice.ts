@@ -34,14 +34,17 @@ export function useLiveTickPrice(
         return;
       }
 
-      const driftFromTrend = Math.abs(changePercent) * 0.0000025 * real;
-      const baseDrift = Math.max(real * 0.00002, driftFromTrend);
+      const volatilityFactor = Math.min(Math.abs(changePercent) * 0.000003, 0.0001);
+      const baseDrift = Math.max(real * 0.000015, volatilityFactor * real);
 
       setTickPrice((prev) => {
-        const seed = Math.random() - 0.5;
-        const next = prev + seed * 2 * baseDrift;
-        const min = real * (1 - clampPercent / 100);
-        const max = real * (1 + clampPercent / 100);
+        const meanRevertStrength = 0.03;
+        const revert = (real - prev) * meanRevertStrength;
+        const seed = (Math.random() - 0.5) * 2;
+        const next = prev + seed * baseDrift + revert;
+        const clamp = clampPercent / 100;
+        const min = real * (1 - clamp);
+        const max = real * (1 + clamp);
         return Math.min(max, Math.max(min, next));
       });
     }, tickMs);

@@ -56,13 +56,19 @@ export function useLiveSymbolPrices(
             continue;
           }
           const cp = Math.abs(input.changePercent || 0);
-          const driftFromTrend = cp * 0.0000025 * real;
-          const baseDrift = Math.max(real * 0.00002, driftFromTrend);
+          // More realistic micro-ticks: tighter drift based on volatility
+          const volatilityFactor = Math.min(cp * 0.000003, 0.0001);
+          const baseDrift = Math.max(real * 0.000015, volatilityFactor * real);
           const prevPrice = prev[id] ?? real;
-          const seed = Math.random() - 0.5;
-          const nextPrice = prevPrice + seed * 2 * baseDrift;
-          const min = real * (1 - 0.25 / 100);
-          const max = real * (1 + 0.25 / 100);
+          // Mean-revert towards real price with slight bias
+          const meanRevertStrength = 0.03;
+          const revert = (real - prevPrice) * meanRevertStrength;
+          const seed = (Math.random() - 0.5) * 2;
+          const nextPrice = prevPrice + seed * baseDrift + revert;
+          // Tighter clamp: ±0.15% from real
+          const clamp = 0.15 / 100;
+          const min = real * (1 - clamp);
+          const max = real * (1 + clamp);
           next[id] = Math.min(max, Math.max(min, nextPrice));
         }
         return next;
