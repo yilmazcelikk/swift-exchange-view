@@ -25,6 +25,7 @@ interface Transaction {
   created_at: string;
   status: string;
   method: string | null;
+  description: string | null;
   original_amount?: number | null;
   original_currency?: string | null;
   exchange_rate?: number | null;
@@ -236,9 +237,16 @@ const History = () => {
                       </div>
                     </div>
                     <div className="flex items-center justify-between mt-1">
-                      <p className="text-xs text-muted-foreground">
-                        {txn.method || "Banka Transferi"}
-                      </p>
+                      <div>
+                        <p className="text-xs text-muted-foreground">
+                          {txn.method || "Banka Transferi"}
+                        </p>
+                        {txn.description && (
+                          <p className="text-[10px] text-muted-foreground/70 italic mt-0.5">
+                            {txn.description}
+                          </p>
+                        )}
+                      </div>
                       <p className="text-[10px] text-muted-foreground">
                         {new Date(txn.created_at).toLocaleDateString("tr-TR")} {new Date(txn.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
                       </p>

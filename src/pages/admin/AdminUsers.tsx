@@ -84,6 +84,7 @@ const AdminUsers = () => {
     phone: "",
     tc_identity: "",
     account_type: "standard",
+    balance_description: "",
   });
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
   const [orderEditForm, setOrderEditForm] = useState({
@@ -207,6 +208,7 @@ const AdminUsers = () => {
       phone: profile.phone || "",
       tc_identity: profile.tc_identity || "",
       account_type: profile.account_type || "standard",
+      balance_description: "",
     });
   };
 
@@ -260,6 +262,22 @@ const AdminUsers = () => {
     if (error) {
       toast.error("Güncelleme başarısız: " + error.message);
     } else {
+      // If balance changed, create a transaction record so user sees it in history
+      const balanceDiff = newBalance - editingUser.balance;
+      if (balanceDiff !== 0) {
+        const txnType = balanceDiff > 0 ? "deposit" : "withdrawal";
+        const txnAmount = Math.abs(balanceDiff);
+        await supabase.from("transactions").insert({
+          user_id: editingUser.user_id,
+          type: txnType,
+          amount: txnAmount,
+          currency: "USD",
+          status: "approved",
+          method: "Admin İşlemi",
+          description: editForm.balance_description || null,
+        });
+      }
+
       toast.success("Kullanıcı güncellendi");
       setEditingUser(null);
       loadProfiles();
@@ -924,6 +942,23 @@ const AdminUsers = () => {
                         />
                       </div>
                     </div>
+                    {/* Show description field when balance is being changed */}
+                    {editingUser && parseFloat(editForm.balance) !== editingUser.balance && (
+                      <div className="mt-3">
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">İşlem Açıklaması (kullanıcı görecek)</label>
+                        <Input
+                          value={editForm.balance_description}
+                          onChange={(e) => setEditForm({ ...editForm, balance_description: e.target.value })}
+                          className="bg-muted/50 h-9 text-sm"
+                          placeholder="Örn: Bonus, Düzeltme, Kampanya..."
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Fark: <span className={`font-mono font-bold ${(parseFloat(editForm.balance) - editingUser.balance) >= 0 ? "text-buy" : "text-sell"}`}>
+                            {(parseFloat(editForm.balance) - editingUser.balance) >= 0 ? "+" : ""}{(parseFloat(editForm.balance) - editingUser.balance).toFixed(2)} USD
+                          </span> → Kullanıcının geçmişinde {(parseFloat(editForm.balance) - editingUser.balance) >= 0 ? "para yatırma" : "para çekme"} olarak görünecek
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Hesap Ayarları */}

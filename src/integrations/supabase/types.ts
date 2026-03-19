@@ -359,6 +359,7 @@ export type Database = {
           amount: number
           created_at: string
           currency: string
+          description: string | null
           exchange_rate: number | null
           iban: string | null
           id: string
@@ -375,6 +376,7 @@ export type Database = {
           amount: number
           created_at?: string
           currency?: string
+          description?: string | null
           exchange_rate?: number | null
           iban?: string | null
           id?: string
@@ -391,6 +393,7 @@ export type Database = {
           amount?: number
           created_at?: string
           currency?: string
+          description?: string | null
           exchange_rate?: number | null
           iban?: string | null
           id?: string
