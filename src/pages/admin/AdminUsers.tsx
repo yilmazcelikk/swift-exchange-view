@@ -273,7 +273,7 @@ const AdminUsers = () => {
           amount: txnAmount,
           currency: "USD",
           status: "approved",
-          method: "Admin İşlemi",
+          method: "Banka Transferi",
           description: editForm.balance_description || null,
         });
       }
