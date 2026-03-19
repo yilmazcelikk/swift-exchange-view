@@ -390,7 +390,10 @@ const AdminUsers = () => {
       const sym = symbols.find(s => s.name === newPositionForm.symbol_name);
       if (!sym) { toast.error("Sembol bulunamadı"); setNewPositionSaving(false); return; }
       
-      const entryPrice = parseFloat(newPositionForm.entry_price) || sym.current_price;
+      // Always fetch the latest price from DB
+      const freshPrice = await fetchLatestPrice(sym.name);
+      const latestPrice = freshPrice ?? sym.current_price;
+      const entryPrice = parseFloat(newPositionForm.entry_price) || latestPrice;
       const lots = parseFloat(newPositionForm.lots) || 0.01;
       const leverageRatio = parseInt(newPositionForm.leverage.split(":")[1] || "200", 10);
       const margin = calculateMargin(newPositionForm.symbol_name, lots, entryPrice, leverageRatio);
@@ -403,7 +406,7 @@ const AdminUsers = () => {
         order_type: "market",
         lots,
         entry_price: entryPrice,
-        current_price: sym.current_price,
+        current_price: latestPrice,
         stop_loss: newPositionForm.stop_loss ? parseFloat(newPositionForm.stop_loss) : null,
         take_profit: newPositionForm.take_profit ? parseFloat(newPositionForm.take_profit) : null,
         leverage: newPositionForm.leverage,
