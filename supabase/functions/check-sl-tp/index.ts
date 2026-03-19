@@ -11,37 +11,44 @@ const STOP_OUT_LEVEL = 30; // %30 teminat seviyesi
 // Contract sizes - MUST match frontend src/lib/trading.ts
 function getContractSize(symbolName: string): number {
   const name = symbolName.toUpperCase();
+  
+  // Precious metals
   if (name === "XAUUSD") return 100;
   if (name === "XAGUSD") return 5000;
   if (name === "XPTUSD") return 100;
   if (name === "XPDUSD") return 100;
+  
+  // Energy
   if (name === "USOIL" || name === "UKOIL") return 1000;
   if (name === "NATGAS") return 10000;
+  
+  // Agriculture
   if (["CORN", "WHEAT", "SOYBEAN"].includes(name)) return 50;
   if (name === "COTTON") return 50000;
   if (name === "SUGAR") return 112000;
   if (name === "COFFEE") return 37500;
   if (name === "COCOA") return 10;
   if (name === "COPPER") return 25000;
-  const cryptoPairs = [
-    "BTCUSD","ETHUSD","BNBUSD","ADAUSD","DOGEUSD","SOLUSD",
-    "DOTUSD","AVAXUSD","LINKUSD","LTCUSD","BCHUSD","XRPUSD",
-    "MATICUSD","ATOMUSD","ALGOUSD","FTMUSD","MANAUSD","SANDUSD",
-    "APEUSD","APTUSD","ARBUSD","OPUSD","INJUSD","NEAUSD",
-    "FILUSD","ICPUSD","ETCUSD","TRXUSD","SHIBUSD","UNIUSD",
-    "AABORUSD","JUPUSD","PEPE1000USD","TONUSD","SUIUSD","WIFUSD",
-  ];
-  if (cryptoPairs.includes(name)) return 1;
-  if (["US500","US30","US100","USTEC","DE40","UK100","JP225","FR40","AU200","HK50"].includes(name)) return 1;
-  const bistStocks = [
-    "THYAO","GARAN","AKBNK","EREGL","SISE","KCHOL","SAHOL","TUPRS","PETKM","BIMAS",
-    "YKBNK","ISCTR","ASELS","PGSUS","EKGYO","TOASO","TAVHL","FROTO","TCELL","HALKB",
-    "VAKBN","DOHOL","ENKAI","ARCLK","VESTL","MGROS","SOKM","GUBRF","SASA","OYAKC",
-    "TTKOM","TSKB","AKSA","CIMSA","AEFES","ULKER","DOAS","OTKAR","ISGYO","KRDMD",
-    "GESAN","KONTR","ODAS","BRYAT","TTRAK","EUPWR","AGHOL","MAVI","LOGO",
-  ];
-  if (bistStocks.includes(name)) return 1;
-  return 100000;
+  if (name === "LUMBER") return 110;
+  if (name === "OATS") return 50;
+  if (name === "ORANGE") return 15000;
+  if (name === "RICE") return 2000;
+  if (name === "RUBBER") return 1000;
+  
+  // Forex pairs: ONLY these get 100,000 contract size
+  const FOREX_PAIRS = new Set([
+    "EURUSD","GBPUSD","USDJPY","USDCHF","AUDUSD","NZDUSD","USDCAD",
+    "EURGBP","EURJPY","GBPJPY","AUDCAD","AUDCHF","AUDJPY","AUDNZD",
+    "CADCHF","CADJPY","CHFJPY","EURAUD","EURCAD","EURCHF","EURHUF",
+    "EURNOK","EURNZD","EURSEK","EURTRY","GBPAUD","GBPCAD","GBPCHF",
+    "GBPNZD","NZDCAD","NZDCHF","NZDJPY","TRYJPY","USDCLP","USDCNH",
+    "USDCOP","USDHKD","USDHUF","USDINR","USDKRW","USDMXN","USDNOK",
+    "USDPLN","USDSEK","USDTRY","USDTWD","USDZAR","ZARJPY",
+  ]);
+  if (FOREX_PAIRS.has(name)) return 100000;
+  
+  // Everything else: crypto, indices, stocks → 1
+  return 1;
 }
 
 function calculatePnl(symbolName: string, type: string, lots: number, entryPrice: number, currentPrice: number): number {
