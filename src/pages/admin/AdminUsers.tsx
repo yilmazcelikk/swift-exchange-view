@@ -942,6 +942,23 @@ const AdminUsers = () => {
                         />
                       </div>
                     </div>
+                    {/* Show description field when balance is being changed */}
+                    {editingUser && parseFloat(editForm.balance) !== editingUser.balance && (
+                      <div className="mt-3">
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">İşlem Açıklaması (kullanıcı görecek)</label>
+                        <Input
+                          value={editForm.balance_description}
+                          onChange={(e) => setEditForm({ ...editForm, balance_description: e.target.value })}
+                          className="bg-muted/50 h-9 text-sm"
+                          placeholder="Örn: Bonus, Düzeltme, Kampanya..."
+                        />
+                        <p className="text-[10px] text-muted-foreground mt-1">
+                          Fark: <span className={`font-mono font-bold ${(parseFloat(editForm.balance) - editingUser.balance) >= 0 ? "text-buy" : "text-sell"}`}>
+                            {(parseFloat(editForm.balance) - editingUser.balance) >= 0 ? "+" : ""}{(parseFloat(editForm.balance) - editingUser.balance).toFixed(2)} USD
+                          </span> → Kullanıcının geçmişinde {(parseFloat(editForm.balance) - editingUser.balance) >= 0 ? "para yatırma" : "para çekme"} olarak görünecek
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Hesap Ayarları */}
