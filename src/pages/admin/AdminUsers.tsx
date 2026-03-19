@@ -710,6 +710,13 @@ const AdminUsers = () => {
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Hızlı İşlemler</h4>
                 <Button
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={openNewPositionDialog}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Pozisyon Aç
+                </Button>
+                <Button
                   className="w-full bg-success hover:bg-success/90 text-success-foreground"
                   onClick={() => loadAllOrders(liveProfile.user_id)}
                 >
