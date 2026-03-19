@@ -109,7 +109,7 @@ const AdminUsers = () => {
   const itemsPerPage = 25;
 
   useEffect(() => {
-    loadProfiles();
+    loadProfiles(true);
     loadSymbols();
   }, []);
 
