@@ -1012,28 +1012,52 @@ const AdminUsers = () => {
             {/* Symbol */}
             <div>
               <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Sembol</label>
-              <Select
-                value={newPositionForm.symbol_name}
-                onValueChange={(v) => {
-                  const sym = symbols.find(s => s.name === v);
-                  setNewPositionForm(prev => ({
-                    ...prev,
-                    symbol_name: v,
-                    entry_price: sym ? String(sym.current_price) : prev.entry_price,
-                  }));
-                }}
-              >
-                <SelectTrigger className="bg-muted/50 h-9 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {symbols.map(s => (
-                    <SelectItem key={s.id} value={s.name}>
-                      {s.name} — ${s.current_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Popover open={symbolSearchOpen} onOpenChange={setSymbolSearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    aria-expanded={symbolSearchOpen}
+                    className="w-full justify-between bg-muted/50 h-9 text-sm font-normal"
+                  >
+                    {newPositionForm.symbol_name
+                      ? `${newPositionForm.symbol_name} — $${(symbols.find(s => s.name === newPositionForm.symbol_name)?.current_price || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}`
+                      : "Sembol seçin..."}
+                    <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Sembol ara..." />
+                    <CommandList>
+                      <CommandEmpty>Sembol bulunamadı.</CommandEmpty>
+                      <CommandGroup className="max-h-60 overflow-auto">
+                        {symbols.map(s => (
+                          <CommandItem
+                            key={s.id}
+                            value={s.name}
+                            onSelect={() => {
+                              setNewPositionForm(prev => ({
+                                ...prev,
+                                symbol_name: s.name,
+                                entry_price: String(s.current_price),
+                              }));
+                              setSymbolSearchOpen(false);
+                            }}
+                            className="flex items-center justify-between"
+                          >
+                            <span className="font-mono font-medium">{s.name}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">${s.current_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}</span>
+                              {newPositionForm.symbol_name === s.name && <Check className="h-4 w-4 text-primary" />}
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
             </div>
 
             {/* Direction */}
