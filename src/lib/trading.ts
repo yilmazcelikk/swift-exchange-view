@@ -36,7 +36,7 @@ export function getContractSize(symbolName: string): number {
   ].includes(name)) return 1;
   
   // Indices
-  if (['US500', 'US30', 'USTEC', 'DE40', 'UK100', 'JP225', 'FR40', 'AU200', 'HK50'].includes(name)) return 1;
+  if (['US500', 'US30', 'US100', 'USTEC', 'DE40', 'UK100', 'JP225', 'FR40', 'AU200', 'HK50'].includes(name)) return 1;
   
   // BIST stocks (TRY based) - 1 lot = 1 share
   if (name.startsWith('BIST') || ['THYAO', 'GARAN', 'AKBNK', 'EREGL', 'SISE', 'KCHOL', 'SAHOL', 'TUPRS', 'PETKM', 'BIMAS'].includes(name)) return 1;
@@ -175,7 +175,7 @@ export function getBaseSpread(symbolName: string, price: number): number {
   if (name === 'NATGAS') return 0.005;
 
   // Indices
-  if (['US500', 'US30', 'USTEC'].includes(name)) return price * 0.00015;
+  if (['US500', 'US30', 'US100', 'USTEC'].includes(name)) return price * 0.00015;
   if (['DE40', 'UK100', 'JP225', 'FR40'].includes(name)) return price * 0.0002;
 
   // Crypto - slightly wider

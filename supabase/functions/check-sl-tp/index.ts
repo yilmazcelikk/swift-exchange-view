@@ -32,7 +32,7 @@ function getContractSize(symbolName: string): number {
     "AABORUSD","JUPUSD","PEPE1000USD","TONUSD","SUIUSD","WIFUSD",
   ];
   if (cryptoPairs.includes(name)) return 1;
-  if (["US500","US30","USTEC","DE40","UK100","JP225","FR40","AU200","HK50"].includes(name)) return 1;
+  if (["US500","US30","US100","USTEC","DE40","UK100","JP225","FR40","AU200","HK50"].includes(name)) return 1;
   const bistStocks = [
     "THYAO","GARAN","AKBNK","EREGL","SISE","KCHOL","SAHOL","TUPRS","PETKM","BIMAS",
     "YKBNK","ISCTR","ASELS","PGSUS","EKGYO","TOASO","TAVHL","FROTO","TCELL","HALKB",
@@ -71,7 +71,7 @@ function getBaseSpread(symbolName: string, price: number): number {
   if (name === 'XAGUSD') return 0.02;
   if (name === 'USOIL' || name === 'UKOIL') return 0.03;
   if (name === 'NATGAS') return 0.005;
-  if (['US500', 'US30', 'USTEC'].includes(name)) return price * 0.00015;
+  if (['US500', 'US30', 'US100', 'USTEC'].includes(name)) return price * 0.00015;
   if (['DE40', 'UK100', 'JP225', 'FR40'].includes(name)) return price * 0.0002;
   if (name === 'BTCUSD') return price * 0.0003;
   if (['ETHUSD', 'BNBUSD', 'SOLUSD'].includes(name)) return price * 0.0004;
@@ -144,7 +144,7 @@ function calculateSwap(symbolName: string, lots: number, daysHeld: number): numb
   if (["XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD"].includes(name)) rate = -1.2;
   else if (["USOIL", "UKOIL", "NATGAS"].includes(name)) rate = -0.8;
   else if (["BTCUSD", "ETHUSD", "BNBUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "ADAUSD"].includes(name)) rate = -2.0;
-  else if (["US500", "US30", "USTEC", "DE40", "UK100", "JP225"].includes(name)) rate = -0.6;
+  else if (["US500", "US30", "US100", "USTEC", "DE40", "UK100", "JP225"].includes(name)) rate = -0.6;
   return rate * lots * daysHeld;
 }
 
