@@ -118,8 +118,8 @@ const AdminUsers = () => {
     if (data) setSymbols(data.map(s => ({ ...s, current_price: Number(s.current_price) })));
   };
 
-  const loadUserOrders = useCallback(async (userId: string) => {
-    setLoadingOrders(true);
+  const loadUserOrders = useCallback(async (userId: string, isInitial = false) => {
+    if (isInitial) setLoadingOrders(true);
     try {
       // Fetch open orders
       const { data: ordersData } = await supabase
