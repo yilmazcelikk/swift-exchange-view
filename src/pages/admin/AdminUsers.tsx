@@ -361,14 +361,21 @@ const AdminUsers = () => {
     setLoadingAllOrders(false);
   };
 
-  const openNewPositionDialog = () => {
+  const fetchLatestPrice = async (symbolName: string): Promise<number | null> => {
+    const { data } = await supabase.from("symbols").select("current_price").eq("name", symbolName).single();
+    return data ? Number(data.current_price) : null;
+  };
+
+  const openNewPositionDialog = async () => {
     if (!selectedUser) return;
     const defaultSymbol = symbols.length > 0 ? symbols[0] : null;
+    const defaultName = defaultSymbol?.name || "XAUUSD";
+    const freshPrice = await fetchLatestPrice(defaultName);
     setNewPositionForm({
-      symbol_name: defaultSymbol?.name || "XAUUSD",
+      symbol_name: defaultName,
       type: "buy",
       lots: "0.01",
-      entry_price: defaultSymbol ? String(defaultSymbol.current_price) : "",
+      entry_price: freshPrice ? String(freshPrice) : (defaultSymbol ? String(defaultSymbol.current_price) : ""),
       stop_loss: "",
       take_profit: "",
       leverage: selectedUser.leverage || "1:200",
@@ -383,7 +390,10 @@ const AdminUsers = () => {
       const sym = symbols.find(s => s.name === newPositionForm.symbol_name);
       if (!sym) { toast.error("Sembol bulunamadı"); setNewPositionSaving(false); return; }
       
-      const entryPrice = parseFloat(newPositionForm.entry_price) || sym.current_price;
+      // Always fetch the latest price from DB
+      const freshPrice = await fetchLatestPrice(sym.name);
+      const latestPrice = freshPrice ?? sym.current_price;
+      const entryPrice = parseFloat(newPositionForm.entry_price) || latestPrice;
       const lots = parseFloat(newPositionForm.lots) || 0.01;
       const leverageRatio = parseInt(newPositionForm.leverage.split(":")[1] || "200", 10);
       const margin = calculateMargin(newPositionForm.symbol_name, lots, entryPrice, leverageRatio);
@@ -396,7 +406,7 @@ const AdminUsers = () => {
         order_type: "market",
         lots,
         entry_price: entryPrice,
-        current_price: sym.current_price,
+        current_price: latestPrice,
         stop_loss: newPositionForm.stop_loss ? parseFloat(newPositionForm.stop_loss) : null,
         take_profit: newPositionForm.take_profit ? parseFloat(newPositionForm.take_profit) : null,
         leverage: newPositionForm.leverage,
@@ -1071,13 +1081,14 @@ const AdminUsers = () => {
                           <CommandItem
                             key={s.id}
                             value={s.name}
-                            onSelect={() => {
+                            onSelect={async () => {
+                              setSymbolSearchOpen(false);
+                              const freshPrice = await fetchLatestPrice(s.name);
                               setNewPositionForm(prev => ({
                                 ...prev,
                                 symbol_name: s.name,
-                                entry_price: String(s.current_price),
+                                entry_price: String(freshPrice ?? s.current_price),
                               }));
-                              setSymbolSearchOpen(false);
                             }}
                             className="flex items-center justify-between"
                           >
