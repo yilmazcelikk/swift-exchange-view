@@ -33,8 +33,7 @@ interface Profile {
   user_id: string;
   full_name: string | null;
   phone: string | null;
-  country: string | null;
-  birth_date: string | null;
+  tc_identity: string | null;
   balance: number;
   credit: number;
   equity: number;
@@ -81,8 +80,7 @@ const AdminUsers = () => {
     verification_status: "",
     full_name: "",
     phone: "",
-    country: "",
-    birth_date: "",
+    tc_identity: "",
     account_type: "standard",
   });
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
@@ -186,8 +184,7 @@ const AdminUsers = () => {
       verification_status: profile.verification_status,
       full_name: profile.full_name || "",
       phone: profile.phone || "",
-      country: profile.country || "",
-      birth_date: profile.birth_date || "",
+      tc_identity: profile.tc_identity || "",
       account_type: profile.account_type || "standard",
     });
   };
@@ -234,10 +231,9 @@ const AdminUsers = () => {
         verification_status: editForm.verification_status,
         full_name: editForm.full_name || null,
         phone: editForm.phone || null,
-        country: editForm.country || null,
-        birth_date: editForm.birth_date || null,
+        tc_identity: editForm.tc_identity || null,
         account_type: editForm.account_type,
-      } as any)
+      })
       .eq("id", editingUser.id);
 
     if (error) {
@@ -540,6 +536,10 @@ const AdminUsers = () => {
                     <span className="text-sm font-mono">{liveProfile.phone || "—"}</span>
                   </div>
                   <div className="flex justify-between py-1.5">
+                    <span className="text-sm text-muted-foreground">TC Kimlik:</span>
+                    <span className="text-sm font-mono">{liveProfile.tc_identity || "—"}</span>
+                  </div>
+                  <div className="flex justify-between py-1.5">
                     <span className="text-sm text-muted-foreground">Doğrulama:</span>
                     {getVerificationBadge(liveProfile.verification_status)}
                   </div>
@@ -793,21 +793,17 @@ const AdminUsers = () => {
                         />
                       </div>
                       <div>
-                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Ülke</label>
+                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">TC Kimlik No</label>
                         <Input
-                          value={editForm.country}
-                          onChange={(e) => setEditForm({ ...editForm, country: e.target.value })}
-                          className="bg-muted/50 h-9 text-sm"
-                          placeholder="Türkiye"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-muted-foreground mb-1 block">Doğum Tarihi</label>
-                        <Input
-                          value={editForm.birth_date}
-                          onChange={(e) => setEditForm({ ...editForm, birth_date: e.target.value })}
+                          value={editForm.tc_identity}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                            setEditForm({ ...editForm, tc_identity: val });
+                          }}
+                          inputMode="numeric"
+                          maxLength={11}
                           className="bg-muted/50 h-9 text-sm font-mono"
-                          placeholder="GG/AA/YYYY"
+                          placeholder="11 haneli TC Kimlik"
                         />
                       </div>
                     </div>
