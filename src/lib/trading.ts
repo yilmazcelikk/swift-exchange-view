@@ -17,18 +17,18 @@ export function getContractSize(symbolName: string): number {
   if (name === 'USOIL' || name === 'UKOIL') return 1000;  // 1 lot = 1000 barrels
   if (name === 'NATGAS') return 10000;      // 1 lot = 10000 MMBtu
   
-  // ── Agriculture ──
-  if (['CORN', 'WHEAT', 'SOYBEAN'].includes(name)) return 50;   // bushels
-  if (name === 'COTTON') return 50000;      // lbs
-  if (name === 'SUGAR') return 112000;      // lbs
-  if (name === 'COFFEE') return 37500;      // lbs
-  if (name === 'COCOA') return 10;          // metric tons
-  if (name === 'COPPER') return 25000;      // lbs
-  if (name === 'LUMBER') return 110;        // board feet (÷1000)
-  if (name === 'OATS') return 50;           // bushels
-  if (name === 'ORANGE') return 15000;      // lbs
-  if (name === 'RICE') return 2000;         // cwt
-  if (name === 'RUBBER') return 1000;       // kg
+  // ── Agriculture (IC Markets CFD standard sizes) ──
+  if (['CORN', 'WHEAT', 'SOYBEAN'].includes(name)) return 4;    // IC Markets CFD
+  if (name === 'COTTON') return 100;       // IC Markets CFD
+  if (name === 'SUGAR') return 100;        // IC Markets CFD
+  if (name === 'COFFEE') return 10;        // IC Markets CFD
+  if (name === 'COCOA') return 1;          // IC Markets CFD
+  if (name === 'COPPER') return 100;       // CFD standard
+  if (name === 'LUMBER') return 1;         // CFD standard
+  if (name === 'OATS') return 4;           // CFD standard (similar to grains)
+  if (name === 'ORANGE') return 20;        // IC Markets CFD (OJ)
+  if (name === 'RICE') return 4;           // CFD standard (similar to grains)
+  if (name === 'RUBBER') return 1;         // CFD standard
   
   // ── Forex pairs: exactly 6 chars, two 3-letter currency codes ──
   // This is the ONLY category with 100,000 contract size
