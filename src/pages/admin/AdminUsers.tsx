@@ -152,13 +152,13 @@ const AdminUsers = () => {
     setLoadingOrders(false);
   }, []);
 
-  // Real-time polling for selected user's orders
+  // Real-time polling for selected user's orders - faster refresh
   useEffect(() => {
     if (selectedUser) {
-      loadUserOrders(selectedUser.user_id);
+      loadUserOrders(selectedUser.user_id, true);
       const interval = setInterval(() => {
-        loadUserOrders(selectedUser.user_id);
-      }, 2000);
+        loadUserOrders(selectedUser.user_id, false);
+      }, 1500);
       return () => clearInterval(interval);
     } else {
       setSelectedUserOrders([]);
