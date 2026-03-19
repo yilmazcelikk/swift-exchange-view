@@ -33,8 +33,7 @@ interface Profile {
   user_id: string;
   full_name: string | null;
   phone: string | null;
-  country: string | null;
-  birth_date: string | null;
+  tc_identity: string | null;
   balance: number;
   credit: number;
   equity: number;
