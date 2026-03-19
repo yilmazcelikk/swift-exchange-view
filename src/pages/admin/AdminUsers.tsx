@@ -1159,6 +1159,7 @@ const AdminUsers = () => {
       </Dialog>
 
       {/* Order Edit Dialog */}
+      <Dialog open={!!editingOrder} onOpenChange={(open) => !open && setEditingOrder(null)}>
         <DialogContent className="max-w-md p-0 overflow-hidden" aria-describedby={undefined}>
           {editingOrder && (() => {
             const entryVal = parseFloat(orderEditForm.entry_price) || editingOrder.entry_price;
