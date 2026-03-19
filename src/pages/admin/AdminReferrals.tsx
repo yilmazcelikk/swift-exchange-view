@@ -25,7 +25,7 @@ interface ReferralCode {
   created_at: string;
 }
 
-const SITE_URL = window.location.origin;
+const SITE_URL = "https://fiba.esubemobilportal.online";
 
 const AdminReferrals = () => {
   const [codes, setCodes] = useState<ReferralCode[]>([]);
