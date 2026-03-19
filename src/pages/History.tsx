@@ -238,11 +238,13 @@ const History = () => {
                     </div>
                     <div className="flex items-center justify-between mt-1">
                       <div>
-                        <p className="text-xs text-muted-foreground">
-                          {txn.method || "Banka Transferi"}
-                        </p>
+                        {txn.method && (
+                          <p className="text-xs text-muted-foreground">
+                            {txn.method}
+                          </p>
+                        )}
                         {txn.description && (
-                          <p className="text-[10px] text-muted-foreground/70 italic mt-0.5">
+                          <p className={`text-muted-foreground ${txn.method ? "text-[10px] text-muted-foreground/70 italic mt-0.5" : "text-xs"}`}>
                             {txn.description}
                           </p>
                         )}
