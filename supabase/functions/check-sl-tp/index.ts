@@ -22,18 +22,18 @@ function getContractSize(symbolName: string): number {
   if (name === "USOIL" || name === "UKOIL") return 1000;
   if (name === "NATGAS") return 10000;
   
-  // Agriculture
-  if (["CORN", "WHEAT", "SOYBEAN"].includes(name)) return 50;
-  if (name === "COTTON") return 50000;
-  if (name === "SUGAR") return 112000;
-  if (name === "COFFEE") return 37500;
-  if (name === "COCOA") return 10;
-  if (name === "COPPER") return 25000;
-  if (name === "LUMBER") return 110;
-  if (name === "OATS") return 50;
-  if (name === "ORANGE") return 15000;
-  if (name === "RICE") return 2000;
-  if (name === "RUBBER") return 1000;
+  // Agriculture (IC Markets CFD standard sizes)
+  if (["CORN", "WHEAT", "SOYBEAN"].includes(name)) return 4;
+  if (name === "COTTON") return 100;
+  if (name === "SUGAR") return 100;
+  if (name === "COFFEE") return 10;
+  if (name === "COCOA") return 1;
+  if (name === "COPPER") return 100;
+  if (name === "LUMBER") return 1;
+  if (name === "OATS") return 4;
+  if (name === "ORANGE") return 20;
+  if (name === "RICE") return 4;
+  if (name === "RUBBER") return 1;
   
   // Forex pairs: ONLY these get 100,000 contract size
   const FOREX_PAIRS = new Set([
