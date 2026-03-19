@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown, Ban, ShieldCheck, ShieldAlert, Target } from "lucide-react";
+import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown, Ban, ShieldCheck, ShieldAlert, Target, Plus } from "lucide-react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -92,16 +92,34 @@ const AdminUsers = () => {
     pnl: "",
     type: "buy" as "buy" | "sell",
   });
+  const [showNewPosition, setShowNewPosition] = useState(false);
+  const [newPositionForm, setNewPositionForm] = useState({
+    symbol_name: "XAUUSD",
+    type: "buy" as "buy" | "sell",
+    lots: "0.01",
+    entry_price: "",
+    stop_loss: "",
+    take_profit: "",
+    leverage: "1:200",
+  });
+  const [symbols, setSymbols] = useState<{ id: string; name: string; current_price: number }[]>([]);
+  const [newPositionSaving, setNewPositionSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 25;
 
   useEffect(() => {
-    loadProfiles();
+    loadProfiles(true);
+    loadSymbols();
   }, []);
 
-  const loadUserOrders = useCallback(async (userId: string) => {
-    setLoadingOrders(true);
+  const loadSymbols = async () => {
+    const { data } = await supabase.from("symbols").select("id, name, current_price").eq("is_active", true).order("name");
+    if (data) setSymbols(data.map(s => ({ ...s, current_price: Number(s.current_price) })));
+  };
+
+  const loadUserOrders = useCallback(async (userId: string, isInitial = false) => {
+    if (isInitial) setLoadingOrders(true);
     try {
       // Fetch open orders
       const { data: ordersData } = await supabase
@@ -134,13 +152,13 @@ const AdminUsers = () => {
     setLoadingOrders(false);
   }, []);
 
-  // Real-time polling for selected user's orders
+  // Real-time polling for selected user's orders - faster refresh
   useEffect(() => {
     if (selectedUser) {
-      loadUserOrders(selectedUser.user_id);
+      loadUserOrders(selectedUser.user_id, true);
       const interval = setInterval(() => {
-        loadUserOrders(selectedUser.user_id);
-      }, 2000);
+        loadUserOrders(selectedUser.user_id, false);
+      }, 1500);
       return () => clearInterval(interval);
     } else {
       setSelectedUserOrders([]);
@@ -155,11 +173,11 @@ const AdminUsers = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const loadProfiles = async () => {
-    setLoading(true);
+  const loadProfiles = async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
     setProfiles((data as Profile[]) || []);
-    setLoading(false);
+    if (showSpinner) setLoading(false);
   };
 
   const filteredProfiles = profiles.filter(
@@ -322,6 +340,68 @@ const AdminUsers = () => {
     setLoadingAllOrders(false);
   };
 
+  const openNewPositionDialog = () => {
+    if (!selectedUser) return;
+    const defaultSymbol = symbols.length > 0 ? symbols[0] : null;
+    setNewPositionForm({
+      symbol_name: defaultSymbol?.name || "XAUUSD",
+      type: "buy",
+      lots: "0.01",
+      entry_price: defaultSymbol ? String(defaultSymbol.current_price) : "",
+      stop_loss: "",
+      take_profit: "",
+      leverage: selectedUser.leverage || "1:200",
+    });
+    setShowNewPosition(true);
+  };
+
+  const handleOpenPosition = async () => {
+    if (!selectedUser) return;
+    setNewPositionSaving(true);
+    try {
+      const sym = symbols.find(s => s.name === newPositionForm.symbol_name);
+      if (!sym) { toast.error("Sembol bulunamadı"); setNewPositionSaving(false); return; }
+      
+      const entryPrice = parseFloat(newPositionForm.entry_price) || sym.current_price;
+      const lots = parseFloat(newPositionForm.lots) || 0.01;
+      const leverageRatio = parseInt(newPositionForm.leverage.split(":")[1] || "200", 10);
+      const margin = calculateMargin(newPositionForm.symbol_name, lots, entryPrice, leverageRatio);
+
+      const { error } = await supabase.from("orders").insert({
+        user_id: selectedUser.user_id,
+        symbol_id: sym.id,
+        symbol_name: sym.name,
+        type: newPositionForm.type,
+        order_type: "market",
+        lots,
+        entry_price: entryPrice,
+        current_price: sym.current_price,
+        stop_loss: newPositionForm.stop_loss ? parseFloat(newPositionForm.stop_loss) : null,
+        take_profit: newPositionForm.take_profit ? parseFloat(newPositionForm.take_profit) : null,
+        leverage: newPositionForm.leverage,
+        status: "open",
+        pnl: 0,
+        swap: 0,
+      });
+
+      if (error) {
+        toast.error("Pozisyon açılamadı: " + error.message);
+      } else {
+        const newFreeMargin = selectedUser.free_margin - margin;
+        await supabase.from("profiles").update({
+          free_margin: Math.max(0, newFreeMargin),
+        }).eq("user_id", selectedUser.user_id);
+
+        toast.success(`${sym.name} ${newPositionForm.type === "buy" ? "ALIŞ" : "SATIŞ"} pozisyon açıldı (${lots} lot)`);
+        setShowNewPosition(false);
+        loadUserOrders(selectedUser.user_id, true);
+        loadProfiles();
+      }
+    } finally {
+      setNewPositionSaving(false);
+    }
+  };
+
   const handleBanToggle = async (profile: Profile, banType?: string) => {
     if (profile.is_banned) {
       // Unban
@@ -374,7 +454,7 @@ const AdminUsers = () => {
           <span className="text-xs bg-success/10 text-success px-2.5 py-1 rounded-full font-medium">
             {profiles.length} kullanıcı
           </span>
-          <Button variant="outline" size="sm" onClick={loadProfiles} disabled={loading}>
+          <Button variant="outline" size="sm" onClick={() => loadProfiles(true)} disabled={loading}>
             <RefreshCw className={`h-4 w-4 mr-1 ${loading ? "animate-spin" : ""}`} />
             Yenile
           </Button>
@@ -629,6 +709,13 @@ const AdminUsers = () => {
               {/* Quick Actions */}
               <div className="space-y-2">
                 <h4 className="text-sm font-semibold">Hızlı İşlemler</h4>
+                <Button
+                  className="w-full bg-primary hover:bg-primary/90 text-primary-foreground"
+                  onClick={openNewPositionDialog}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Pozisyon Aç
+                </Button>
                 <Button
                   className="w-full bg-success hover:bg-success/90 text-success-foreground"
                   onClick={() => loadAllOrders(liveProfile.user_id)}
@@ -905,6 +992,169 @@ const AdminUsers = () => {
               </>
             );
           })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* New Position Dialog */}
+      <Dialog open={showNewPosition} onOpenChange={setShowNewPosition}>
+        <DialogContent className="max-w-md p-0 overflow-hidden" aria-describedby={undefined}>
+          <div className="px-5 py-4 bg-primary/5 border-b border-border">
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Pozisyon Aç — {selectedUser?.full_name || "Kullanıcı"}
+            </DialogTitle>
+            <p className="text-xs text-muted-foreground mt-1">MTID: {selectedUser?.meta_id}</p>
+          </div>
+          <div className="px-5 py-4 space-y-4">
+            {/* Symbol */}
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Sembol</label>
+              <Select
+                value={newPositionForm.symbol_name}
+                onValueChange={(v) => {
+                  const sym = symbols.find(s => s.name === v);
+                  setNewPositionForm(prev => ({
+                    ...prev,
+                    symbol_name: v,
+                    entry_price: sym ? String(sym.current_price) : prev.entry_price,
+                  }));
+                }}
+              >
+                <SelectTrigger className="bg-muted/50 h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {symbols.map(s => (
+                    <SelectItem key={s.id} value={s.name}>
+                      {s.name} — ${s.current_price.toLocaleString("en-US", { minimumFractionDigits: 2 })}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Direction */}
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Yön</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setNewPositionForm(prev => ({ ...prev, type: "buy" }))}
+                  className={`flex-1 text-sm font-bold py-2.5 rounded-lg transition-all ${newPositionForm.type === "buy" ? "bg-buy text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                >
+                  ALIŞ (BUY)
+                </button>
+                <button
+                  onClick={() => setNewPositionForm(prev => ({ ...prev, type: "sell" }))}
+                  className={`flex-1 text-sm font-bold py-2.5 rounded-lg transition-all ${newPositionForm.type === "sell" ? "bg-sell text-white shadow-md" : "bg-muted text-muted-foreground hover:bg-muted/80"}`}
+                >
+                  SATIŞ (SELL)
+                </button>
+              </div>
+            </div>
+
+            {/* Lots & Entry Price */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Lot</label>
+                <Input
+                  type="number"
+                  value={newPositionForm.lots}
+                  onChange={(e) => setNewPositionForm(prev => ({ ...prev, lots: e.target.value }))}
+                  className="bg-muted/50 font-mono h-9 text-sm"
+                  step="0.01"
+                  min="0.01"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Giriş Fiyatı</label>
+                <Input
+                  type="number"
+                  value={newPositionForm.entry_price}
+                  onChange={(e) => setNewPositionForm(prev => ({ ...prev, entry_price: e.target.value }))}
+                  className="bg-muted/50 font-mono h-9 text-sm"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* SL & TP */}
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[11px] font-semibold text-sell uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <ShieldAlert className="h-3 w-3" /> Zarar Durdur
+                </label>
+                <Input
+                  type="number"
+                  value={newPositionForm.stop_loss}
+                  onChange={(e) => setNewPositionForm(prev => ({ ...prev, stop_loss: e.target.value }))}
+                  className="bg-muted/50 font-mono h-9 text-sm border-sell/20"
+                  placeholder="Opsiyonel"
+                  step="0.01"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold text-buy uppercase tracking-wider mb-1.5 flex items-center gap-1">
+                  <Target className="h-3 w-3" /> Kâr Al
+                </label>
+                <Input
+                  type="number"
+                  value={newPositionForm.take_profit}
+                  onChange={(e) => setNewPositionForm(prev => ({ ...prev, take_profit: e.target.value }))}
+                  className="bg-muted/50 font-mono h-9 text-sm border-buy/20"
+                  placeholder="Opsiyonel"
+                  step="0.01"
+                />
+              </div>
+            </div>
+
+            {/* Leverage */}
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Kaldıraç</label>
+              <Select value={newPositionForm.leverage} onValueChange={(v) => setNewPositionForm(prev => ({ ...prev, leverage: v }))}>
+                <SelectTrigger className="bg-muted/50 h-9 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {["1:10", "1:50", "1:100", "1:200", "1:500"].map(l => (
+                    <SelectItem key={l} value={l}>{l}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Margin Info */}
+            {(() => {
+              const lots = parseFloat(newPositionForm.lots) || 0;
+              const price = parseFloat(newPositionForm.entry_price) || 0;
+              const lev = parseInt(newPositionForm.leverage.split(":")[1] || "200", 10);
+              const margin = lots > 0 && price > 0 ? calculateMargin(newPositionForm.symbol_name, lots, price, lev) : 0;
+              return margin > 0 ? (
+                <div className="p-3 rounded-lg bg-muted/30 border border-border text-xs space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Gerekli Teminat:</span>
+                    <span className="font-mono font-bold">${margin.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Serbest Teminat:</span>
+                    <span className="font-mono font-bold">${selectedUser?.free_margin.toFixed(2)}</span>
+                  </div>
+                </div>
+              ) : null;
+            })()}
+
+            <Button
+              onClick={handleOpenPosition}
+              disabled={newPositionSaving}
+              className={`w-full h-11 font-semibold ${newPositionForm.type === "buy" ? "bg-buy hover:bg-buy/90" : "bg-sell hover:bg-sell/90"} text-white`}
+            >
+              {newPositionSaving ? (
+                <RefreshCw className="h-4 w-4 animate-spin mr-2" />
+              ) : (
+                <Plus className="h-4 w-4 mr-2" />
+              )}
+              {newPositionForm.type === "buy" ? "ALIŞ" : "SATIŞ"} Pozisyon Aç
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
 
