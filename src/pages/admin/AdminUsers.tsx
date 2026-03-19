@@ -110,7 +110,13 @@ const AdminUsers = () => {
 
   useEffect(() => {
     loadProfiles();
+    loadSymbols();
   }, []);
+
+  const loadSymbols = async () => {
+    const { data } = await supabase.from("symbols").select("id, name, current_price").eq("is_active", true).order("name");
+    if (data) setSymbols(data.map(s => ({ ...s, current_price: Number(s.current_price) })));
+  };
 
   const loadUserOrders = useCallback(async (userId: string) => {
     setLoadingOrders(true);
