@@ -173,11 +173,11 @@ const AdminUsers = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const loadProfiles = async () => {
-    setLoading(true);
+  const loadProfiles = async (showSpinner = false) => {
+    if (showSpinner) setLoading(true);
     const { data } = await supabase.from("profiles").select("*").order("created_at", { ascending: false });
     setProfiles((data as Profile[]) || []);
-    setLoading(false);
+    if (showSpinner) setLoading(false);
   };
 
   const filteredProfiles = profiles.filter(
