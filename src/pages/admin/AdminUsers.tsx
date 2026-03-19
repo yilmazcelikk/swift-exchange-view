@@ -231,10 +231,9 @@ const AdminUsers = () => {
         verification_status: editForm.verification_status,
         full_name: editForm.full_name || null,
         phone: editForm.phone || null,
-        country: editForm.country || null,
-        birth_date: editForm.birth_date || null,
+        tc_identity: editForm.tc_identity || null,
         account_type: editForm.account_type,
-      } as any)
+      })
       .eq("id", editingUser.id);
 
     if (error) {
