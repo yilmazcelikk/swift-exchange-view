@@ -1078,13 +1078,14 @@ const AdminUsers = () => {
                           <CommandItem
                             key={s.id}
                             value={s.name}
-                            onSelect={() => {
+                            onSelect={async () => {
+                              setSymbolSearchOpen(false);
+                              const freshPrice = await fetchLatestPrice(s.name);
                               setNewPositionForm(prev => ({
                                 ...prev,
                                 symbol_name: s.name,
-                                entry_price: String(s.current_price),
+                                entry_price: String(freshPrice ?? s.current_price),
                               }));
-                              setSymbolSearchOpen(false);
                             }}
                             className="flex items-center justify-between"
                           >
