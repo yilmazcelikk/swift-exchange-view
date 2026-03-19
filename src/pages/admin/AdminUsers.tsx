@@ -361,14 +361,21 @@ const AdminUsers = () => {
     setLoadingAllOrders(false);
   };
 
-  const openNewPositionDialog = () => {
+  const fetchLatestPrice = async (symbolName: string): Promise<number | null> => {
+    const { data } = await supabase.from("symbols").select("current_price").eq("name", symbolName).single();
+    return data ? Number(data.current_price) : null;
+  };
+
+  const openNewPositionDialog = async () => {
     if (!selectedUser) return;
     const defaultSymbol = symbols.length > 0 ? symbols[0] : null;
+    const defaultName = defaultSymbol?.name || "XAUUSD";
+    const freshPrice = await fetchLatestPrice(defaultName);
     setNewPositionForm({
-      symbol_name: defaultSymbol?.name || "XAUUSD",
+      symbol_name: defaultName,
       type: "buy",
       lots: "0.01",
-      entry_price: defaultSymbol ? String(defaultSymbol.current_price) : "",
+      entry_price: freshPrice ? String(freshPrice) : (defaultSymbol ? String(defaultSymbol.current_price) : ""),
       stop_loss: "",
       take_profit: "",
       leverage: selectedUser.leverage || "1:200",
