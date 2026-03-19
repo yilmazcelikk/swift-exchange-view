@@ -536,6 +536,10 @@ const AdminUsers = () => {
                     <span className="text-sm font-mono">{liveProfile.phone || "—"}</span>
                   </div>
                   <div className="flex justify-between py-1.5">
+                    <span className="text-sm text-muted-foreground">TC Kimlik:</span>
+                    <span className="text-sm font-mono">{liveProfile.tc_identity || "—"}</span>
+                  </div>
+                  <div className="flex justify-between py-1.5">
                     <span className="text-sm text-muted-foreground">Doğrulama:</span>
                     {getVerificationBadge(liveProfile.verification_status)}
                   </div>
