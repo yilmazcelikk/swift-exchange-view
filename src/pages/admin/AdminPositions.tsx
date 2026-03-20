@@ -160,7 +160,8 @@ const AdminPositions = () => {
   // Summary stats
   const totalPnl = orders.reduce((sum, o) => sum + o.pnl, 0);
   const totalMargin = orders.reduce((sum, o) => {
-    return sum + calculateMargin(o.symbol_name, o.lots, o.entry_price, 200);
+    const lev = parseInt(o.leverage.split(":")[1] || "200", 10);
+    return sum + calculateMargin(o.symbol_name, o.lots, o.entry_price, lev);
   }, 0);
   const uniqueUsers = new Set(orders.map(o => o.user_id)).size;
   const buyCount = orders.filter(o => o.type === "buy").length;
