@@ -368,6 +368,17 @@ const DISPLAY_NAMES: Record<string, string> = {
   TBORG: "T. Tuborg", YATAS: "Yataş", ZOREN: "Zorlu Enerji",
   BRSAN: "Borusan Mannesmann", BAGFS: "Bagfaş", BANVT: "Banvit",
   DEVA: "Deva Holding", GOODY: "Goodyear", HEKTS: "Hektaş",
+  // BIST 100 missing (March 2026)
+  DSTKF: "Destek Finans Faktoring", ASTOR: "Astor Enerji", TRALT: "Türk Altın İşletmeleri",
+  MAGEN: "Margün Enerji", KTLEV: "Katılımevim", PASEU: "Pasifik Eurasia",
+  TRMET: "TR Anadolu Metal", ANSGR: "Anadolu Sigorta", RALYH: "Ral Yatırım Holding",
+  ENERY: "Enerya Enerji", TABGD: "Tab Gıda", BSOKE: "Batı Söke Çimento",
+  DAPGM: "DAP Gayrimenkul", CWENE: "CW Enerji", GENIL: "Gen İlaç",
+  GRSEL: "Gürsel Taşımacılık", TRENJ: "TR Doğal Enerji", IZENR: "İzdemir Enerji",
+  GRTHO: "Graintürk Holding", EFOR: "Efor Yatırım", GLRMK: "Gülermak",
+  FENER: "Fenerbahçe SK", OBAMS: "Oba Makarnacılık", GSRAY: "Galatasaray SK",
+  TUKAS: "Tukaş Gıda", KCAER: "Kocaer Çelik", REEDR: "Reeder Teknoloji",
+  PATEK: "Pasifik Teknoloji", BALSU: "Balsu Gıda", TSPOR: "Trabzonspor SK",
 
   // US Stocks
   AAPL: "Apple", TSLA: "Tesla", MSFT: "Microsoft", GOOGL: "Alphabet",
