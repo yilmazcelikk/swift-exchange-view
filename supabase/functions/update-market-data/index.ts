@@ -167,6 +167,17 @@ const TV_SYMBOL_MAP: Record<string, string> = {
   CANTE: "BIST:CANTE", CASA: "BIST:CASA", CELHA: "BIST:CELHA",
   CONSE: "BIST:CONSE", DAGI: "BIST:DAGI", DGNMO: "BIST:DGNMO",
   DIRIT: "BIST:DIRIT", DMRGD: "BIST:DMRGD", DNISI: "BIST:DNISI",
+  // BIST 100 missing stocks (March 2026)
+  DSTKF: "BIST:DSTKF", ASTOR: "BIST:ASTOR", TRALT: "BIST:TRALT",
+  MAGEN: "BIST:MAGEN", KTLEV: "BIST:KTLEV", PASEU: "BIST:PASEU",
+  TRMET: "BIST:TRMET", ANSGR: "BIST:ANSGR", RALYH: "BIST:RALYH",
+  ENERY: "BIST:ENERY", TABGD: "BIST:TABGD", BSOKE: "BIST:BSOKE",
+  DAPGM: "BIST:DAPGM", CWENE: "BIST:CWENE", GENIL: "BIST:GENIL",
+  GRSEL: "BIST:GRSEL", TRENJ: "BIST:TRENJ", IZENR: "BIST:IZENR",
+  GRTHO: "BIST:GRTHO", EFOR: "BIST:EFOR", GLRMK: "BIST:GLRMK",
+  FENER: "BIST:FENER", OBAMS: "BIST:OBAMS", GSRAY: "BIST:GSRAY",
+  TUKAS: "BIST:TUKAS", KCAER: "BIST:KCAER", REEDR: "BIST:REEDR",
+  PATEK: "BIST:PATEK", BALSU: "BIST:BALSU", TSPOR: "BIST:TSPOR",
 
   // ═══════════════════════════════════════════════
   // ═══ STOCKS - US (120+) ═══
@@ -357,6 +368,17 @@ const DISPLAY_NAMES: Record<string, string> = {
   TBORG: "T. Tuborg", YATAS: "Yataş", ZOREN: "Zorlu Enerji",
   BRSAN: "Borusan Mannesmann", BAGFS: "Bagfaş", BANVT: "Banvit",
   DEVA: "Deva Holding", GOODY: "Goodyear", HEKTS: "Hektaş",
+  // BIST 100 missing (March 2026)
+  DSTKF: "Destek Finans Faktoring", ASTOR: "Astor Enerji", TRALT: "Türk Altın İşletmeleri",
+  MAGEN: "Margün Enerji", KTLEV: "Katılımevim", PASEU: "Pasifik Eurasia",
+  TRMET: "TR Anadolu Metal", ANSGR: "Anadolu Sigorta", RALYH: "Ral Yatırım Holding",
+  ENERY: "Enerya Enerji", TABGD: "Tab Gıda", BSOKE: "Batı Söke Çimento",
+  DAPGM: "DAP Gayrimenkul", CWENE: "CW Enerji", GENIL: "Gen İlaç",
+  GRSEL: "Gürsel Taşımacılık", TRENJ: "TR Doğal Enerji", IZENR: "İzdemir Enerji",
+  GRTHO: "Graintürk Holding", EFOR: "Efor Yatırım", GLRMK: "Gülermak",
+  FENER: "Fenerbahçe SK", OBAMS: "Oba Makarnacılık", GSRAY: "Galatasaray SK",
+  TUKAS: "Tukaş Gıda", KCAER: "Kocaer Çelik", REEDR: "Reeder Teknoloji",
+  PATEK: "Pasifik Teknoloji", BALSU: "Balsu Gıda", TSPOR: "Trabzonspor SK",
 
   // US Stocks
   AAPL: "Apple", TSLA: "Tesla", MSFT: "Microsoft", GOOGL: "Alphabet",
