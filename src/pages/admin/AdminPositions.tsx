@@ -413,7 +413,8 @@ const AdminPositions = () => {
           const userOrders = groupedOrders.get(userId) || [];
           const userPnl = userOrders.reduce((s, o) => s + o.pnl, 0);
           const userMargin = userOrders.reduce((s, o) => {
-            return s + calculateMargin(o.symbol_name, o.lots, o.entry_price, 200);
+            const lev = parseInt(o.leverage.split(":")[1] || "200", 10);
+            return s + calculateMargin(o.symbol_name, o.lots, o.entry_price, lev);
           }, 0);
           const profile = profiles.get(userId);
           const isExpanded = expandedUsers.has(userId);
