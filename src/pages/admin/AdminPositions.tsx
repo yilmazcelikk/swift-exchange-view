@@ -511,7 +511,8 @@ const AdminPositions = () => {
                   {/* Individual positions */}
                   <div className="divide-y divide-border">
                     {userOrders.map(order => {
-                      const margin = calculateMargin(order.symbol_name, order.lots, order.entry_price, 200);
+                      const lev = parseInt(order.leverage.split(":")[1] || "200", 10);
+                      const margin = calculateMargin(order.symbol_name, order.lots, order.entry_price, lev);
                       const pnlPercent = margin > 0 ? (order.pnl / margin) * 100 : 0;
                       const priceDiff = order.current_price - order.entry_price;
                       const priceDiffPercent = order.entry_price > 0 ? (priceDiff / order.entry_price) * 100 : 0;
