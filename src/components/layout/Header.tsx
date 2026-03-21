@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculatePnl, calculateMargin } from "@/lib/trading";
+import { shouldSkipOrderRefetch } from "@/lib/realtime";
 
 interface OpenOrder {
   id: string;
@@ -68,11 +69,7 @@ export function Header() {
     const ordersChannel = supabase
       .channel('header-orders')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (payload) => {
-        // current_price/pnl gibi açık pozisyon güncellemelerinde tekrar sorgu atma
-        if (payload.eventType === 'UPDATE') {
-          const next = payload.new as any;
-          if (next?.status === 'open') return;
-        }
+        if (shouldSkipOrderRefetch(payload as any)) return;
         void loadOrders();
       })
       .subscribe();
