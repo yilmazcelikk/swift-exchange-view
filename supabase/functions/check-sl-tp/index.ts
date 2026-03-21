@@ -279,10 +279,13 @@ Deno.serve(async (req) => {
       }
 
       if (shouldClose) {
+        // Use the TP/SL price as close price, not market price (prevents overshoot)
+        const closePrice = closeReason === "take_profit" ? tp! : closeReason === "stop_loss" ? sl! : currentPrice;
+
         const { data: userProfile } = await supabase.from("profiles").select("account_type").eq("user_id", order.user_id).single();
         const accountType = userProfile?.account_type || "standard";
-        const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), currentPrice);
-        const commission = calculateCommission(order.symbol_name, Number(order.lots), currentPrice, accountType);
+        const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), closePrice);
+        const commission = calculateCommission(order.symbol_name, Number(order.lots), closePrice, accountType);
         const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
         const swap = calculateSwap(order.symbol_name, Number(order.lots), daysHeld);
         const netPnl = pnl - commission + swap;
@@ -292,7 +295,7 @@ Deno.serve(async (req) => {
           .update({
             status: "closed",
             closed_at: new Date().toISOString(),
-            current_price: currentPrice,
+            current_price: closePrice,
             pnl: netPnl,
             swap: swap,
             close_reason: closeReason,
@@ -332,7 +335,7 @@ Deno.serve(async (req) => {
 
         closedOrderIds.add(order.id);
         closedCount++;
-        console.log(`Order ${order.id} closed by ${closeReason}: ${order.symbol_name} ${type} @ ${currentPrice}, PnL: ${netPnl.toFixed(2)}`);
+        console.log(`Order ${order.id} closed by ${closeReason}: ${order.symbol_name} ${type} @ ${closePrice} (market: ${currentPrice}), PnL: ${netPnl.toFixed(2)}`);
       }
     }
 
