@@ -98,7 +98,7 @@ const History = () => {
 
       const ordersChannel = supabase
         .channel("history-orders")
-        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(); })
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(false); })
         .subscribe();
 
       const transactionsChannel = supabase
