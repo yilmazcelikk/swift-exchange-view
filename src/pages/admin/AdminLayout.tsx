@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -16,16 +16,16 @@ import {
   ShoppingBag,
   ShieldAlert,
 } from "lucide-react";
-import AdminDashboard from "./AdminDashboard";
-import AdminUsers from "./AdminUsers";
-import AdminPositions from "./AdminPositions";
-import AdminTransactions from "./AdminTransactions";
-import AdminDocuments from "./AdminDocuments";
-import AdminSettings from "./AdminSettings";
-import AdminProducts from "./AdminProducts";
-import AdminReferrals from "./AdminReferrals";
-import AdminBankAccounts from "./AdminBankAccounts";
-import AdminRisk from "./AdminRisk";
+const AdminDashboard = lazy(() => import("./AdminDashboard"));
+const AdminUsers = lazy(() => import("./AdminUsers"));
+const AdminPositions = lazy(() => import("./AdminPositions"));
+const AdminTransactions = lazy(() => import("./AdminTransactions"));
+const AdminDocuments = lazy(() => import("./AdminDocuments"));
+const AdminSettings = lazy(() => import("./AdminSettings"));
+const AdminProducts = lazy(() => import("./AdminProducts"));
+const AdminReferrals = lazy(() => import("./AdminReferrals"));
+const AdminBankAccounts = lazy(() => import("./AdminBankAccounts"));
+const AdminRisk = lazy(() => import("./AdminRisk"));
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { AdminNotifications } from "@/components/admin/AdminNotifications";
 import { supabase } from "@/integrations/supabase/client";
@@ -219,7 +219,15 @@ const AdminLayout = () => {
         </header>
 
         <main className="flex-1 overflow-auto p-3 md:p-6">
-          {renderContent()}
+          <Suspense
+            fallback={
+              <div className="min-h-[50vh] flex items-center justify-center">
+                <div className="animate-spin h-7 w-7 border-4 border-primary border-t-transparent rounded-full" />
+              </div>
+            }
+          >
+            {renderContent()}
+          </Suspense>
         </main>
       </div>
     </div>
