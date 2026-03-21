@@ -71,6 +71,7 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [selectedUserOrders, setSelectedUserOrders] = useState<OrderRow[]>([]);
   const [allUserOrders, setAllUserOrders] = useState<any[]>([]);
+  const [allUserTransactions, setAllUserTransactions] = useState<any[]>([]);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingAllOrders, setLoadingAllOrders] = useState(false);
