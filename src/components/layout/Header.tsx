@@ -67,8 +67,13 @@ export function Header() {
 
     const ordersChannel = supabase
       .channel('header-orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, () => {
-        loadOrders();
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${user.id}` }, (payload) => {
+        // current_price/pnl gibi açık pozisyon güncellemelerinde tekrar sorgu atma
+        if (payload.eventType === 'UPDATE') {
+          const next = payload.new as any;
+          if (next?.status === 'open') return;
+        }
+        void loadOrders();
       })
       .subscribe();
 
