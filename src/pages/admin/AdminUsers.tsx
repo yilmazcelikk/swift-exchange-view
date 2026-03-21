@@ -13,7 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown, Ban, ShieldCheck, ShieldAlert, Target, Plus, ChevronsUpDown, Check } from "lucide-react";
+import { Search, X, RefreshCw, Eye, Settings, ChevronLeft, ChevronRight, User, TrendingUp, TrendingDown, Ban, ShieldCheck, ShieldAlert, Target, Plus, ChevronsUpDown, Check, Trash2, ArrowDownToLine, ArrowUpFromLine } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
 import { toast } from "sonner";
@@ -71,6 +71,7 @@ const AdminUsers = () => {
   const [selectedUser, setSelectedUser] = useState<Profile | null>(null);
   const [selectedUserOrders, setSelectedUserOrders] = useState<OrderRow[]>([]);
   const [allUserOrders, setAllUserOrders] = useState<any[]>([]);
+  const [allUserTransactions, setAllUserTransactions] = useState<any[]>([]);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingAllOrders, setLoadingAllOrders] = useState(false);
@@ -352,13 +353,33 @@ const AdminUsers = () => {
   const loadAllOrders = async (userId: string) => {
     setShowAllOrders(true);
     setLoadingAllOrders(true);
-    const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    setAllUserOrders(data || []);
+    const [ordersRes, txnRes] = await Promise.all([
+      supabase.from("orders").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("transactions").select("*").eq("user_id", userId).eq("status", "approved").order("created_at", { ascending: false }),
+    ]);
+    setAllUserOrders(ordersRes.data || []);
+    setAllUserTransactions(txnRes.data || []);
     setLoadingAllOrders(false);
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    const { error } = await supabase.from("orders").delete().eq("id", orderId);
+    if (error) {
+      toast.error("Silme başarısız: " + error.message);
+    } else {
+      setAllUserOrders(prev => prev.filter(o => o.id !== orderId));
+      toast.success("İşlem silindi");
+    }
+  };
+
+  const handleDeleteTransaction = async (txnId: string) => {
+    const { error } = await supabase.from("transactions").delete().eq("id", txnId);
+    if (error) {
+      toast.error("Silme başarısız: " + error.message);
+    } else {
+      setAllUserTransactions(prev => prev.filter(t => t.id !== txnId));
+      toast.success("İşlem kaydı silindi");
+    }
   };
 
   const fetchLatestPrice = async (symbolName: string): Promise<number | null> => {
@@ -811,7 +832,54 @@ const AdminUsers = () => {
                   ) : allUserOrders.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-3">İşlem bulunamadı.</p>
                   ) : (
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    <div className="space-y-4">
+                      {/* Transactions */}
+                      {allUserTransactions.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-semibold text-muted-foreground mb-2">Para İşlemleri</h5>
+                          <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                            {allUserTransactions.map((txn: any) => (
+                              <div key={txn.id} className="p-2.5 rounded-lg border border-border space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {txn.type === "deposit" ? (
+                                      <ArrowDownToLine className="h-3 w-3 text-buy" />
+                                    ) : (
+                                      <ArrowUpFromLine className="h-3 w-3 text-sell" />
+                                    )}
+                                    <span className="text-xs font-semibold">
+                                      {txn.type === "deposit" ? "Para Yatırma" : "Para Çekme"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-mono font-bold ${txn.type === "deposit" ? "text-buy" : "text-sell"}`}>
+                                      {txn.type === "deposit" ? "+" : "-"}{Number(txn.amount).toFixed(2)} {txn.currency}
+                                    </span>
+                                    <button
+                                      onClick={() => handleDeleteTransaction(txn.id)}
+                                      className="p-1 rounded hover:bg-sell/10 transition-colors"
+                                      title="Sil"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5 text-sell" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                  <span>{txn.description || txn.method || "—"}</span>
+                                  <span>
+                                    {new Date(txn.created_at).toLocaleDateString("tr-TR")} {new Date(txn.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Orders */}
+                      <div>
+                        <h5 className="text-xs font-semibold text-muted-foreground mb-2">Pozisyon İşlemleri</h5>
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
                       {allUserOrders.map((order: any) => (
                         <div key={order.id} className="p-2.5 rounded-lg border border-border space-y-1">
                           <div className="flex items-center justify-between">
@@ -828,9 +896,20 @@ const AdminUsers = () => {
                                 {order.status === "open" ? "Açık" : "Kapalı"}
                               </span>
                             </div>
-                            <span className={`text-xs font-mono font-bold ${Number(order.pnl) >= 0 ? "text-buy" : "text-sell"}`}>
-                              {Number(order.pnl) >= 0 ? "+" : ""}{Number(order.pnl).toFixed(2)}$
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs font-mono font-bold ${Number(order.pnl) >= 0 ? "text-buy" : "text-sell"}`}>
+                                {Number(order.pnl) >= 0 ? "+" : ""}{Number(order.pnl).toFixed(2)}$
+                              </span>
+                              {order.status === "closed" && (
+                                <button
+                                  onClick={() => handleDeleteOrder(order.id)}
+                                  className="p-1 rounded hover:bg-sell/10 transition-colors"
+                                  title="Sil"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 text-sell" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                             <span>{order.type === "buy" ? "AL" : "SAT"} • {order.lots} lot</span>
@@ -842,6 +921,8 @@ const AdminUsers = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                      </div>
                     </div>
                   )}
                 </div>
