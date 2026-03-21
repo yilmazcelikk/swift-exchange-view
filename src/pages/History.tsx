@@ -203,7 +203,11 @@ const History = () => {
 
       {/* Scrollable orders area - takes remaining space above summary */}
       <div ref={listRef} className="flex-1 min-h-0 overflow-auto px-4">
-        {historyItems.length === 0 ? (
+        {historyLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-7 w-7 border-3 border-primary border-t-transparent rounded-full" />
+          </div>
+        ) : historyItems.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Geçmiş bulunmuyor.</p>
         ) : (
           <div className="divide-y divide-border">
