@@ -363,12 +363,20 @@ const AdminUsers = () => {
   };
 
   const handleDeleteOrder = async (orderId: string) => {
-    const { error } = await supabase.from("orders").delete().eq("id", orderId);
+    const { data, error } = await supabase.rpc("delete_order_and_reverse_pnl", { p_order_id: orderId });
     if (error) {
       toast.error("Silme başarısız: " + error.message);
+    } else if (data && !(data as any).success) {
+      toast.error("Silme başarısız: " + (data as any).reason);
     } else {
       setAllUserOrders(prev => prev.filter(o => o.id !== orderId));
-      toast.success("İşlem silindi");
+      const reversed = (data as any)?.reversed_pnl;
+      toast.success(`İşlem silindi${reversed ? `, bakiye ${reversed > 0 ? '-' : '+'}${Math.abs(reversed).toFixed(2)} USD güncellendi` : ''}`);
+      // Refresh selected user profile
+      if (selectedUser) {
+        const { data: prof } = await supabase.from("profiles").select("*").eq("user_id", selectedUser.user_id).single();
+        if (prof) setSelectedUser({ ...selectedUser, ...prof });
+      }
     }
   };
 

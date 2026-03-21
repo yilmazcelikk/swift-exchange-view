@@ -440,6 +440,10 @@ export type Database = {
         }
         Returns: Json
       }
+      delete_order_and_reverse_pnl: {
+        Args: { p_order_id: string }
+        Returns: Json
+      }
       generate_random_meta_id: { Args: never; Returns: number }
       has_role: {
         Args: {
