@@ -487,6 +487,43 @@ async function fetchTradingViewData(symbols: string[]): Promise<Record<string, a
   return results;
 }
 
+// ── Market hours helpers ──
+function isMarketOpen(category: string, exchange: string | undefined, now: Date): boolean {
+  const utcDay = now.getUTCDay(); // 0=Sun, 6=Sat
+  const utcHour = now.getUTCHours();
+  const turkeyHour = (utcHour + 3) % 24; // Turkey is UTC+3
+
+  // Crypto: always open
+  if (category === "crypto") return true;
+
+  // Weekend: only crypto markets are open
+  if (utcDay === 0 || utcDay === 6) return false;
+
+  // BIST: Mon-Fri 10:00-18:00 Turkey time
+  if (exchange === "BIST" || (category === "stock" && !exchange)) {
+    // Simple check: if it's a BIST stock (no exchange means Turkish by default in this system)
+    return turkeyHour >= 10 && turkeyHour < 18;
+  }
+
+  // Forex/Commodities: Sun 22:00 UTC - Fri 22:00 UTC (practically Mon-Fri)
+  if (category === "forex" || category === "commodity") {
+    if (utcDay === 5 && utcHour >= 22) return false; // Friday after 22:00 UTC
+    return true;
+  }
+
+  // US markets: Mon-Fri ~14:30-21:00 UTC (pre-market from 13:00)
+  // European markets: Mon-Fri ~07:00-16:30 UTC
+  // We keep it simple: weekdays only, already handled above
+  return true;
+}
+
+function getSymbolExchange(tvTicker: string): string | undefined {
+  if (tvTicker.startsWith("BIST:")) return "BIST";
+  if (tvTicker.startsWith("NASDAQ:") || tvTicker.startsWith("NYSE:") || tvTicker.startsWith("OTC:")) return "US";
+  if (["XETR:", "LSE:", "EURONEXT:", "SIX:", "BME:", "MIL:", "OMXCOP:", "OMXSTO:"].some(p => tvTicker.startsWith(p))) return "EU";
+  return undefined;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -538,15 +575,24 @@ Deno.serve(async (req) => {
     }
 
     // Step 2: Fetch ALL active symbols from DB that have a TV mapping
+    // FILTER by market hours — skip symbols whose market is closed
     const { data: activeDbSymbols } = await supabase
       .from("symbols")
       .select("name, updated_at")
       .eq("is_active", true);
 
+    const filteredSymbols = (activeDbSymbols || []).filter((s) => {
+      const tvTicker = TV_SYMBOL_MAP[s.name];
+      if (!tvTicker) return false;
+      if (force) return true; // Force mode updates everything
+      const cat = inferCategory(tvTicker);
+      const exchange = getSymbolExchange(tvTicker);
+      return isMarketOpen(cat, exchange, nowDate);
+    });
+
     // Update oldest symbols first; cap per run to keep function under timeout.
     const MAX_SYMBOLS_PER_RUN = force ? 120 : 40;
-    const namesToUpdate = (activeDbSymbols || [])
-      .filter((s) => TV_SYMBOL_MAP[s.name])
+    const namesToUpdate = filteredSymbols
       .sort((a, b) => {
         const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0;
         const tb = b.updated_at ? new Date(b.updated_at).getTime() : 0;
@@ -554,7 +600,7 @@ Deno.serve(async (req) => {
       })
       .slice(0, MAX_SYMBOLS_PER_RUN)
       .map((s) => s.name);
-    console.log(`Updating ${namesToUpdate.length} symbols (of ${Object.keys(TV_SYMBOL_MAP).length} total)`);
+    console.log(`Updating ${namesToUpdate.length} symbols (of ${filteredSymbols.length} market-open, ${Object.keys(TV_SYMBOL_MAP).length} total)`);
 
     // Step 3: Fetch price data from TradingView (only active symbols)
     const tvData = await fetchTradingViewData(namesToUpdate);
