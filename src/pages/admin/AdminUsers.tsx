@@ -832,7 +832,54 @@ const AdminUsers = () => {
                   ) : allUserOrders.length === 0 ? (
                     <p className="text-xs text-muted-foreground text-center py-3">İşlem bulunamadı.</p>
                   ) : (
-                    <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    <div className="space-y-4">
+                      {/* Transactions */}
+                      {allUserTransactions.length > 0 && (
+                        <div>
+                          <h5 className="text-xs font-semibold text-muted-foreground mb-2">Para İşlemleri</h5>
+                          <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                            {allUserTransactions.map((txn: any) => (
+                              <div key={txn.id} className="p-2.5 rounded-lg border border-border space-y-1">
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-2">
+                                    {txn.type === "deposit" ? (
+                                      <ArrowDownToLine className="h-3 w-3 text-buy" />
+                                    ) : (
+                                      <ArrowUpFromLine className="h-3 w-3 text-sell" />
+                                    )}
+                                    <span className="text-xs font-semibold">
+                                      {txn.type === "deposit" ? "Para Yatırma" : "Para Çekme"}
+                                    </span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <span className={`text-xs font-mono font-bold ${txn.type === "deposit" ? "text-buy" : "text-sell"}`}>
+                                      {txn.type === "deposit" ? "+" : "-"}{Number(txn.amount).toFixed(2)} {txn.currency}
+                                    </span>
+                                    <button
+                                      onClick={() => handleDeleteTransaction(txn.id)}
+                                      className="p-1 rounded hover:bg-sell/10 transition-colors"
+                                      title="Sil"
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5 text-sell" />
+                                    </button>
+                                  </div>
+                                </div>
+                                <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                                  <span>{txn.description || txn.method || "—"}</span>
+                                  <span>
+                                    {new Date(txn.created_at).toLocaleDateString("tr-TR")} {new Date(txn.created_at).toLocaleTimeString("tr-TR", { hour: "2-digit", minute: "2-digit" })}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Orders */}
+                      <div>
+                        <h5 className="text-xs font-semibold text-muted-foreground mb-2">Pozisyon İşlemleri</h5>
+                        <div className="space-y-2 max-h-[300px] overflow-y-auto">
                       {allUserOrders.map((order: any) => (
                         <div key={order.id} className="p-2.5 rounded-lg border border-border space-y-1">
                           <div className="flex items-center justify-between">
@@ -849,9 +896,20 @@ const AdminUsers = () => {
                                 {order.status === "open" ? "Açık" : "Kapalı"}
                               </span>
                             </div>
-                            <span className={`text-xs font-mono font-bold ${Number(order.pnl) >= 0 ? "text-buy" : "text-sell"}`}>
-                              {Number(order.pnl) >= 0 ? "+" : ""}{Number(order.pnl).toFixed(2)}$
-                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-xs font-mono font-bold ${Number(order.pnl) >= 0 ? "text-buy" : "text-sell"}`}>
+                                {Number(order.pnl) >= 0 ? "+" : ""}{Number(order.pnl).toFixed(2)}$
+                              </span>
+                              {order.status === "closed" && (
+                                <button
+                                  onClick={() => handleDeleteOrder(order.id)}
+                                  className="p-1 rounded hover:bg-sell/10 transition-colors"
+                                  title="Sil"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 text-sell" />
+                                </button>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center justify-between text-[10px] text-muted-foreground">
                             <span>{order.type === "buy" ? "AL" : "SAT"} • {order.lots} lot</span>
@@ -863,6 +921,8 @@ const AdminUsers = () => {
                           </div>
                         </div>
                       ))}
+                    </div>
+                      </div>
                     </div>
                   )}
                 </div>
