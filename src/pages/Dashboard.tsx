@@ -30,7 +30,7 @@ const Dashboard = () => {
   const [editSL, setEditSL] = useState("");
   const [editTP, setEditTP] = useState("");
   const [editSaving, setEditSaving] = useState(false);
-  const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0, leverage: "1:200" });
+  const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0, leverage: "1:200", accountType: "standard" });
 
   const leverageRatio = parseInt(profile.leverage.split(":")[1] || "200", 10);
 
@@ -47,6 +47,7 @@ const Dashboard = () => {
               balance: Number(d.balance), equity: Number(d.equity),
               freeMargin: Number(d.free_margin), credit: Number(d.credit || 0),
               leverage: d.leverage || "1:200",
+              accountType: d.account_type || "standard",
             });
           }
         })
@@ -82,13 +83,14 @@ const Dashboard = () => {
 
   const loadData = async () => {
     const [profileRes] = await Promise.all([
-      supabase.from("profiles").select("balance, equity, free_margin, credit, leverage").eq("user_id", authUser!.id).single(),
+      supabase.from("profiles").select("balance, equity, free_margin, credit, leverage, account_type").eq("user_id", authUser!.id).single(),
     ]);
     if (profileRes.data) {
       setProfile({
         balance: Number(profileRes.data.balance), equity: Number(profileRes.data.equity),
         freeMargin: Number(profileRes.data.free_margin), credit: Number(profileRes.data.credit || 0),
         leverage: profileRes.data.leverage || "1:200",
+        accountType: (profileRes.data as any).account_type || "standard",
       });
     }
     await loadOrders();
@@ -223,7 +225,7 @@ const Dashboard = () => {
     setSelectedOrder(null);
 
     const liveOrder = liveOrders.find(o => o.id === order.id) || order;
-    const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice);
+    const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice, profile.accountType);
     const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 86400000));
     const swap = calculateSwap(liveOrder.symbolName, liveOrder.lots, daysHeld);
     const netPnl = liveOrder.pnl - commission + swap;
@@ -293,7 +295,7 @@ const Dashboard = () => {
 
   const liveSelectedOrder = selectedOrder ? liveOrders.find(o => o.id === selectedOrder.id) || selectedOrder : null;
   const liveClosingOrder = closingOrder ? liveOrders.find(o => o.id === closingOrder.id) || closingOrder : null;
-  const closingCommission = liveClosingOrder ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice) : 0;
+  const closingCommission = liveClosingOrder ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice, profile.accountType) : 0;
   const closingDaysHeld = liveClosingOrder ? Math.max(1, Math.floor((Date.now() - new Date(liveClosingOrder.createdAt).getTime()) / 86400000)) : 0;
   const closingSwap = liveClosingOrder ? calculateSwap(liveClosingOrder.symbolName, liveClosingOrder.lots, closingDaysHeld) : 0;
   const closingNetPnl = liveClosingOrder ? liveClosingOrder.pnl - closingCommission + closingSwap : 0;
