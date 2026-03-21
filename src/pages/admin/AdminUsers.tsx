@@ -203,7 +203,37 @@ const AdminUsers = () => {
   useEffect(() => {
     const profilesChannel = supabase
       .channel('admin-profiles-list')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+        // Fast-path: for live balance/equity ticks patch in-memory state, avoid full list refetch
+        if (payload.eventType === 'UPDATE' && payload.new) {
+          const updated = payload.new as Profile;
+          setProfiles((prev) => prev.map((p) =>
+            p.user_id === updated.user_id
+              ? {
+                  ...p,
+                  ...updated,
+                  balance: Number((updated as any).balance),
+                  credit: Number((updated as any).credit),
+                  equity: Number((updated as any).equity),
+                  free_margin: Number((updated as any).free_margin),
+                }
+              : p
+          ));
+
+          setSelectedUser((prev) => {
+            if (!prev || prev.user_id !== updated.user_id) return prev;
+            return {
+              ...prev,
+              ...updated,
+              balance: Number((updated as any).balance),
+              credit: Number((updated as any).credit),
+              equity: Number((updated as any).equity),
+              free_margin: Number((updated as any).free_margin),
+            };
+          });
+          return;
+        }
+
         loadProfiles();
       })
       .subscribe();
