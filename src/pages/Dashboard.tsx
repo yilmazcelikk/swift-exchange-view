@@ -295,7 +295,7 @@ const Dashboard = () => {
 
   const liveSelectedOrder = selectedOrder ? liveOrders.find(o => o.id === selectedOrder.id) || selectedOrder : null;
   const liveClosingOrder = closingOrder ? liveOrders.find(o => o.id === closingOrder.id) || closingOrder : null;
-  const closingCommission = liveClosingOrder ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice) : 0;
+  const closingCommission = liveClosingOrder ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice, profile.accountType) : 0;
   const closingDaysHeld = liveClosingOrder ? Math.max(1, Math.floor((Date.now() - new Date(liveClosingOrder.createdAt).getTime()) / 86400000)) : 0;
   const closingSwap = liveClosingOrder ? calculateSwap(liveClosingOrder.symbolName, liveClosingOrder.lots, closingDaysHeld) : 0;
   const closingNetPnl = liveClosingOrder ? liveClosingOrder.pnl - closingCommission + closingSwap : 0;
