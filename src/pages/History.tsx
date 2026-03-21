@@ -119,7 +119,8 @@ const History = () => {
     }
   }, [historyItems.length]);
 
-  const loadHistory = async () => {
+  const loadHistory = async (showSpinner = true) => {
+    if (showSpinner) setHistoryLoading(true);
     const [ordersRes, profileRes, transactionsRes] = await Promise.all([
       supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
       supabase.from("profiles").select("balance, account_type").eq("user_id", authUser!.id).single(),
