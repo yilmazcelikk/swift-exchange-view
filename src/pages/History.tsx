@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { calculateCommission } from "@/lib/trading";
+import { shouldSkipOrderRefetch } from "@/lib/realtime";
 
 interface ClosedOrder {
   id: string;
@@ -99,8 +100,7 @@ const History = () => {
       const ordersChannel = supabase
         .channel("history-orders")
         .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, (payload) => {
-          // Skip full reload on open-order price/pnl ticks
-          if (payload.eventType === "UPDATE" && (payload.new as any)?.status === "open") return;
+          if (shouldSkipOrderRefetch(payload as any)) return;
           loadHistory(false);
         })
         .subscribe();

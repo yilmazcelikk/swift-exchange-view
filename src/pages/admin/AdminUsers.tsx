@@ -29,6 +29,7 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
+import { isUpdateWithoutRowData, shouldSkipOrderRefetch } from "@/lib/realtime";
 
 interface Profile {
   id: string;
@@ -170,8 +171,7 @@ const AdminUsers = () => {
       const ordersChannel = supabase
         .channel(`admin-user-orders-${selectedUser.user_id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${selectedUser.user_id}` }, (payload) => {
-          // Skip full reload on price/pnl tick updates — symbols channel handles local updates
-          if (payload.eventType === 'UPDATE' && (payload.new as any)?.status === 'open') return;
+          if (shouldSkipOrderRefetch(payload as any)) return;
           loadUserOrders(selectedUser.user_id, false);
         })
         .subscribe();
@@ -204,6 +204,8 @@ const AdminUsers = () => {
     const profilesChannel = supabase
       .channel('admin-profiles-list')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, (payload) => {
+        if (isUpdateWithoutRowData(payload as any)) return;
+
         // Fast-path: for live balance/equity ticks patch in-memory state, avoid full list refetch
         if (payload.eventType === 'UPDATE' && payload.new) {
           const updated = payload.new as Profile;

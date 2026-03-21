@@ -11,6 +11,7 @@ import {
   ArrowUpRight, ArrowDownRight, Eye,
 } from "lucide-react";
 import { calculatePnl, calculateMargin } from "@/lib/trading";
+import { isUpdateWithoutRowData, shouldSkipOrderRefetch } from "@/lib/realtime";
 
 interface OrderRow {
   id: string;
@@ -86,8 +87,7 @@ const AdminRisk = () => {
     const ordersChannel = supabase
       .channel("admin-risk-orders")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
-        // Skip full reload on price/pnl tick updates — symbols channel handles local price updates
-        if (payload.eventType === 'UPDATE' && (payload.new as any)?.status === 'open') return;
+        if (shouldSkipOrderRefetch(payload as any)) return;
         void loadOrders();
       })
       .subscribe();
@@ -95,6 +95,8 @@ const AdminRisk = () => {
     const profilesChannel = supabase
       .channel("admin-risk-profiles")
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, (payload) => {
+        if (isUpdateWithoutRowData(payload as any)) return;
+
         // Fast-path: patch updated profile locally instead of refetching all profiles
         if (payload.eventType === "UPDATE" && payload.new) {
           const updated = payload.new as any;

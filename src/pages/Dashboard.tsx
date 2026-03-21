@@ -16,6 +16,7 @@ import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission, calculateSwap, calculateNetMargin } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
 import { getMarketStatus } from "@/lib/marketHours";
+import { shouldSkipOrderRefetch } from "@/lib/realtime";
 
 const Dashboard = () => {
   const { user: authUser } = useAuth();
@@ -56,11 +57,7 @@ const Dashboard = () => {
       const ordersChannel = supabase
         .channel('dashboard-orders')
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${authUser.id}` }, (payload) => {
-          // Açık pozisyon fiyat/pnl tick güncellemelerinde tekrar sorgu atma
-          if (payload.eventType === 'UPDATE') {
-            const next = payload.new as any;
-            if (next?.status === 'open') return;
-          }
+          if (shouldSkipOrderRefetch(payload as any)) return;
           void loadOrders();
         })
         .subscribe();
