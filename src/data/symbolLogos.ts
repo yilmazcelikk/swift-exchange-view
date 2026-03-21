@@ -646,25 +646,30 @@ export function resolveLogoUrls(symbol: string, category?: string): string[] {
   // 3. Local fallback (for known BIST stocks with local PNGs)
   if (LOCAL_FALLBACKS[normalized]) urls.push(LOCAL_FALLBACKS[normalized]);
 
-  // 4. Index flags
+  // 4. BIST CDN logos (KAP-sourced, covers virtually all BIST stocks)
+  if (BIST_EXCHANGE_TICKERS.has(normalized) || category === "bist" || category === "stock") {
+    urls.push(`${BIST_CDN}/${normalized}.png`);
+  }
+
+  // 5. Index flags
   if (INDEX_FLAGS[normalized]) {
     urls.push(`${FLAG_BASE}/${INDEX_FLAGS[normalized]}.svg`);
   }
 
-  // 5. Forex flags
+  // 6. Forex flags
   if (urls.length === 0 && (category === "forex" || normalized.length === 6)) {
     const base = normalized.slice(0, 3);
     const flagCode = CURRENCY_FLAGS[base];
     if (flagCode) urls.push(`${FLAG_BASE}/${flagCode}.svg`);
   }
 
-  // 6. Speculative: try crypto path for unknown USD-ending symbols
+  // 7. Speculative: try crypto path for unknown USD-ending symbols
   if (urls.length === 0 && normalized.endsWith("USD")) {
     const base = normalized.replace(/USD[T]?$/, "");
     urls.push(`${TV_CRYPTO}/XTVC${base}--big.svg`);
   }
 
-  // 7. Speculative TradingView attempt (lowercase symbol as slug)
+  // 8. Speculative TradingView attempt (lowercase symbol as slug)
   if (urls.length === 0) {
     const guess = normalized.toLowerCase();
     urls.push(`${TV}/${guess}--big.svg`);
