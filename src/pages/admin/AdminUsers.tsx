@@ -157,25 +157,37 @@ const AdminUsers = () => {
     setLoadingOrders(false);
   }, []);
 
-  // Real-time polling for selected user's orders - faster refresh
+  // Real-time subscription for selected user's orders — instant updates, no polling
   useEffect(() => {
     if (selectedUser) {
       loadUserOrders(selectedUser.user_id, true);
-      const interval = setInterval(() => {
-        loadUserOrders(selectedUser.user_id, false);
-      }, 1500);
-      return () => clearInterval(interval);
+      
+      const ordersChannel = supabase
+        .channel(`admin-user-orders-${selectedUser.user_id}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${selectedUser.user_id}` }, () => {
+          loadUserOrders(selectedUser.user_id, false);
+        })
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, () => {
+          loadUserOrders(selectedUser.user_id, false);
+        })
+        .subscribe();
+
+      return () => { supabase.removeChannel(ordersChannel); };
     } else {
       setSelectedUserOrders([]);
     }
   }, [selectedUser, loadUserOrders]);
 
-  // Real-time polling for profiles list
+  // Real-time subscription for profiles list — instant updates, no polling
   useEffect(() => {
-    const interval = setInterval(() => {
-      loadProfiles();
-    }, 5000);
-    return () => clearInterval(interval);
+    const profilesChannel = supabase
+      .channel('admin-profiles-list')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => {
+        loadProfiles();
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(profilesChannel); };
   }, []);
 
   const loadProfiles = async (showSpinner = false) => {
