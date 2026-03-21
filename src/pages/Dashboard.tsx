@@ -47,6 +47,7 @@ const Dashboard = () => {
               balance: Number(d.balance), equity: Number(d.equity),
               freeMargin: Number(d.free_margin), credit: Number(d.credit || 0),
               leverage: d.leverage || "1:200",
+              accountType: d.account_type || "standard",
             });
           }
         })
