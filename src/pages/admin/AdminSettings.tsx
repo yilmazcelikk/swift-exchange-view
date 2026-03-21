@@ -85,7 +85,9 @@ const AdminSettings = () => {
   const handleUpdateMarkets = async () => {
     setUpdating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("update-market-data");
+      const { data, error } = await supabase.functions.invoke("update-market-data", {
+        body: { force: true },
+      });
 
       if (error) {
         toast.error("Güncelleme başarısız: " + error.message);
@@ -93,7 +95,12 @@ const AdminSettings = () => {
       }
 
       if (data?.success) {
-        toast.success(`${data.updated}/${data.total} enstrüman güncellendi`);
+        if (data?.skipped) {
+          toast.info("Güncelleme şu an trafik korumasında, birazdan tekrar deneyin.");
+        } else {
+          const total = Number(data?.total ?? data?.active_symbols ?? 0);
+          toast.success(`${data.updated}/${total} enstrüman güncellendi`);
+        }
       } else {
         toast.error("Güncelleme başarısız: " + (data?.error || "Bilinmeyen hata"));
       }
