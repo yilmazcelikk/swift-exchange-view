@@ -76,8 +76,8 @@ const Profile = () => {
 
   useEffect(() => {
     if (authUser) {
-      loadProfile();
-      loadVerificationStatus();
+      // Load both in parallel
+      Promise.all([loadProfile(), loadVerificationStatus()]);
     }
   }, [authUser]);
 

@@ -82,8 +82,10 @@ const Dashboard = () => {
   }, [authUser?.id]);
 
   const loadData = async () => {
-    const [profileRes] = await Promise.all([
+    const [profileRes, openRes, pendRes] = await Promise.all([
       supabase.from("profiles").select("balance, equity, free_margin, credit, leverage, account_type").eq("user_id", authUser!.id).single(),
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open"),
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "pending"),
     ]);
     if (profileRes.data) {
       setProfile({
@@ -93,21 +95,39 @@ const Dashboard = () => {
         accountType: (profileRes.data as any).account_type || "standard",
       });
     }
-    await loadOrders();
+    processOrders(openRes.data, pendRes.data);
   };
 
   const loadOrders = async () => {
-    const { data } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open");
-    if (data) {
-      const symbolIds = [...new Set(data.map((o: any) => o.symbol_id))];
-      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, name, category, exchange").in("id", symbolIds);
-      const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
-      const catMap: Record<string, string> = {};
-      const exchMap: Record<string, string | null> = {};
-      symbolsData?.forEach(s => { catMap[s.id] = s.category; exchMap[s.id] = s.exchange; });
-      setSymbolCategories(prev => ({ ...prev, ...catMap }));
-      setSymbolExchanges(prev => ({ ...prev, ...exchMap }));
-      setOrders(data.map((o: any) => {
+    const [openRes, pendRes] = await Promise.all([
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "open"),
+      supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "pending"),
+    ]);
+    processOrders(openRes.data, pendRes.data);
+  };
+
+  const processOrders = async (openData: any[] | null, pendData: any[] | null) => {
+    // Collect all symbol IDs from both sets
+    const allSymbolIds = [...new Set([
+      ...(openData || []).map((o: any) => o.symbol_id),
+      ...(pendData || []).map((o: any) => o.symbol_id),
+    ])];
+
+    let symbolsData: any[] | null = null;
+    if (allSymbolIds.length > 0) {
+      const { data } = await supabase.from("symbols").select("id, current_price, name, category, exchange").in("id", allSymbolIds);
+      symbolsData = data;
+    }
+
+    const priceMap = new Map(symbolsData?.map(s => [s.id, { price: Number(s.current_price), name: s.name, category: s.category }]) || []);
+    const catMap: Record<string, string> = {};
+    const exchMap: Record<string, string | null> = {};
+    symbolsData?.forEach(s => { catMap[s.id] = s.category; exchMap[s.id] = s.exchange; });
+    setSymbolCategories(prev => ({ ...prev, ...catMap }));
+    setSymbolExchanges(prev => ({ ...prev, ...exchMap }));
+
+    if (openData) {
+      setOrders(openData.map((o: any) => {
         const symbolInfo = priceMap.get(o.symbol_id);
         return {
           id: o.id, symbolId: o.symbol_id, symbolName: o.symbol_name,
@@ -121,21 +141,7 @@ const Dashboard = () => {
         };
       }));
     }
-    const { data: pendData } = await supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "pending");
-    if (pendData) {
-      const pendSymbolIds = [...new Set(pendData.map((o: any) => o.symbol_id))];
-      if (pendSymbolIds.length > 0) {
-        const { data: pendSymbolsData } = await supabase.from("symbols").select("id, current_price, category, exchange").in("id", pendSymbolIds);
-        const catMap: Record<string, string> = {};
-        const exchMap: Record<string, string | null> = {};
-        pendSymbolsData?.forEach(s => { catMap[s.id] = s.category; exchMap[s.id] = s.exchange; });
-        setSymbolCategories(prev => ({ ...prev, ...catMap }));
-        setSymbolExchanges(prev => ({ ...prev, ...exchMap }));
-      }
-      setPendingOrders(pendData);
-    } else {
-      setPendingOrders([]);
-    }
+    setPendingOrders(pendData || []);
   };
 
   const openOrders = orders.filter(o => o.status === 'open');

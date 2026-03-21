@@ -175,6 +175,7 @@ const History = () => {
       setTotalDeposit(deposits.reduce((s: number, t: any) => s + getTxnUsdAmount(t), 0));
       setTotalWithdrawal(withdrawals.reduce((s: number, t: any) => s + getTxnUsdAmount(t), 0));
     }
+    setHistoryLoading(false);
   };
 
   const closedOrders = historyItems.filter(item => item.itemType === 'order').map(item => item.data as ClosedOrder);

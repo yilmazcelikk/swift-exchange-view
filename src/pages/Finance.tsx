@@ -39,9 +39,8 @@ const Finance = () => {
 
   useEffect(() => {
     if (authUser) {
-      loadTransactions();
-      loadBankAccounts();
-      loadVerificationStatus();
+      // Load all in parallel
+      Promise.all([loadTransactions(), loadBankAccounts(), loadVerificationStatus()]);
     }
   }, [authUser]);
 
