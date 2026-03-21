@@ -203,7 +203,7 @@ export function getTvSymbol(
 
   // Best-effort fallbacks
   if (exchange) return `${exchange}:${upper}`;
-  if (category === "stock") return `BIST:${upper}`;
+  if (category === "stock" || category === "bist") return `BIST:${upper}`;
 
   return `FX:${upper}`;
 }
