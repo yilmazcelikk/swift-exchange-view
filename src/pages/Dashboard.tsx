@@ -55,7 +55,14 @@ const Dashboard = () => {
 
       const ordersChannel = supabase
         .channel('dashboard-orders')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${authUser.id}` }, () => loadOrders())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${authUser.id}` }, (payload) => {
+          // Açık pozisyon fiyat/pnl tick güncellemelerinde tekrar sorgu atma
+          if (payload.eventType === 'UPDATE') {
+            const next = payload.new as any;
+            if (next?.status === 'open') return;
+          }
+          void loadOrders();
+        })
         .subscribe();
 
       const symbolsChannel = supabase
