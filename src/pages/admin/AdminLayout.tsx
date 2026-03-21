@@ -95,8 +95,22 @@ const AdminLayout = () => {
     };
     if (isAdmin) {
       loadBadges();
-      const interval = setInterval(loadBadges, 30000);
-      return () => clearInterval(interval);
+
+      // Realtime instead of 30s polling
+      const txChannel = supabase
+        .channel('admin-layout-tx-badges')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => loadBadges())
+        .subscribe();
+
+      const docChannel = supabase
+        .channel('admin-layout-doc-badges')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, () => loadBadges())
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(txChannel);
+        supabase.removeChannel(docChannel);
+      };
     }
   }, [isAdmin]);
 
