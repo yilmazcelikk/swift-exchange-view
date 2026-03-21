@@ -353,13 +353,33 @@ const AdminUsers = () => {
   const loadAllOrders = async (userId: string) => {
     setShowAllOrders(true);
     setLoadingAllOrders(true);
-    const { data } = await supabase
-      .from("orders")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    setAllUserOrders(data || []);
+    const [ordersRes, txnRes] = await Promise.all([
+      supabase.from("orders").select("*").eq("user_id", userId).order("created_at", { ascending: false }),
+      supabase.from("transactions").select("*").eq("user_id", userId).eq("status", "approved").order("created_at", { ascending: false }),
+    ]);
+    setAllUserOrders(ordersRes.data || []);
+    setAllUserTransactions(txnRes.data || []);
     setLoadingAllOrders(false);
+  };
+
+  const handleDeleteOrder = async (orderId: string) => {
+    const { error } = await supabase.from("orders").delete().eq("id", orderId);
+    if (error) {
+      toast.error("Silme başarısız: " + error.message);
+    } else {
+      setAllUserOrders(prev => prev.filter(o => o.id !== orderId));
+      toast.success("İşlem silindi");
+    }
+  };
+
+  const handleDeleteTransaction = async (txnId: string) => {
+    const { error } = await supabase.from("transactions").delete().eq("id", txnId);
+    if (error) {
+      toast.error("Silme başarısız: " + error.message);
+    } else {
+      setAllUserTransactions(prev => prev.filter(t => t.id !== txnId));
+      toast.success("İşlem kaydı silindi");
+    }
   };
 
   const fetchLatestPrice = async (symbolName: string): Promise<number | null> => {
