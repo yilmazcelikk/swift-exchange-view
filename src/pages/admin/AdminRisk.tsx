@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -42,52 +42,81 @@ const AdminRisk = () => {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  useEffect(() => {
-    loadAll();
+  const loadProfiles = useCallback(async () => {
+    const { data } = await supabase.from("profiles").select("user_id, full_name, balance, credit, meta_id");
+    if (data) {
+      const map = new Map<string, UserProfile>();
+      data.forEach((p: any) => map.set(p.user_id, { ...p, credit: Number(p.credit || 0) }));
+      setProfiles(map);
+    }
+  }, []);
 
-    // Realtime subscriptions instead of polling
+  const loadOrders = useCallback(async () => {
+    const ordersRes = await supabase.from("orders").select("*").eq("status", "open").order("created_at", { ascending: false });
+
+    if (!ordersRes.data || ordersRes.data.length === 0) {
+      setOrders([]);
+      return;
+    }
+
+    const symbolIds = [...new Set(ordersRes.data.map((o: any) => o.symbol_id).filter(Boolean))];
+    let priceMap = new Map<string, number>();
+
+    if (symbolIds.length > 0) {
+      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
+      priceMap = new Map((symbolsData ?? []).map((s: any) => [s.id, Number(s.current_price)]));
+    }
+
+    setOrders(ordersRes.data.map((o: any) => {
+      const cp = priceMap.get(o.symbol_id) ?? Number(o.current_price);
+      const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), cp);
+      return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: cp, pnl, swap: Number(o.swap || 0) };
+    }));
+  }, []);
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    await Promise.all([loadOrders(), loadProfiles()]);
+    setLoading(false);
+  }, [loadOrders, loadProfiles]);
+
+  useEffect(() => {
+    void loadAll();
+
     const ordersChannel = supabase
-      .channel('admin-risk-orders')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadAll())
+      .channel("admin-risk-orders")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+        void loadOrders();
+      })
+      .subscribe();
+
+    const profilesChannel = supabase
+      .channel("admin-risk-profiles")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        void loadProfiles();
+      })
       .subscribe();
 
     const symbolsChannel = supabase
-      .channel('admin-risk-symbols')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, () => loadAll())
+      .channel("admin-risk-symbols")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "symbols" }, (payload) => {
+        if (!payload.new) return;
+        const updated = payload.new as any;
+        const nextPrice = Number(updated.current_price);
+        setOrders((prev) => prev.map((o) => {
+          if (o.symbol_id !== updated.id) return o;
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, nextPrice);
+          return { ...o, current_price: nextPrice, pnl };
+        }));
+      })
       .subscribe();
 
     return () => {
       supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(profilesChannel);
       supabase.removeChannel(symbolsChannel);
     };
-  }, []);
-
-  const loadAll = async () => {
-    const [ordersRes, profilesRes] = await Promise.all([
-      supabase.from("orders").select("*").eq("status", "open").order("created_at", { ascending: false }),
-      supabase.from("profiles").select("user_id, full_name, balance, credit, meta_id"),
-    ]);
-
-    if (ordersRes.data) {
-      const symbolIds = [...new Set(ordersRes.data.map((o: any) => o.symbol_id))];
-      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
-      const priceMap = new Map((symbolsData ?? []).map((s: any) => [s.id, Number(s.current_price)]));
-
-      setOrders(ordersRes.data.map((o: any) => {
-        const cp = priceMap.get(o.symbol_id) || Number(o.current_price);
-        const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), cp);
-        return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: cp, pnl, swap: Number(o.swap || 0) };
-      }));
-    }
-
-    if (profilesRes.data) {
-      const map = new Map<string, UserProfile>();
-      profilesRes.data.forEach((p: any) => map.set(p.user_id, { ...p, credit: Number(p.credit || 0) }));
-      setProfiles(map);
-    }
-
-    setLoading(false);
-  };
+  }, [loadAll, loadOrders, loadProfiles]);
 
   // ---- Aggregated Risk Metrics ----
   const totalExposure = orders.reduce((s, o) => s + Math.abs(o.lots * o.entry_price), 0);
