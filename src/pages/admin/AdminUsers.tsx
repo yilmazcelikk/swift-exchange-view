@@ -169,7 +169,9 @@ const AdminUsers = () => {
 
       const ordersChannel = supabase
         .channel(`admin-user-orders-${selectedUser.user_id}`)
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${selectedUser.user_id}` }, () => {
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${selectedUser.user_id}` }, (payload) => {
+          // Skip full reload on price/pnl tick updates — symbols channel handles local updates
+          if (payload.eventType === 'UPDATE' && (payload.new as any)?.status === 'open') return;
           loadUserOrders(selectedUser.user_id, false);
         })
         .subscribe();
