@@ -493,14 +493,37 @@ Deno.serve(async (req) => {
   }
 
   try {
+    const requestBody = await req.json().catch(() => ({} as Record<string, unknown>));
+    const force = requestBody?.force === true;
+
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
     if (!supabaseUrl || !serviceRoleKey) throw new Error("Missing env vars");
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
+    const nowDate = new Date();
+    const minute = nowDate.getMinutes();
+
+    // Prevent overlapping heavy runs from saturating DB under frequent schedulers.
+    const RUN_EVERY_MINUTES = 2;
+    if (!force && minute % RUN_EVERY_MINUTES !== 0) {
+      return new Response(
+        JSON.stringify({
+          success: true,
+          skipped: true,
+          reason: `throttled_${RUN_EVERY_MINUTES}m`,
+          updated: 0,
+          total: 0,
+          active_symbols: 0,
+          deleted_orphaned: 0,
+          sl_tp_closed: 0,
+        }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     // Step 1: Ensure all symbols from the map exist in DB (auto-create missing) — only run occasionally
-    const minute = new Date().getMinutes();
     if (minute % 10 === 0) {
       const allSymbolRows = Object.entries(TV_SYMBOL_MAP).map(([name, tvTicker]) => ({
         name,
@@ -517,40 +540,57 @@ Deno.serve(async (req) => {
     // Step 2: Fetch ALL active symbols from DB that have a TV mapping
     const { data: activeDbSymbols } = await supabase
       .from("symbols")
-      .select("name")
+      .select("name, updated_at")
       .eq("is_active", true);
-    
+
+    // Update oldest symbols first; cap per run to keep function under timeout.
+    const MAX_SYMBOLS_PER_RUN = force ? 220 : 120;
     const namesToUpdate = (activeDbSymbols || [])
-      .map(s => s.name)
-      .filter(n => TV_SYMBOL_MAP[n]);
+      .filter((s) => TV_SYMBOL_MAP[s.name])
+      .sort((a, b) => {
+        const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0;
+        const tb = b.updated_at ? new Date(b.updated_at).getTime() : 0;
+        return ta - tb;
+      })
+      .slice(0, MAX_SYMBOLS_PER_RUN)
+      .map((s) => s.name);
     console.log(`Updating ${namesToUpdate.length} symbols (of ${Object.keys(TV_SYMBOL_MAP).length} total)`);
 
     // Step 3: Fetch price data from TradingView (only active symbols)
     const tvData = await fetchTradingViewData(namesToUpdate);
     const updatedNames: string[] = [];
-    const now = new Date().toISOString();
+    const now = nowDate.toISOString();
 
-    // Step 4: Batch update prices
-    const entries = Object.entries(tvData);
-    const updateBatchSize = 50;
+    // Step 4: Batch upsert prices (far fewer DB round trips than per-symbol updates)
+    const updateRows = Object.entries(tvData).map(([name, values]) => ({
+      name,
+      display_name: DISPLAY_NAMES[name] || name,
+      category: inferCategory(TV_SYMBOL_MAP[name]),
+      is_active: true,
+      current_price: values.current_price,
+      change_percent: values.change_percent,
+      high: values.high,
+      low: values.low,
+      volume: values.volume,
+      updated_at: now,
+    }));
+    const updateBatchSize = 120;
 
-    for (let i = 0; i < entries.length; i += updateBatchSize) {
-      const batch = entries.slice(i, i + updateBatchSize);
-      await Promise.all(
-        batch.map(([name, values]) =>
-          supabase.from("symbols").update({
-            current_price: values.current_price,
-            change_percent: values.change_percent,
-            high: values.high,
-            low: values.low,
-            volume: values.volume,
-            updated_at: now,
-          }).eq("name", name).then(({ error }) => {
-            if (!error) updatedNames.push(name);
-            return !error;
-          })
-        )
-      );
+    for (let i = 0; i < updateRows.length; i += updateBatchSize) {
+      const batch = updateRows.slice(i, i + updateBatchSize);
+      const { data: upsertedRows, error: upsertErr } = await supabase
+        .from("symbols")
+        .upsert(batch, { onConflict: "name" })
+        .select("name");
+
+      if (upsertErr) {
+        console.error("Price upsert batch error:", upsertErr.message);
+        continue;
+      }
+
+      if (upsertedRows) {
+        updatedNames.push(...upsertedRows.map((r) => r.name));
+      }
     }
 
     // Step 5: Orphan cleanup — only every 10 minutes to save queries
@@ -572,25 +612,28 @@ Deno.serve(async (req) => {
 
     // Step 6: Check SL/TP levels and auto-close orders
     let slTpClosed = 0;
-    try {
-      const slTpRes = await fetch(`${supabaseUrl}/functions/v1/check-sl-tp`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${serviceRoleKey}`,
-          "Content-Type": "application/json",
-        },
-      });
-      const slTpData = await slTpRes.json();
-      slTpClosed = slTpData.closed || 0;
-      if (slTpClosed > 0) console.log(`SL/TP auto-closed ${slTpClosed} orders`);
-    } catch (err) {
-      console.error("SL/TP check error:", err);
+    if (force || minute % 2 === 0) {
+      try {
+        const slTpRes = await fetch(`${supabaseUrl}/functions/v1/check-sl-tp`, {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${serviceRoleKey}`,
+            "Content-Type": "application/json",
+          },
+        });
+        const slTpData = await slTpRes.json();
+        slTpClosed = slTpData.closed || 0;
+        if (slTpClosed > 0) console.log(`SL/TP auto-closed ${slTpClosed} orders`);
+      } catch (err) {
+        console.error("SL/TP check error:", err);
+      }
     }
 
     return new Response(
       JSON.stringify({
         success: true,
         updated: updatedNames.length,
+        total: namesToUpdate.length,
         active_symbols: namesToUpdate.length,
         deleted_orphaned: deletedCount,
         sl_tp_closed: slTpClosed,
