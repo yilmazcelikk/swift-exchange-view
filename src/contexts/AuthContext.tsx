@@ -35,9 +35,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const adminCheckInFlight = useRef<Map<string, Promise<boolean>>>(new Map());
   const banCheckInFlight = useRef<Map<string, Promise<boolean>>>(new Map());
 
-  const withTimeout = useCallback(<T,>(promise: Promise<T>, ms: number, fallback: T): Promise<T> => {
+  const withTimeout = useCallback(<T,>(promiseLike: PromiseLike<T>, ms: number, fallback: T): Promise<T> => {
     return Promise.race([
-      promise,
+      Promise.resolve(promiseLike),
       new Promise<T>((resolve) => window.setTimeout(() => resolve(fallback), ms)),
     ]);
   }, []);
