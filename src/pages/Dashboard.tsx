@@ -82,13 +82,14 @@ const Dashboard = () => {
 
   const loadData = async () => {
     const [profileRes] = await Promise.all([
-      supabase.from("profiles").select("balance, equity, free_margin, credit, leverage").eq("user_id", authUser!.id).single(),
+      supabase.from("profiles").select("balance, equity, free_margin, credit, leverage, account_type").eq("user_id", authUser!.id).single(),
     ]);
     if (profileRes.data) {
       setProfile({
         balance: Number(profileRes.data.balance), equity: Number(profileRes.data.equity),
         freeMargin: Number(profileRes.data.free_margin), credit: Number(profileRes.data.credit || 0),
         leverage: profileRes.data.leverage || "1:200",
+        accountType: (profileRes.data as any).account_type || "standard",
       });
     }
     await loadOrders();
