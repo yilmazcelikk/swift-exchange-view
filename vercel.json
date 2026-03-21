@@ -1,5 +1,12 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "routes": [
+    { "handle": "error" },
+    { "status": 500, "src": "/(.*)", "dest": "/maintenance.html" },
+    { "status": 502, "src": "/(.*)", "dest": "/maintenance.html" },
+    { "status": 503, "src": "/(.*)", "dest": "/maintenance.html" },
+    { "status": 504, "src": "/(.*)", "dest": "/maintenance.html" }
   ]
 }
