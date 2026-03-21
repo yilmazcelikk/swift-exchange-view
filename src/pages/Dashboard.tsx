@@ -224,7 +224,7 @@ const Dashboard = () => {
     setSelectedOrder(null);
 
     const liveOrder = liveOrders.find(o => o.id === order.id) || order;
-    const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice);
+    const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice, profile.accountType);
     const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 86400000));
     const swap = calculateSwap(liveOrder.symbolName, liveOrder.lots, daysHeld);
     const netPnl = liveOrder.pnl - commission + swap;
