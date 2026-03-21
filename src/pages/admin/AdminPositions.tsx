@@ -126,7 +126,9 @@ const AdminPositions = () => {
 
     const ordersChannel = supabase
       .channel("admin-positions-orders")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+        // Skip full reload on price/pnl tick updates for open orders — symbols channel handles those locally
+        if (payload.eventType === 'UPDATE' && (payload.new as any)?.status === 'open') return;
         void loadOrders();
       })
       .subscribe();

@@ -85,7 +85,9 @@ const AdminRisk = () => {
 
     const ordersChannel = supabase
       .channel("admin-risk-orders")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
+        // Skip full reload on price/pnl tick updates — symbols channel handles local price updates
+        if (payload.eventType === 'UPDATE' && (payload.new as any)?.status === 'open') return;
         void loadOrders();
       })
       .subscribe();
