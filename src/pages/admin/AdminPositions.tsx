@@ -21,6 +21,7 @@ import {
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { isUpdateWithoutRowData, shouldSkipOrderRefetch } from "@/lib/realtime";
 
 interface OrderRow {
   id: string;
@@ -127,8 +128,7 @@ const AdminPositions = () => {
     const ordersChannel = supabase
       .channel("admin-positions-orders")
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
-        // Skip full reload on price/pnl tick updates for open orders — symbols channel handles those locally
-        if (payload.eventType === 'UPDATE' && (payload.new as any)?.status === 'open') return;
+        if (shouldSkipOrderRefetch(payload as any)) return;
         void loadOrders();
       })
       .subscribe();
@@ -136,6 +136,8 @@ const AdminPositions = () => {
     const profilesChannel = supabase
       .channel("admin-positions-profiles")
       .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, (payload) => {
+        if (isUpdateWithoutRowData(payload as any)) return;
+
         // Fast-path: patch updated profile locally instead of refetching all profiles
         if (payload.eventType === "UPDATE" && payload.new) {
           const updated = payload.new as any;
