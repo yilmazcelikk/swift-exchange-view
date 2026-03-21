@@ -80,13 +80,12 @@ export function Header() {
       })
       .subscribe();
 
-    const interval = setInterval(loadOrders, 5000);
+    // Removed redundant 5s polling — realtime channels already handle updates
 
     return () => {
       supabase.removeChannel(profileChannel);
       supabase.removeChannel(ordersChannel);
       supabase.removeChannel(symbolsChannel);
-      clearInterval(interval);
     };
   }, [user]);
 

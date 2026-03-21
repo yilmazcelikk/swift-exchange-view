@@ -9,7 +9,7 @@ interface SymbolPriceInput {
 export function useLiveSymbolPrices(
   symbolPrices: Record<string, SymbolPriceInput>,
   enabled = true,
-  tickMs = 1000,
+  tickMs = 2000,
 ): Record<string, number> {
   const [livePrices, setLivePrices] = useState<Record<string, number>>({});
   const realPricesRef = useRef<Record<string, SymbolPriceInput>>({});
