@@ -53,7 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           _user_id: userId,
           _role: "admin",
         }),
-        4500,
+        9000,
         { data: false, error: { message: "has_role timeout" } } as any,
       );
       if (error) {
@@ -90,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             .select("is_banned, ban_type")
             .eq("user_id", userId)
             .single(),
-          4500,
+          9000,
           { data: null } as any,
         );
 
@@ -112,18 +112,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let cancelled = false;
-    let lastSessionId: string | null = null;
+    let lastSessionUserId: string | null = null;
     let initialResolved = false;
     let resolving = false;
 
     const resolveSession = async (nextSession: Session | null) => {
       if (cancelled) return;
 
-      const nextId = nextSession?.access_token ?? null;
-      if (nextId === lastSessionId && (initialResolved || resolving)) return;
+      const nextUserId = nextSession?.user?.id ?? null;
+      if (nextUserId === lastSessionUserId && (initialResolved || resolving)) {
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+        return;
+      }
 
       resolving = true;
-      lastSessionId = nextId;
+      lastSessionUserId = nextUserId;
 
       setSession(nextSession);
       setUser(nextSession?.user ?? null);
@@ -156,7 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setRoleResolved(true);
         setLoading(false);
       }
-    }, 7000);
+    }, 15000);
 
     void supabase.auth
       .getSession()
@@ -175,7 +179,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+    } = supabase.auth.onAuthStateChange((event, nextSession) => {
+      if (event === "TOKEN_REFRESHED") {
+        setSession(nextSession);
+        setUser(nextSession?.user ?? null);
+        return;
+      }
       void resolveSession(nextSession);
     });
 
