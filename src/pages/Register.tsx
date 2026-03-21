@@ -57,11 +57,36 @@ const Register = () => {
       return;
     }
     setLoading(true);
+
+    // Validate & prepare referral code before signup
+    let validatedReferralCode = "";
+    if (formData.referralCode.trim()) {
+      const code = formData.referralCode.trim().toUpperCase();
+      const { data: refData } = await supabase
+        .from("referral_codes")
+        .select("id, is_active")
+        .eq("code", code)
+        .eq("is_active", true)
+        .single();
+
+      if (refData) {
+        validatedReferralCode = code;
+        await supabase.rpc("increment_referral_usage", { p_code_id: refData.id });
+      } else {
+        toast.warning("Referans kodu geçersiz veya aktif değil, kod kaydedilmedi.");
+      }
+    }
+
     const { data: signUpData, error } = await supabase.auth.signUp({
       email: formData.email,
       password: formData.password,
       options: {
-        data: { full_name: `${formData.firstName} ${formData.lastName}` },
+        data: {
+          full_name: `${formData.firstName} ${formData.lastName}`,
+          phone: formData.phone.trim() || undefined,
+          tc_identity: formData.tcIdentity.trim() || undefined,
+          referral_code: validatedReferralCode || undefined,
+        },
       },
     });
     
@@ -69,42 +94,6 @@ const Register = () => {
       setLoading(false);
       toast.error("Kayıt başarısız: " + error.message);
       return;
-    }
-
-    if (signUpData.user) {
-      const profileUpdates: Record<string, string> = {};
-
-      // Save phone number
-      if (formData.phone.trim()) {
-        profileUpdates.phone = formData.phone.trim();
-      }
-
-      // Save TC identity
-      if (formData.tcIdentity.trim()) {
-        (profileUpdates as any).tc_identity = formData.tcIdentity.trim();
-      }
-
-      // Validate & save referral code
-      if (formData.referralCode.trim()) {
-        const code = formData.referralCode.trim().toUpperCase();
-        const { data: refData } = await supabase
-          .from("referral_codes")
-          .select("id, is_active")
-          .eq("code", code)
-          .eq("is_active", true)
-          .single();
-
-        if (refData) {
-          profileUpdates.referral_code = code;
-          await supabase.rpc("increment_referral_usage", { p_code_id: refData.id });
-        } else {
-          toast.warning("Referans kodu geçersiz veya aktif değil, kod kaydedilmedi.");
-        }
-      }
-
-      if (Object.keys(profileUpdates).length > 0) {
-        await supabase.from("profiles").update(profileUpdates).eq("user_id", signUpData.user.id);
-      }
     }
 
     setLoading(false);
