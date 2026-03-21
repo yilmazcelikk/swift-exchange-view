@@ -89,6 +89,7 @@ const History = () => {
   const [totalDeposit, setTotalDeposit] = useState(0);
   const [totalWithdrawal, setTotalWithdrawal] = useState(0);
   const [accountType, setAccountType] = useState("standard");
+  const [historyLoading, setHistoryLoading] = useState(true);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
