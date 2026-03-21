@@ -98,7 +98,11 @@ const History = () => {
 
       const ordersChannel = supabase
         .channel("history-orders")
-        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(false); })
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, (payload) => {
+          // Skip full reload on open-order price/pnl ticks
+          if (payload.eventType === "UPDATE" && (payload.new as any)?.status === "open") return;
+          loadHistory(false);
+        })
         .subscribe();
 
       const transactionsChannel = supabase

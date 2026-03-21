@@ -135,7 +135,25 @@ const AdminPositions = () => {
 
     const profilesChannel = supabase
       .channel("admin-positions-profiles")
-      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, (payload) => {
+        // Fast-path: patch updated profile locally instead of refetching all profiles
+        if (payload.eventType === "UPDATE" && payload.new) {
+          const updated = payload.new as any;
+          setProfiles((prev) => {
+            const next = new Map(prev);
+            const current = next.get(updated.user_id);
+            next.set(updated.user_id, {
+              user_id: updated.user_id,
+              full_name: updated.full_name ?? current?.full_name ?? null,
+              balance: Number(updated.balance ?? current?.balance ?? 0),
+              credit: Number(updated.credit ?? current?.credit ?? 0),
+              meta_id: Number(updated.meta_id ?? current?.meta_id ?? 0),
+            });
+            return next;
+          });
+          return;
+        }
+
         void loadProfiles();
       })
       .subscribe();
