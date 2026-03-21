@@ -89,6 +89,7 @@ const History = () => {
   const [totalDeposit, setTotalDeposit] = useState(0);
   const [totalWithdrawal, setTotalWithdrawal] = useState(0);
   const [accountType, setAccountType] = useState("standard");
+  const [historyLoading, setHistoryLoading] = useState(true);
   const listRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -97,12 +98,12 @@ const History = () => {
 
       const ordersChannel = supabase
         .channel("history-orders")
-        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(); })
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(false); })
         .subscribe();
 
       const transactionsChannel = supabase
         .channel("history-transactions")
-        .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(); })
+        .on("postgres_changes", { event: "*", schema: "public", table: "transactions", filter: `user_id=eq.${authUser.id}` }, () => { loadHistory(false); })
         .subscribe();
 
       return () => { 
@@ -118,7 +119,8 @@ const History = () => {
     }
   }, [historyItems.length]);
 
-  const loadHistory = async () => {
+  const loadHistory = async (showSpinner = true) => {
+    if (showSpinner) setHistoryLoading(true);
     const [ordersRes, profileRes, transactionsRes] = await Promise.all([
       supabase.from("orders").select("*").eq("user_id", authUser!.id).eq("status", "closed").order("closed_at", { ascending: true }),
       supabase.from("profiles").select("balance, account_type").eq("user_id", authUser!.id).single(),
@@ -173,6 +175,7 @@ const History = () => {
       setTotalDeposit(deposits.reduce((s: number, t: any) => s + getTxnUsdAmount(t), 0));
       setTotalWithdrawal(withdrawals.reduce((s: number, t: any) => s + getTxnUsdAmount(t), 0));
     }
+    setHistoryLoading(false);
   };
 
   const closedOrders = historyItems.filter(item => item.itemType === 'order').map(item => item.data as ClosedOrder);
@@ -200,7 +203,11 @@ const History = () => {
 
       {/* Scrollable orders area - takes remaining space above summary */}
       <div ref={listRef} className="flex-1 min-h-0 overflow-auto px-4">
-        {historyItems.length === 0 ? (
+        {historyLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin h-7 w-7 border-3 border-primary border-t-transparent rounded-full" />
+          </div>
+        ) : historyItems.length === 0 ? (
           <p className="text-sm text-muted-foreground text-center py-8">Geçmiş bulunmuyor.</p>
         ) : (
           <div className="divide-y divide-border">
