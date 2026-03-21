@@ -162,18 +162,32 @@ const AdminUsers = () => {
   useEffect(() => {
     if (selectedUser) {
       loadUserOrders(selectedUser.user_id, true);
-      
+
       const ordersChannel = supabase
         .channel(`admin-user-orders-${selectedUser.user_id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${selectedUser.user_id}` }, () => {
           loadUserOrders(selectedUser.user_id, false);
         })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, () => {
-          loadUserOrders(selectedUser.user_id, false);
+        .subscribe();
+
+      const symbolsChannel = supabase
+        .channel(`admin-user-symbols-${selectedUser.user_id}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, (payload) => {
+          if (!payload.new) return;
+          const updated = payload.new as any;
+          const nextPrice = Number(updated.current_price);
+          setSelectedUserOrders((prev) => prev.map((o) => {
+            if (o.symbol_id !== updated.id) return o;
+            const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), nextPrice);
+            return { ...o, current_price: nextPrice, pnl };
+          }));
         })
         .subscribe();
 
-      return () => { supabase.removeChannel(ordersChannel); };
+      return () => {
+        supabase.removeChannel(ordersChannel);
+        supabase.removeChannel(symbolsChannel);
+      };
     } else {
       setSelectedUserOrders([]);
     }
