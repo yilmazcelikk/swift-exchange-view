@@ -402,8 +402,30 @@ const TV_SLUGS: Record<string, string> = {
   PATEK: "pasifik-teknoloji",
   BALSU: "balsu-gida",
   TSPOR: "trabzonspor",
+  // Additional popular BIST stocks
+  AKCNS: "akcansa-cimento",
+  AKGRT: "aksigorta",
+  ALKIM: "alkim-kimya",
+  ASUZU: "anadolu-isuzu",
+  AYDEM: "aydem-enerji",
+  AYGAZ: "aygaz",
+  BJKAS: "besiktas",
+  BRISA: "brisa",
+  CLEBI: "celebi",
+  GWIND: "galata-wind",
+  INDES: "indeks-bilgisayar",
+  KORDS: "kordsa",
+  NUHCM: "nuh-cimento",
+  QNBFK: "qnb-finansbank",
+  RYSAS: "reysas-lojistik",
+  TATGD: "tat-gida",
+  TKNSA: "teknosa",
+  TRGYO: "torunlar-gmyo",
+  VESBE: "vestel-beyaz-esya",
+  IPEKE: "ipek-dogal-enerji",
+  KERVT: "kerevitas",
 
-  // ── Crypto (legacy slugs kept for fallback) ──
+
   AAVEUSD: "aave",
   ADAUSD: "cardano",
   ALGOUSD: "algorand",
@@ -547,6 +569,58 @@ const LOCAL_FALLBACKS: Record<string, string> = {
   TSKB: "/logos/TSKB.png",
 };
 
+// CDN-hosted BIST stock logos (KAP source via GitHub)
+const BIST_CDN = "https://cdn.jsdelivr.net/gh/ahmeterenodaci/Istanbul-Stock-Exchange--BIST--including-symbols-and-logos/logos";
+
+// Known BIST stock tickers for CDN fallback detection
+const BIST_EXCHANGE_TICKERS = new Set([
+  "A1CAP","ACSEL","ADEL","ADESE","AEFES","AFYON","AGESA","AGHOL","AHGAZ",
+  "AKBNK","AKCNS","AKENR","AKFGY","AKGRT","AKSA","AKSEN","AKSGY","ALARK",
+  "ALBRK","ALFAS","ALKIM","ALTNY","ANELE","ANHYT","ANSGR","ARCLK","ARENA",
+  "ASELS","ASTOR","ASUZU","AVGYO","AVHOL","AVOD","AVTUR","AYCES","AYDEM",
+  "AYEN","AYGAZ","BAGFS","BAKAB","BALSU","BANVT","BARMA","BASGZ","BAYRK",
+  "BERA","BFREN","BIMAS","BIOEN","BIZIM","BJKAS","BLCYT","BMSCH","BMSTL",
+  "BNTAS","BOBET","BORLS","BORSK","BRISA","BRKSN","BRSAN","BRYAT","BSOKE",
+  "BTCIM","BUCIM","BURCE","BURVA","CACYL","CANTE","CASA","CATES","CCOLA",
+  "CELHA","CEMAS","CEMTS","CEOEM","CIMSA","CLEBI","CONSE","COSMO","CRDFA",
+  "CUSAN","CVKMD","CWENE","DAGI","DAPGM","DARDL","DESA","DESPC","DEVA",
+  "DGATE","DGNMO","DIRIT","DMRGD","DNISI","DOAS","DOCO","DOHOL","DOKTA",
+  "DSTKF","DURDO","DYOBY","DZGYO","ECILC","ECZYT","EDIP","EFOR","EGEEN",
+  "EGEPO","EGGUB","EGPRO","EKGYO","EKSUN","ELITE","EMKEL","ENERY","ENJSA",
+  "ENKAI","ERBOS","EREGL","ERSU","EUPWR","EYGYO","FADE","FENER","FLAP",
+  "FMIZP","FONET","FORMT","FROTO","GARAN","GARFA","GEDIK","GEDZA","GENIL",
+  "GENTS","GESAN","GLBMD","GLCVY","GLRMK","GMTAS","GOKNR","GOLTS","GOODY",
+  "GOZDE","GRSEL","GRTHO","GRTRK","GSRAY","GUBRF","GWIND","GZNMI","HALKB",
+  "HATEK","HDFGS","HEKTS","HEDEF","HKTM","HLGYO","HTTBT","HUBVC","HUNER",
+  "IDEAS","IHEVA","IHGZT","IHLAS","IHLGM","IHYAY","INDES","INFO","INTEM",
+  "INVEO","INVES","IPEKE","ISBTR","ISCTR","ISDMR","ISFIN","ISGYO","ISMEN",
+  "ISSEN","IZENR","IZMDC","JANTS","KAPLM","KAREL","KARSN","KARTN","KARYE",
+  "KAYSE","KCAER","KCHOL","KERVN","KERVT","KFEIN","KGYO","KLMSN","KLNMA",
+  "KLRHO","KLSER","KLSYN","KMPUR","KNFRT","KONKA","KONTR","KONYA","KOPOL",
+  "KORDS","KOZAA","KOZAL","KRDMA","KRDMD","KRGYO","KRONT","KRVGD","KTLEV",
+  "KTSKR","KUYAS","KZBGY","LIDER","LIDFA","LINK","LKMNH","LOGO","LRSHO",
+  "LUKSK","MAALT","MACKO","MAGEN","MAKIM","MAKTK","MANAS","MARKA","MAVI",
+  "MEDTR","MEGAP","MEKAG","MERCN","MERIT","MGROS","MIATK","MNDRS","MNDTR",
+  "MOBTL","MOGAN","MPARK","MRGYO","MRSHL","MSGYO","MTAS","MTRKS","MZHLD",
+  "NETAS","NIBAS","NTHOL","NUHCM","OBAMS","ODAS","OFSYM","ONCSM","ORCAY",
+  "ORGE","ORMA","OSCYM","OSTIM","OTKAR","OTTO","OYAKC","OYLUM","OZKGY",
+  "OZSUB","PAGYO","PAMEL","PAPIL","PARSN","PASEU","PATEK","PCILT","PEGYO",
+  "PEKGY","PENGD","PENTA","PESDV","PETKM","PETUN","PGSUS","PINSU","PKART",
+  "PLTUR","POLHO","POLTK","PRDGS","PRKAB","PRKME","PSGYO","PTCTR","QUAGR",
+  "RALYH","RAYSG","REEDR","RGYAS","RODRG","ROYAL","RTALB","RUBNS","RYGYO",
+  "RYSAS","SAFKR","SAHOL","SAMAT","SANEL","SANFM","SANKO","SARKY","SASA",
+  "SAYAS","SDTTR","SEGYO","SEKFK","SEKUR","SELEC","SELGD","SRVGY","SERVE",
+  "SILVR","SISE","SKBNK","SKYMD","SMRTG","SNGYO","SNICA","SNKRN","SNPAM",
+  "SOKM","SRVGY","SUMAS","SUNTK","SUWEN","TABGD","TATEN","TAVHL","TBORG",
+  "TCELL","TDGYO","TEKTU","TERA","TETMT","TGSAS","THYAO","TKFEN","TKNSA",
+  "TLMAN","TMPOL","TMSN","TOASO","TRACB","TRALT","TRCAS","TRGYO","TRILC",
+  "TRNJ","TRMET","TSGYO","TSKB","TSPOR","TTKOM","TTRAK","TUKAS","TUPRS",
+  "TUREX","TURSG","UFUK","ULKER","ULUUN","UNLU","USAK","UZERB","VAKBN",
+  "VAKFN","VAKKO","VANGD","VBTYZ","VERTU","VERUS","VESBE","VESTL","VKGYO",
+  "VRGYO","YAPRK","YATAS","YEOTK","YGYO","YKBNK","YKSLN","YUNSA","ZEDUR",
+  "ZOREN","ZRGYO",
+]);
+
 // Crypto base tickers for new TradingView S3 path: crypto/XTVC{TICKER}--big.svg
 const CRYPTO_TICKERS: Record<string, string> = {
   AAVEUSD: "AAVE", ADAUSD: "ADA", ALGOUSD: "ALGO", ANKRUSD: "ANKR",
@@ -594,25 +668,30 @@ export function resolveLogoUrls(symbol: string, category?: string): string[] {
   // 3. Local fallback (for known BIST stocks with local PNGs)
   if (LOCAL_FALLBACKS[normalized]) urls.push(LOCAL_FALLBACKS[normalized]);
 
-  // 4. Index flags
+  // 4. BIST CDN logos (KAP-sourced, covers virtually all BIST stocks)
+  if (BIST_EXCHANGE_TICKERS.has(normalized) || category === "bist" || category === "stock") {
+    urls.push(`${BIST_CDN}/${normalized}.png`);
+  }
+
+  // 5. Index flags
   if (INDEX_FLAGS[normalized]) {
     urls.push(`${FLAG_BASE}/${INDEX_FLAGS[normalized]}.svg`);
   }
 
-  // 5. Forex flags
+  // 6. Forex flags
   if (urls.length === 0 && (category === "forex" || normalized.length === 6)) {
     const base = normalized.slice(0, 3);
     const flagCode = CURRENCY_FLAGS[base];
     if (flagCode) urls.push(`${FLAG_BASE}/${flagCode}.svg`);
   }
 
-  // 6. Speculative: try crypto path for unknown USD-ending symbols
+  // 7. Speculative: try crypto path for unknown USD-ending symbols
   if (urls.length === 0 && normalized.endsWith("USD")) {
     const base = normalized.replace(/USD[T]?$/, "");
     urls.push(`${TV_CRYPTO}/XTVC${base}--big.svg`);
   }
 
-  // 7. Speculative TradingView attempt (lowercase symbol as slug)
+  // 8. Speculative TradingView attempt (lowercase symbol as slug)
   if (urls.length === 0) {
     const guess = normalized.toLowerCase();
     urls.push(`${TV}/${guess}--big.svg`);
