@@ -506,7 +506,7 @@ Deno.serve(async (req) => {
     const minute = nowDate.getMinutes();
 
     // Prevent overlapping heavy runs from saturating DB under frequent schedulers.
-    const RUN_EVERY_MINUTES = 2;
+    const RUN_EVERY_MINUTES = 5;
     if (!force && minute % RUN_EVERY_MINUTES !== 0) {
       return new Response(
         JSON.stringify({
@@ -544,7 +544,7 @@ Deno.serve(async (req) => {
       .eq("is_active", true);
 
     // Update oldest symbols first; cap per run to keep function under timeout.
-    const MAX_SYMBOLS_PER_RUN = force ? 220 : 120;
+    const MAX_SYMBOLS_PER_RUN = force ? 120 : 40;
     const namesToUpdate = (activeDbSymbols || [])
       .filter((s) => TV_SYMBOL_MAP[s.name])
       .sort((a, b) => {
@@ -612,7 +612,7 @@ Deno.serve(async (req) => {
 
     // Step 6: Check SL/TP levels and auto-close orders
     let slTpClosed = 0;
-    if (force || minute % 2 === 0) {
+    if (force) {
       try {
         const slTpRes = await fetch(`${supabaseUrl}/functions/v1/check-sl-tp`, {
           method: "POST",
