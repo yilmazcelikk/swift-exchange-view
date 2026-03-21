@@ -167,7 +167,20 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, serviceRoleKey);
 
-    // Get current prices
+    // ── EARLY EXIT: Check if there are any open or pending orders at all ──
+    const { count: openCount } = await supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .in("status", ["open", "pending"]);
+
+    if (!openCount || openCount === 0) {
+      return new Response(
+        JSON.stringify({ success: true, checked: 0, closed: 0, stopOutClosed: 0, pendingTriggered: 0, skipped: true, reason: "no_open_orders" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Get current prices (only needed when there are orders)
     const { data: symbols } = await supabase
       .from("symbols")
       .select("id, current_price, name");
