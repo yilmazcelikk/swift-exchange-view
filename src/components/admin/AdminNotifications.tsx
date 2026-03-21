@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Bell, ArrowDownToLine, ArrowUpFromLine, FileText, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -39,8 +39,23 @@ export function AdminNotifications() {
     }
   });
 
+  // Cache profile names to avoid refetching every time
+  const profileMapRef = useRef<Map<string, string>>(new Map());
+
+  const loadProfileNames = useCallback(async () => {
+    const { data } = await supabase.from("profiles").select("user_id, full_name");
+    if (data) {
+      profileMapRef.current = new Map(data.map((p) => [p.user_id, p.full_name || "Bilinmeyen"]));
+    }
+  }, []);
+
   const fetchNotifications = useCallback(async () => {
-    const [txRes, docRes, profilesRes] = await Promise.all([
+    // Load profile names only if cache is empty
+    if (profileMapRef.current.size === 0) {
+      await loadProfileNames();
+    }
+
+    const [txRes, docRes] = await Promise.all([
       supabase
         .from("transactions")
         .select("id, type, amount, currency, status, created_at, user_id")
@@ -53,16 +68,12 @@ export function AdminNotifications() {
         .eq("status", "pending")
         .order("created_at", { ascending: false })
         .limit(10),
-      supabase.from("profiles").select("user_id, full_name"),
     ]);
-
-    const profiles = profilesRes.data || [];
-    const profileMap = new Map(profiles.map((p) => [p.user_id, p.full_name || "Bilinmeyen"]));
 
     const items: Notification[] = [];
 
     for (const tx of txRes.data || []) {
-      const userName = profileMap.get(tx.user_id) || "Bilinmeyen";
+      const userName = profileMapRef.current.get(tx.user_id) || "Bilinmeyen";
       const isDeposit = tx.type === "deposit";
       items.push({
         id: tx.id,
@@ -75,7 +86,7 @@ export function AdminNotifications() {
     }
 
     for (const doc of docRes.data || []) {
-      const userName = profileMap.get(doc.user_id) || "Bilinmeyen";
+      const userName = profileMapRef.current.get(doc.user_id) || "Bilinmeyen";
       items.push({
         id: doc.id,
         type: "document",
@@ -92,13 +103,40 @@ export function AdminNotifications() {
     });
 
     setNotifications(items);
-  }, [readIds]);
+  }, [readIds, loadProfileNames]);
 
   useEffect(() => {
     fetchNotifications();
-    const interval = setInterval(fetchNotifications, 10000);
-    return () => clearInterval(interval);
-  }, [fetchNotifications]);
+
+    // Realtime instead of polling
+    const txChannel = supabase
+      .channel('admin-notif-tx')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+
+    const docChannel = supabase
+      .channel('admin-notif-doc')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, () => {
+        fetchNotifications();
+      })
+      .subscribe();
+
+    // Refresh profile cache when new users register
+    const profileChannel = supabase
+      .channel('admin-notif-profiles')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'profiles' }, () => {
+        loadProfileNames();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(txChannel);
+      supabase.removeChannel(docChannel);
+      supabase.removeChannel(profileChannel);
+    };
+  }, [fetchNotifications, loadProfileNames]);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
