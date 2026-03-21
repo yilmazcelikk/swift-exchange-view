@@ -86,7 +86,6 @@ export function Header() {
       supabase.removeChannel(profileChannel);
       supabase.removeChannel(ordersChannel);
       supabase.removeChannel(symbolsChannel);
-      clearInterval(interval);
     };
   }, [user]);
 
