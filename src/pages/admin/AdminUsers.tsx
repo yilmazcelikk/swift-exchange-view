@@ -53,6 +53,7 @@ interface Profile {
 
 interface OrderRow {
   id: string;
+  symbol_id: string;
   symbol_name: string;
   type: string;
   lots: number;
