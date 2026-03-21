@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -64,55 +64,7 @@ const AdminPositions = () => {
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    void loadAll();
-    const interval = setInterval(() => {
-      void Promise.all([loadOrders(), loadProfiles()]);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const loadAll = async () => {
-    setLoading(true);
-    try {
-      await Promise.all([loadOrders(), loadProfiles()]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadOrders = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*")
-        .eq("status", "open")
-        .order("created_at", { ascending: false });
-
-      if (error) { console.error("loadOrders error:", error); return; }
-      if (!data || data.length === 0) { setOrders([]); return; }
-
-      const symbolIds = [...new Set(data.map((o) => o.symbol_id).filter(Boolean))];
-      const { data: symbolsData } = await supabase
-        .from("symbols")
-        .select("id, current_price")
-        .in("id", symbolIds);
-
-      const priceMap = new Map((symbolsData ?? []).map((s) => [s.id, Number(s.current_price)]));
-
-      setOrders(
-        data.map((o) => {
-          const currentPrice = priceMap.get(o.symbol_id) || Number(o.current_price);
-          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), currentPrice);
-          return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl, swap: Number(o.swap || 0) };
-        })
-      );
-    } catch (err) {
-      console.error("loadOrders unexpected error:", err);
-    }
-  };
-
-  const loadProfiles = async () => {
+  const loadProfiles = useCallback(async () => {
     try {
       const { data, error } = await supabase.from("profiles").select("user_id, full_name, balance, credit, meta_id");
       if (error) { console.error("loadProfiles error:", error); return; }
@@ -124,7 +76,88 @@ const AdminPositions = () => {
     } catch (err) {
       console.error("loadProfiles unexpected error:", err);
     }
-  };
+  }, []);
+
+  const loadOrders = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("status", "open")
+        .order("created_at", { ascending: false });
+
+      if (error) { console.error("loadOrders error:", error); return; }
+      if (!data || data.length === 0) { setOrders([]); return; }
+
+      const symbolIds = [...new Set(data.map((o) => o.symbol_id).filter(Boolean))];
+      let priceMap = new Map<string, number>();
+
+      if (symbolIds.length > 0) {
+        const { data: symbolsData } = await supabase
+          .from("symbols")
+          .select("id, current_price")
+          .in("id", symbolIds);
+        priceMap = new Map((symbolsData ?? []).map((s) => [s.id, Number(s.current_price)]));
+      }
+
+      setOrders(
+        data.map((o) => {
+          const currentPrice = priceMap.get(o.symbol_id) ?? Number(o.current_price);
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), currentPrice);
+          return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl, swap: Number(o.swap || 0) };
+        })
+      );
+    } catch (err) {
+      console.error("loadOrders unexpected error:", err);
+    }
+  }, []);
+
+  const loadAll = useCallback(async () => {
+    setLoading(true);
+    try {
+      await Promise.all([loadOrders(), loadProfiles()]);
+    } finally {
+      setLoading(false);
+    }
+  }, [loadOrders, loadProfiles]);
+
+  useEffect(() => {
+    void loadAll();
+
+    const ordersChannel = supabase
+      .channel("admin-positions-orders")
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => {
+        void loadOrders();
+      })
+      .subscribe();
+
+    const profilesChannel = supabase
+      .channel("admin-positions-profiles")
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles" }, () => {
+        void loadProfiles();
+      })
+      .subscribe();
+
+    const symbolsChannel = supabase
+      .channel("admin-positions-symbols")
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "symbols" }, (payload) => {
+        if (!payload.new) return;
+        const updated = payload.new as any;
+        const nextPrice = Number(updated.current_price);
+        setOrders((prev) => prev.map((o) => {
+          if (o.symbol_id !== updated.id) return o;
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, nextPrice);
+          return { ...o, current_price: nextPrice, pnl };
+        }));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(symbolsChannel);
+    };
+  }, [loadAll, loadOrders, loadProfiles]);
 
   const toggleUser = (userId: string) => {
     setExpandedUsers(prev => {

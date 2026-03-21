@@ -53,6 +53,7 @@ interface Profile {
 
 interface OrderRow {
   id: string;
+  symbol_id: string;
   symbol_name: string;
   type: string;
   lots: number;
@@ -136,11 +137,15 @@ const AdminUsers = () => {
       if (ordersData && ordersData.length > 0) {
         // Fetch live prices for symbols
         const symbolIds = [...new Set(ordersData.map(o => (o as any).symbol_id).filter(Boolean))];
-        const { data: symbolsData } = await supabase
-          .from("symbols")
-          .select("id, current_price")
-          .in("id", symbolIds);
-        const priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+        let priceMap = new Map<string, number>();
+
+        if (symbolIds.length > 0) {
+          const { data: symbolsData } = await supabase
+            .from("symbols")
+            .select("id, current_price")
+            .in("id", symbolIds);
+          priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+        }
 
         const enriched = ordersData.map(o => {
           const livePrice = priceMap.get((o as any).symbol_id) || Number(o.current_price);
@@ -161,18 +166,32 @@ const AdminUsers = () => {
   useEffect(() => {
     if (selectedUser) {
       loadUserOrders(selectedUser.user_id, true);
-      
+
       const ordersChannel = supabase
         .channel(`admin-user-orders-${selectedUser.user_id}`)
         .on('postgres_changes', { event: '*', schema: 'public', table: 'orders', filter: `user_id=eq.${selectedUser.user_id}` }, () => {
           loadUserOrders(selectedUser.user_id, false);
         })
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, () => {
-          loadUserOrders(selectedUser.user_id, false);
+        .subscribe();
+
+      const symbolsChannel = supabase
+        .channel(`admin-user-symbols-${selectedUser.user_id}`)
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, (payload) => {
+          if (!payload.new) return;
+          const updated = payload.new as any;
+          const nextPrice = Number(updated.current_price);
+          setSelectedUserOrders((prev) => prev.map((o) => {
+            if (o.symbol_id !== updated.id) return o;
+            const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), nextPrice);
+            return { ...o, current_price: nextPrice, pnl };
+          }));
         })
         .subscribe();
 
-      return () => { supabase.removeChannel(ordersChannel); };
+      return () => {
+        supabase.removeChannel(ordersChannel);
+        supabase.removeChannel(symbolsChannel);
+      };
     } else {
       setSelectedUserOrders([]);
     }
