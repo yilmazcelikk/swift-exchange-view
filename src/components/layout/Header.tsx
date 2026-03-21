@@ -31,11 +31,15 @@ export function Header() {
 
     const loadOrders = async () => {
       const { data } = await supabase.from("orders").select("id, symbol_id, symbol_name, type, lots, entry_price, current_price, leverage").eq("user_id", user.id).eq("status", "open");
-      if (data) {
-        const symbolIds = [...new Set(data.map(o => o.symbol_id))];
-        const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
-        const priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
-        
+      if (data && data.length > 0) {
+        const symbolIds = [...new Set(data.map(o => o.symbol_id).filter(Boolean))];
+        let priceMap = new Map<string, number>();
+
+        if (symbolIds.length > 0) {
+          const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
+          priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+        }
+
         setOpenOrders(data.map(o => ({
           ...o,
           lots: Number(o.lots),
