@@ -12,7 +12,6 @@ interface Candle {
 }
 
 const TIMEFRAMES = [
-  { key: "1m", label: "1dk" },
   { key: "15m", label: "15dk" },
   { key: "1h", label: "1sa" },
   { key: "4h", label: "4sa" },
@@ -452,7 +451,7 @@ function generateSimulatedCandles(basePrice: number, timeframe: Timeframe): Cand
   const now = new Date();
   let interval: number;
   switch (timeframe) {
-    case "1m": interval = 60 * 1000; break;
+    case "15m": interval = 15 * 60 * 1000; break;
     case "15m": interval = 15 * 60 * 1000; break;
     case "1h": interval = 60 * 60 * 1000; break;
     case "4h": interval = 4 * 60 * 60 * 1000; break;

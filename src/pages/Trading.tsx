@@ -137,7 +137,7 @@ const Trading = () => {
   const isBISTStock = BIST_SYMBOLS.has(selectedSymbol.name) || selectedSymbol.exchange === "BIST";
 
   return (
-    <div className="flex flex-col h-full animate-slide-up overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
+    <div className="flex flex-col h-full animate-slide-up overscroll-none touch-pan-y" style={{ WebkitOverflowScrolling: 'touch' }}>
       {/* Compact Header */}
       <div className="px-3 py-2.5 border-b border-border/60 flex items-center gap-2.5 bg-card shrink-0">
         <button onClick={() => setSelectedSymbol(null)} className="p-1.5 -ml-1 hover:bg-muted rounded-lg transition-colors active:scale-95">
