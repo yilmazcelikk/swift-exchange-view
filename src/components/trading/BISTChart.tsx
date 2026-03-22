@@ -12,7 +12,6 @@ interface Candle {
 }
 
 const TIMEFRAMES = [
-  { key: "1m", label: "1dk" },
   { key: "15m", label: "15dk" },
   { key: "1h", label: "1sa" },
   { key: "4h", label: "4sa" },
