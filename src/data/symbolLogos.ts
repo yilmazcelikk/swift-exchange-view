@@ -483,7 +483,7 @@ const TV_SLUGS: Record<string, string> = {
   PENDLEUSD: "pendle",
   PEPEUSD: "pepe",
   "PEPE1000USD": "pepe",
-  POLUSD: "polygon",
+  POLUSD: "polygon-ecosystem-token",
   QNTUSD: "quant",
   RAREUSD: "superrare",
   RENDERUSD: "render-token",
