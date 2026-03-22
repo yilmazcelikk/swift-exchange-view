@@ -462,16 +462,25 @@ function hashString(str: string): number {
 function generateSimulatedCandles(basePrice: number, timeframe: Timeframe, symbolName?: string): Candle[] {
   const count = 80;
   const candles: Candle[] = [];
-  const seed = hashString(symbolName || "default");
+  const seed = hashString((symbolName || "default") + timeframe);
   const rng = seededRandom(seed);
   
-  // Each symbol gets a unique starting bias and volatility multiplier
-  const startBias = 0.92 + rng() * 0.10; // 0.92 to 1.02
-  const volMult = 0.002 + rng() * 0.006; // 0.002 to 0.008
-  const trendBias = (rng() - 0.5) * 0.3; // -0.15 to 0.15
+  // Each symbol gets a unique starting bias
+  const startBias = 0.96 + rng() * 0.06; // 0.96 to 1.02
+  const trendBias = (rng() - 0.5) * 0.2; // -0.1 to 0.1
+  
+  // Timeframe-based volatility — shorter timeframes = smaller candles
+  const tfVolMultiplier: Record<string, number> = {
+    "15m": 0.0008,
+    "1h": 0.0015,
+    "4h": 0.003,
+    "1d": 0.006,
+  };
+  const volBase = tfVolMultiplier[timeframe] || 0.0015;
+  const volSymbolFactor = 0.7 + rng() * 0.6; // 0.7 to 1.3
   
   let price = basePrice * startBias;
-  const volatility = basePrice * volMult;
+  const volatility = basePrice * volBase * volSymbolFactor;
 
   const now = new Date();
   let interval: number;
@@ -485,17 +494,19 @@ function generateSimulatedCandles(basePrice: number, timeframe: Timeframe, symbo
 
   for (let i = 0; i < count; i++) {
     const time = new Date(now.getTime() - (count - i) * interval);
-    // Progress toward basePrice in last 20% of candles
+    // Progress toward basePrice in last 25% of candles
     const progress = i / count;
-    const pullStrength = progress > 0.8 ? (progress - 0.8) / 0.2 : 0;
-    const pullToBase = (basePrice - price) * pullStrength * 0.15;
+    const pullStrength = progress > 0.75 ? (progress - 0.75) / 0.25 : 0;
+    const pullToBase = (basePrice - price) * pullStrength * 0.2;
     
-    const change = (rng() - 0.48 + trendBias * 0.1) * volatility + pullToBase;
+    const change = (rng() - 0.48 + trendBias * 0.05) * volatility + pullToBase;
     const open = price;
-    price = Math.max(price + change, basePrice * 0.7);
+    price = Math.max(price + change, basePrice * 0.8);
     const close = price;
-    const wickUp = rng() * volatility * 0.5;
-    const wickDown = rng() * volatility * 0.5;
+    // Wicks proportional to body size, not full volatility
+    const bodySize = Math.abs(close - open);
+    const wickUp = rng() * bodySize * 0.8 + rng() * volatility * 0.1;
+    const wickDown = rng() * bodySize * 0.8 + rng() * volatility * 0.1;
     const high = Math.max(open, close) + wickUp;
     const low = Math.min(open, close) - wickDown;
     const volume = Math.floor(rng() * 10000 + 1000);
