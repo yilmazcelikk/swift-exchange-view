@@ -76,7 +76,7 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
           volume: Number(c.volume),
         })));
       } else {
-        const simulated = generateSimulatedCandles(currentPrice, timeframe);
+        const simulated = generateSimulatedCandles(currentPrice, timeframe, symbolName);
         setCandleData(simulated);
       }
       setLoading(false);
@@ -441,17 +441,41 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
 
 BISTChart.displayName = "BISTChart";
 
+// Seeded PRNG for consistent per-symbol candle generation
+function seededRandom(seed: number) {
+  let s = seed;
+  return () => {
+    s = (s * 16807 + 0) % 2147483647;
+    return (s - 1) / 2147483646;
+  };
+}
+
+function hashString(str: string): number {
+  let hash = 5381;
+  for (let i = 0; i < str.length; i++) {
+    hash = ((hash << 5) + hash) + str.charCodeAt(i);
+  }
+  return Math.abs(hash);
+}
+
 // Generate simulated candle data for when DB has no data yet
-function generateSimulatedCandles(basePrice: number, timeframe: Timeframe): Candle[] {
+function generateSimulatedCandles(basePrice: number, timeframe: Timeframe, symbolName?: string): Candle[] {
   const count = 80;
   const candles: Candle[] = [];
-  let price = basePrice * 0.97;
-  const volatility = basePrice * 0.004;
+  const seed = hashString(symbolName || "default");
+  const rng = seededRandom(seed);
+  
+  // Each symbol gets a unique starting bias and volatility multiplier
+  const startBias = 0.92 + rng() * 0.10; // 0.92 to 1.02
+  const volMult = 0.002 + rng() * 0.006; // 0.002 to 0.008
+  const trendBias = (rng() - 0.5) * 0.3; // -0.15 to 0.15
+  
+  let price = basePrice * startBias;
+  const volatility = basePrice * volMult;
 
   const now = new Date();
   let interval: number;
   switch (timeframe) {
-    case "15m": interval = 15 * 60 * 1000; break;
     case "15m": interval = 15 * 60 * 1000; break;
     case "1h": interval = 60 * 60 * 1000; break;
     case "4h": interval = 4 * 60 * 60 * 1000; break;
@@ -461,13 +485,20 @@ function generateSimulatedCandles(basePrice: number, timeframe: Timeframe): Cand
 
   for (let i = 0; i < count; i++) {
     const time = new Date(now.getTime() - (count - i) * interval);
-    const change = (Math.random() - 0.47) * volatility;
+    // Progress toward basePrice in last 20% of candles
+    const progress = i / count;
+    const pullStrength = progress > 0.8 ? (progress - 0.8) / 0.2 : 0;
+    const pullToBase = (basePrice - price) * pullStrength * 0.15;
+    
+    const change = (rng() - 0.48 + trendBias * 0.1) * volatility + pullToBase;
     const open = price;
-    price = Math.max(price + change, basePrice * 0.85);
+    price = Math.max(price + change, basePrice * 0.7);
     const close = price;
-    const high = Math.max(open, close) + Math.random() * volatility * 0.4;
-    const low = Math.min(open, close) - Math.random() * volatility * 0.4;
-    const volume = Math.floor(Math.random() * 10000 + 1000);
+    const wickUp = rng() * volatility * 0.5;
+    const wickDown = rng() * volatility * 0.5;
+    const high = Math.max(open, close) + wickUp;
+    const low = Math.min(open, close) - wickDown;
+    const volume = Math.floor(rng() * 10000 + 1000);
 
     candles.push({ time: time.toISOString(), open, high, low, close, volume });
   }
