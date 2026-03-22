@@ -76,7 +76,7 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
           volume: Number(c.volume),
         })));
       } else {
-        const simulated = generateSimulatedCandles(currentPrice, timeframe);
+        const simulated = generateSimulatedCandles(currentPrice, timeframe, symbolName);
         setCandleData(simulated);
       }
       setLoading(false);
