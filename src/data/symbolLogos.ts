@@ -336,7 +336,7 @@ const TV_SLUGS: Record<string, string> = {
   KARSN: "karsan",
   KARTN: "kartonsan",
   KLRHO: "kaleseramik",
-  KLSER: "kaleseramik",
+  KLSER: "kale-seramik",
   KMPUR: "kimpur",
   KONYA: "konya-cimento",
   KUYAS: "ku-yatas",
