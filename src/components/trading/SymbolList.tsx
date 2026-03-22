@@ -81,7 +81,7 @@ export function SymbolList({ symbols, loading, onSelectSymbol }: SymbolListProps
     });
 
   return (
-    <div className="flex flex-col h-[calc(100vh-3.5rem)] animate-slide-up">
+    <div className="flex flex-col h-full animate-slide-up">
       <div className="p-3 border-b border-border space-y-2">
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
