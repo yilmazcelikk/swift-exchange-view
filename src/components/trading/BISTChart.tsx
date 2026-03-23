@@ -55,6 +55,8 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
     return price.toLocaleString("tr-TR", { minimumFractionDigits: 2 });
   };
 
+  const isSimulatedRef = useRef(false);
+
   useEffect(() => {
     const loadCandles = async () => {
       setLoading(true);
@@ -67,6 +69,7 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
         .limit(500);
 
       if (data && data.length > 0) {
+        isSimulatedRef.current = false;
         setCandleData(data.map(c => ({
           time: c.bucket_time,
           open: Number(c.open),
@@ -76,6 +79,7 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
           volume: Number(c.volume),
         })));
       } else {
+        isSimulatedRef.current = true;
         const simulated = generateSimulatedCandles(currentPrice, timeframe, symbolName);
         setCandleData(simulated);
       }

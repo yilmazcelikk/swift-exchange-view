@@ -199,7 +199,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
   };
 
   return (
-    <div className="border-t border-border bg-card p-3 space-y-3 overflow-y-auto flex-1 md:flex-none md:overflow-visible">
+    <div className="border-t border-border bg-card p-3 space-y-3 overflow-y-auto shrink-0" style={{ overscrollBehavior: 'contain' }}>
       {!currentMarketStatus.isOpen && (
         <div className="text-center py-1.5 px-3 rounded-lg bg-muted text-muted-foreground text-xs font-medium">
           Piyasa kapalı
