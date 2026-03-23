@@ -128,6 +128,20 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
     return () => { supabase.removeChannel(channel); };
   }, [symbolId, timeframe, currentPrice]);
 
+  // Keep last candle in sync with live price
+  useEffect(() => {
+    if (candleData.length === 0 || !currentPrice) return;
+    setCandleData(prev => {
+      const updated = [...prev];
+      const last = { ...updated[updated.length - 1] };
+      last.close = currentPrice;
+      last.high = Math.max(last.high, currentPrice);
+      last.low = Math.min(last.low, currentPrice);
+      updated[updated.length - 1] = last;
+      return updated;
+    });
+  }, [currentPrice]);
+
   const totalCandles = candleData.length;
   const maxOffset = Math.max(0, totalCandles - chartVisibleCount);
   const clampedOffset = Math.min(Math.max(0, chartOffset), maxOffset);
