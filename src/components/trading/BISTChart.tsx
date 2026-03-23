@@ -55,6 +55,8 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
     return price.toLocaleString("tr-TR", { minimumFractionDigits: 2 });
   };
 
+  const isSimulatedRef = useRef(false);
+
   useEffect(() => {
     const loadCandles = async () => {
       setLoading(true);
@@ -67,6 +69,7 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
         .limit(500);
 
       if (data && data.length > 0) {
+        isSimulatedRef.current = false;
         setCandleData(data.map(c => ({
           time: c.bucket_time,
           open: Number(c.open),
@@ -76,6 +79,7 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
           volume: Number(c.volume),
         })));
       } else {
+        isSimulatedRef.current = true;
         const simulated = generateSimulatedCandles(currentPrice, timeframe, symbolName);
         setCandleData(simulated);
       }
@@ -123,6 +127,20 @@ export const BISTChart = memo(({ symbolId, symbolName, currentPrice, isPositive,
 
     return () => { supabase.removeChannel(channel); };
   }, [symbolId, timeframe, currentPrice]);
+
+  // Keep last candle in sync with live price
+  useEffect(() => {
+    if (candleData.length === 0 || !currentPrice) return;
+    setCandleData(prev => {
+      const updated = [...prev];
+      const last = { ...updated[updated.length - 1] };
+      last.close = currentPrice;
+      last.high = Math.max(last.high, currentPrice);
+      last.low = Math.min(last.low, currentPrice);
+      updated[updated.length - 1] = last;
+      return updated;
+    });
+  }, [currentPrice]);
 
   const totalCandles = candleData.length;
   const maxOffset = Math.max(0, totalCandles - chartVisibleCount);
