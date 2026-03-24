@@ -459,4 +459,4 @@ const Finance = () => {
   );
 };
 
-export default Finance;
+export default memo(Finance);
