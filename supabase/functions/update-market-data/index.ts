@@ -438,13 +438,13 @@ function inferCategory(tvTicker: string): string {
   return "index";
 }
 
-async function fetchTradingViewData(symbols: string[]): Promise<Record<string, any>> {
-  const tvSymbols = symbols.map(s => TV_SYMBOL_MAP[s]).filter(Boolean);
+async function fetchTradingViewData(symbols: string[], tvMap: Record<string, string>): Promise<Record<string, any>> {
+  const tvSymbols = symbols.map(s => tvMap[s]).filter(Boolean);
   if (tvSymbols.length === 0) return {};
 
   const results: Record<string, any> = {};
   const reverseMap: Record<string, string> = {};
-  for (const [dbName, tvName] of Object.entries(TV_SYMBOL_MAP)) {
+  for (const [dbName, tvName] of Object.entries(tvMap)) {
     reverseMap[tvName] = dbName;
   }
 
