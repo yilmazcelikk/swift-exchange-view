@@ -619,7 +619,7 @@ Deno.serve(async (req) => {
     const updateRows = Object.entries(tvData).map(([name, values]) => ({
       name,
       display_name: DISPLAY_NAMES[name] || name,
-      category: inferCategory(TV_SYMBOL_MAP[name]),
+      category: inferCategory(dynamicTvMap[name] || `BIST:${name}`),
       is_active: true,
       current_price: values.current_price,
       change_percent: values.change_percent,
