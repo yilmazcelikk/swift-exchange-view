@@ -611,7 +611,7 @@ Deno.serve(async (req) => {
     console.log(`Updating ${namesToUpdate.length} symbols (of ${filteredSymbols.length} market-open, ${Object.keys(dynamicTvMap).length} total)`);
 
     // Step 3: Fetch price data from TradingView (only active symbols)
-    const tvData = await fetchTradingViewData(namesToUpdate);
+    const tvData = await fetchTradingViewData(namesToUpdate, dynamicTvMap);
     const updatedNames: string[] = [];
     const now = nowDate.toISOString();
 
@@ -619,7 +619,7 @@ Deno.serve(async (req) => {
     const updateRows = Object.entries(tvData).map(([name, values]) => ({
       name,
       display_name: DISPLAY_NAMES[name] || name,
-      category: inferCategory(TV_SYMBOL_MAP[name]),
+      category: inferCategory(dynamicTvMap[name] || `BIST:${name}`),
       is_active: true,
       current_price: values.current_price,
       change_percent: values.change_percent,
@@ -649,20 +649,8 @@ Deno.serve(async (req) => {
 
     // Step 5: Orphan cleanup — only every 10 minutes to save queries
     let deletedCount = 0;
-    if (minute % 10 === 0) {
-      const validNames = Object.keys(TV_SYMBOL_MAP);
-      const { data: allDbSymbols } = await supabase.from("symbols").select("name");
-      const orphanedNames = (allDbSymbols || [])
-        .map(s => s.name)
-        .filter(n => !validNames.includes(n));
-      if (orphanedNames.length > 0) {
-        const { count } = await supabase
-          .from("symbols")
-          .delete({ count: "exact" })
-          .in("name", orphanedNames);
-        deletedCount = count || 0;
-      }
-    }
+    // Orphan cleanup disabled — symbols are managed via DB migrations and admin panel.
+    // Dynamic BIST symbols added to DB should not be deleted.
 
     // Step 6: Check SL/TP levels and auto-close orders
     let slTpClosed = 0;
