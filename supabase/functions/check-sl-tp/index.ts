@@ -147,13 +147,25 @@ function calculateNetMarginForOrders(orders: { symbol_name: string; lots: number
 
 function calculateSwap(symbolName: string, lots: number, daysHeld: number): number {
   const name = symbolName.toUpperCase();
-  let rate = -0.5;
+  let rate = -0.02; // default for stocks (BIST etc.)
   if (["XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD"].includes(name)) rate = -1.2;
   else if (["USOIL", "UKOIL", "NATGAS"].includes(name)) rate = -0.8;
   else if (["BTCUSD", "ETHUSD", "BNBUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "ADAUSD"].includes(name)) rate = -2.0;
   else if (["US500", "US30", "US100", "USTEC", "DE40", "UK100", "JP225"].includes(name)) rate = -0.6;
+  else if (name.endsWith("USD") && !name.includes("/")) rate = -0.3;
+  else if (FOREX_PAIRS_SET.has(name)) rate = -0.5;
   return rate * lots * daysHeld;
 }
+
+const FOREX_PAIRS_SET = new Set([
+  "EURUSD","GBPUSD","USDJPY","USDCHF","AUDUSD","NZDUSD","USDCAD",
+  "EURGBP","EURJPY","GBPJPY","AUDCAD","AUDCHF","AUDJPY","AUDNZD",
+  "CADCHF","CADJPY","CHFJPY","EURAUD","EURCAD","EURCHF","EURHUF",
+  "EURNOK","EURNZD","EURSEK","EURTRY","GBPAUD","GBPCAD","GBPCHF",
+  "GBPNZD","NZDCAD","NZDCHF","NZDJPY","TRYJPY","USDCLP","USDCNH",
+  "USDCOP","USDHKD","USDHUF","USDINR","USDKRW","USDMXN","USDNOK",
+  "USDPLN","USDSEK","USDTRY","USDTWD","USDZAR","ZARJPY",
+]);
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
