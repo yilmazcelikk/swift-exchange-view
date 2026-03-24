@@ -574,24 +574,32 @@ Deno.serve(async (req) => {
       if (upsertErr) console.error("Symbol upsert error:", upsertErr.message);
     }
 
-    // Step 2: Fetch ALL active symbols from DB that have a TV mapping
-    // FILTER by market hours — skip symbols whose market is closed
+    // Step 2: Fetch ALL active symbols from DB
+    // BIST stocks are handled dynamically — no need for TV_SYMBOL_MAP entry
     const { data: activeDbSymbols } = await supabase
       .from("symbols")
-      .select("name, updated_at")
+      .select("name, exchange, category, updated_at")
       .eq("is_active", true);
 
+    // Build dynamic TV ticker map: BIST stocks auto-map to BIST:{NAME}
+    const dynamicTvMap: Record<string, string> = { ...TV_SYMBOL_MAP };
+    for (const s of (activeDbSymbols || [])) {
+      if (s.exchange === "BIST" && !dynamicTvMap[s.name]) {
+        dynamicTvMap[s.name] = `BIST:${s.name}`;
+      }
+    }
+
     const filteredSymbols = (activeDbSymbols || []).filter((s) => {
-      const tvTicker = TV_SYMBOL_MAP[s.name];
+      const tvTicker = dynamicTvMap[s.name];
       if (!tvTicker) return false;
-      if (force) return true; // Force mode updates everything
-      const cat = inferCategory(tvTicker);
-      const exchange = getSymbolExchange(tvTicker);
+      if (force) return true;
+      const cat = s.category || inferCategory(tvTicker);
+      const exchange = s.exchange || getSymbolExchange(tvTicker);
       return isMarketOpen(cat, exchange, nowDate);
     });
 
     // Update oldest symbols first; cap per run to keep function under timeout.
-    const MAX_SYMBOLS_PER_RUN = force ? 500 : 200;
+    const MAX_SYMBOLS_PER_RUN = force ? 500 : 300;
     const namesToUpdate = filteredSymbols
       .sort((a, b) => {
         const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0;
@@ -600,7 +608,7 @@ Deno.serve(async (req) => {
       })
       .slice(0, MAX_SYMBOLS_PER_RUN)
       .map((s) => s.name);
-    console.log(`Updating ${namesToUpdate.length} symbols (of ${filteredSymbols.length} market-open, ${Object.keys(TV_SYMBOL_MAP).length} total)`);
+    console.log(`Updating ${namesToUpdate.length} symbols (of ${filteredSymbols.length} market-open, ${Object.keys(dynamicTvMap).length} total)`);
 
     // Step 3: Fetch price data from TradingView (only active symbols)
     const tvData = await fetchTradingViewData(namesToUpdate);
