@@ -338,7 +338,7 @@ const AdminPositions = () => {
     } else {
       toast.success(`${editingOrder.symbol_name} pozisyon güncellendi`);
       setEditingOrder(null);
-      loadOrders();
+      await loadOrders(); // await to ensure state is fresh before any close action
     }
     setEditSaving(false);
   };
