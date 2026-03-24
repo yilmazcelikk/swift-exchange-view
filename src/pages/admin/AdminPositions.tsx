@@ -736,8 +736,7 @@ const AdminPositions = () => {
               <div className="space-y-2">
                 <p>Bu pozisyonu kapatmak istediğinize emin misiniz?</p>
                 {closingOrder && (() => {
-                  const commission = calculateCommission(closingOrder.symbol_name, closingOrder.lots, closingOrder.current_price);
-                  const netPnl = closingOrder.pnl - commission;
+                  const { commission, swap, daysHeld, netPnl } = getCloseBreakdown(closingOrder);
                   return (
                     <div className="bg-muted/50 rounded-lg p-3 space-y-1.5 text-sm">
                       <div className="flex justify-between">
@@ -768,12 +767,21 @@ const AdminPositions = () => {
                         <span className="text-muted-foreground">Komisyon</span>
                         <span className="font-mono text-sell">-{formatUsd(commission)}</span>
                       </div>
+                      {swap !== 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Swap ({daysHeld} gün)</span>
+                          <span className="font-mono text-sell">{formatUsd(swap)}</span>
+                        </div>
+                      )}
                       <div className="flex justify-between border-t border-border pt-1.5 mt-1">
                         <span className="text-muted-foreground font-semibold">Net K/Z</span>
                         <span className={`font-mono font-bold ${netPnl >= 0 ? "text-buy" : "text-sell"}`}>
                           {netPnl >= 0 ? "+" : ""}{formatUsd(netPnl)} USD
                         </span>
                       </div>
+                      <p className="text-[10px] text-muted-foreground italic mt-1">
+                        * Net K/Z, kapatma anında DB'den güncel verilerle yeniden hesaplanır.
+                      </p>
                     </div>
                   );
                 })()}
