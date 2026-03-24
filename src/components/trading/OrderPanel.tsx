@@ -291,6 +291,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       {orderType === "market" ? (
         <div className="grid grid-cols-2 gap-2">
           <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
+
             <span className="text-xs opacity-80">SAT</span>
             <span className="text-sm font-mono">{formatPrice(bid)}</span>
           </Button>
