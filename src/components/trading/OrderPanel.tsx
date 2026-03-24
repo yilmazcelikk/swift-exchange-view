@@ -303,7 +303,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       ) : (
         <Button
           onClick={() => handleOrder(orderType.startsWith("buy") ? "buy" : "sell")}
-          disabled={orderLoading || !currentMarketStatus.isOpen || !targetPrice}
+          disabled={orderLoading || (!currentMarketStatus.isOpen && symbol.exchange !== "BIST") || !targetPrice}
           className={`w-full h-12 font-bold disabled:opacity-50 ${orderType.startsWith("buy") ? "bg-buy hover:bg-buy/90 text-buy-foreground" : "bg-sell hover:bg-sell/90 text-sell-foreground"}`}
         >
           {orderType === "buy_limit" ? "BUY LIMIT" : orderType === "sell_limit" ? "SELL LIMIT" : orderType === "buy_stop" ? "BUY STOP" : "SELL STOP"}
