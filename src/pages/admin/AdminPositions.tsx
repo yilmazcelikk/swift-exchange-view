@@ -238,15 +238,65 @@ const AdminPositions = () => {
       .slice(0, 5);
   }, [orders]);
 
-  const closePosition = async (order: OrderRow) => {
-    const commission = calculateCommission(order.symbol_name, order.lots, order.current_price);
-    const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
-    const swap = calculateSwap(order.symbol_name, order.lots, daysHeld);
+  // Helper to compute close breakdown for an order
+  const getCloseBreakdown = (order: OrderRow) => {
+    const userProfile = profiles.get(order.user_id);
+    const userAccountType = userProfile ? "standard" : "standard"; // will be fetched async
+    const commission = calculateCommission(order.symbol_name, order.lots, order.current_price, userAccountType);
+    const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
+    const swap = daysHeld > 0 ? calculateSwap(order.symbol_name, order.lots, daysHeld) : 0;
     const netPnl = order.pnl - commission + swap;
+    return { commission, swap, daysHeld, netPnl };
+  };
+
+  const closePosition = async (order: OrderRow) => {
+    // Fetch fresh order data from DB to avoid stale state after edits
+    const { data: freshOrder } = await supabase
+      .from("orders")
+      .select("*")
+      .eq("id", order.id)
+      .eq("status", "open")
+      .single();
+
+    if (!freshOrder) {
+      toast.error("Pozisyon bulunamadı veya zaten kapatılmış.");
+      setClosingOrder(null);
+      return;
+    }
+
+    // Get live price from symbols
+    const { data: symData } = await supabase
+      .from("symbols")
+      .select("current_price")
+      .eq("id", freshOrder.symbol_id)
+      .single();
+    const livePrice = symData ? Number(symData.current_price) : Number(freshOrder.current_price);
+
+    // Recalculate PnL with fresh data
+    const freshPnl = calculatePnl(
+      freshOrder.symbol_name,
+      freshOrder.type as "buy" | "sell",
+      Number(freshOrder.lots),
+      Number(freshOrder.entry_price),
+      livePrice
+    );
+
+    // Fetch user's actual account type for correct commission
+    const { data: userProf } = await supabase
+      .from("profiles")
+      .select("account_type")
+      .eq("user_id", freshOrder.user_id)
+      .single();
+    const accountType = userProf?.account_type || "standard";
+
+    const commission = calculateCommission(freshOrder.symbol_name, Number(freshOrder.lots), livePrice, accountType);
+    const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(freshOrder.created_at).getTime()) / 86400000));
+    const swap = daysHeld > 0 ? calculateSwap(freshOrder.symbol_name, Number(freshOrder.lots), daysHeld) : 0;
+    const netPnl = freshPnl - commission + swap;
 
     const { data, error } = await supabase.rpc("close_position", {
       p_order_id: order.id,
-      p_close_price: order.current_price,
+      p_close_price: livePrice,
       p_net_pnl: netPnl,
       p_swap: swap,
       p_close_reason: "admin_close",
@@ -257,7 +307,7 @@ const AdminPositions = () => {
     } else if (data && typeof data === "object" && !(data as any).success) {
       toast.error("Pozisyon kapatılamadı: " + ((data as any).reason || "Bilinmeyen hata"));
     } else {
-      toast.success(`${order.symbol_name} pozisyon kapatıldı (K/Z: ${formatUsd(netPnl)})`);
+      toast.success(`${freshOrder.symbol_name} pozisyon kapatıldı (K/Z: ${formatUsd(netPnl)})`);
       setClosingOrder(null);
       loadOrders();
     }
