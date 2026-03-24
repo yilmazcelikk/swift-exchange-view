@@ -64,7 +64,9 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
     }
 
     const status = getMarketStatus(symbol.name, symbol.category, symbol.exchange);
-    if (!status.isOpen) {
+    // BIST stocks allow pending orders even when market is closed
+    const isBIST = symbol.exchange === "BIST";
+    if (!status.isOpen && !(isPending && isBIST)) {
       toast.error("Piyasa kapalı. Bu enstrümanda şu an işlem açılamaz.", { description: status.scheduleLabel });
       return;
     }
