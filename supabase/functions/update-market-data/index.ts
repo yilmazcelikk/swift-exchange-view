@@ -542,9 +542,9 @@ Deno.serve(async (req) => {
     const nowDate = new Date();
     const minute = nowDate.getMinutes();
 
-    // Prevent overlapping heavy runs from saturating DB under frequent schedulers.
-    const RUN_EVERY_MINUTES = 5;
-    if (!force && minute % RUN_EVERY_MINUTES !== 0) {
+    // Scheduler throttle (1 = every run). Keep configurable for future tuning.
+    const RUN_EVERY_MINUTES = 1;
+    if (!force && RUN_EVERY_MINUTES > 1 && minute % RUN_EVERY_MINUTES !== 0) {
       return new Response(
         JSON.stringify({
           success: true,
@@ -598,8 +598,8 @@ Deno.serve(async (req) => {
       return isMarketOpen(cat, exchange, nowDate);
     });
 
-    // Update oldest symbols first; cap per run to keep function under timeout.
-    const MAX_SYMBOLS_PER_RUN = force ? 500 : 300;
+    // Update all market-open symbols each run (kept with a high safety cap).
+    const MAX_SYMBOLS_PER_RUN = force ? 5000 : 2000;
     const namesToUpdate = filteredSymbols
       .sort((a, b) => {
         const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0;
