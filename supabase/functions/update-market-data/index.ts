@@ -591,7 +591,7 @@ Deno.serve(async (req) => {
     });
 
     // Update oldest symbols first; cap per run to keep function under timeout.
-    const MAX_SYMBOLS_PER_RUN = force ? 120 : 40;
+    const MAX_SYMBOLS_PER_RUN = force ? 500 : 200;
     const namesToUpdate = filteredSymbols
       .sort((a, b) => {
         const ta = a.updated_at ? new Date(a.updated_at).getTime() : 0;
