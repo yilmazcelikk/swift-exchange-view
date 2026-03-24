@@ -76,17 +76,43 @@ const Trading = () => {
     // Realtime subscription for live price updates in symbol list
     const channel = supabase
       .channel('trading-symbols')
-      .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'symbols' }, (payload) => {
-        if (payload.new) {
-          const updated = payload.new as any;
-          setSymbols(prev => prev.map(s => s.id === updated.id ? { ...s, ...updated } as DBSymbol : s));
-          setSelectedSymbol(prev => prev && prev.id === updated.id ? { ...prev, ...updated } as DBSymbol : prev);
-        }
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'symbols' }, (payload) => {
+        if (payload.eventType === 'DELETE') return;
+
+        const updated = payload.new as any;
+        if (!updated?.id) return;
+
+        setSymbols((prev) => {
+          const exists = prev.some((s) => s.id === updated.id);
+          if (!exists) return [...prev, updated as DBSymbol];
+          return prev.map((s) => (s.id === updated.id ? { ...s, ...updated } as DBSymbol : s));
+        });
+
+        setSelectedSymbol((prev) =>
+          prev && prev.id === updated.id ? { ...prev, ...updated } as DBSymbol : prev
+        );
       })
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
+
+  // Fallback refresh for cases where realtime drops
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      loadSymbols();
+    }, 15000);
+
+    const onFocus = () => loadSymbols();
+    window.addEventListener("focus", onFocus);
+
+    return () => {
+      window.clearInterval(intervalId);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, [selectedSymbol?.id]);
 
   const loadSymbols = async () => {
     const { data, error } = await supabase
