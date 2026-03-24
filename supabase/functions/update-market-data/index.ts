@@ -611,7 +611,7 @@ Deno.serve(async (req) => {
     console.log(`Updating ${namesToUpdate.length} symbols (of ${filteredSymbols.length} market-open, ${Object.keys(dynamicTvMap).length} total)`);
 
     // Step 3: Fetch price data from TradingView (only active symbols)
-    const tvData = await fetchTradingViewData(namesToUpdate);
+    const tvData = await fetchTradingViewData(namesToUpdate, dynamicTvMap);
     const updatedNames: string[] = [];
     const now = nowDate.toISOString();
 
