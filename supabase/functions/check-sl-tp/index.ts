@@ -311,8 +311,8 @@ Deno.serve(async (req) => {
         const accountType = userProfile?.account_type || "standard";
         const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), closePrice);
         const commission = calculateCommission(order.symbol_name, Number(order.lots), closePrice, accountType);
-        const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
-        const swap = calculateSwap(order.symbol_name, Number(order.lots), daysHeld);
+        const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
+        const swap = daysHeld > 0 ? calculateSwap(order.symbol_name, Number(order.lots), daysHeld) : 0;
         const netPnl = pnl - commission + swap;
 
         const { data: closedRows, error: closeErr } = await supabase
