@@ -446,8 +446,8 @@ Deno.serve(async (req) => {
 
           for (const item of orderPnls) {
             const commission = calculateCommission(item.order.symbol_name, Number(item.order.lots), item.currentPrice, profile.account_type || "standard");
-            const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(item.order.created_at).getTime()) / 86400000));
-            const swap = calculateSwap(item.order.symbol_name, Number(item.order.lots), daysHeld);
+            const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(item.order.created_at).getTime()) / 86400000));
+            const swap = daysHeld > 0 ? calculateSwap(item.order.symbol_name, Number(item.order.lots), daysHeld) : 0;
             const netPnl = item.pnl - commission + swap;
 
             const { data: closedRows, error: closeErr } = await supabase
