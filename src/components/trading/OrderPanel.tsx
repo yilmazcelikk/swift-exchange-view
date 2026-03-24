@@ -64,7 +64,9 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
     }
 
     const status = getMarketStatus(symbol.name, symbol.category, symbol.exchange);
-    if (!status.isOpen) {
+    // BIST stocks allow pending orders even when market is closed
+    const isBIST = symbol.exchange === "BIST";
+    if (!status.isOpen && !(isPending && isBIST)) {
       toast.error("Piyasa kapalı. Bu enstrümanda şu an işlem açılamaz.", { description: status.scheduleLabel });
       return;
     }
@@ -289,6 +291,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       {orderType === "market" ? (
         <div className="grid grid-cols-2 gap-2">
           <Button onClick={() => handleOrder("sell")} disabled={orderLoading || !currentMarketStatus.isOpen} className="h-14 bg-sell hover:bg-sell/90 text-sell-foreground font-bold disabled:opacity-50 flex flex-col items-center gap-0.5">
+
             <span className="text-xs opacity-80">SAT</span>
             <span className="text-sm font-mono">{formatPrice(bid)}</span>
           </Button>
@@ -300,7 +303,7 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
       ) : (
         <Button
           onClick={() => handleOrder(orderType.startsWith("buy") ? "buy" : "sell")}
-          disabled={orderLoading || !currentMarketStatus.isOpen || !targetPrice}
+          disabled={orderLoading || (!currentMarketStatus.isOpen && symbol.exchange !== "BIST") || !targetPrice}
           className={`w-full h-12 font-bold disabled:opacity-50 ${orderType.startsWith("buy") ? "bg-buy hover:bg-buy/90 text-buy-foreground" : "bg-sell hover:bg-sell/90 text-sell-foreground"}`}
         >
           {orderType === "buy_limit" ? "BUY LIMIT" : orderType === "sell_limit" ? "SELL LIMIT" : orderType === "buy_stop" ? "BUY STOP" : "SELL STOP"}
