@@ -211,7 +211,7 @@ export function calculateSwap(
   daysHeld: number,
 ): number {
   const name = symbolName.toUpperCase();
-  let ratePerLotPerDay = -0.5; // default forex
+  let ratePerLotPerDay = -0.02; // default for stocks (BIST etc.) - very low
 
   // Precious metals
   if (['XAUUSD', 'XAGUSD', 'XPTUSD', 'XPDUSD'].some(s => name === s)) ratePerLotPerDay = -1.2;
@@ -222,9 +222,22 @@ export function calculateSwap(
   else if (name.endsWith('USD') && !name.includes('/')) ratePerLotPerDay = -0.3;
   // Indices
   else if (['US500', 'US30', 'USTEC', 'DE40', 'UK100', 'JP225'].some(s => name === s)) ratePerLotPerDay = -0.6;
+  // Forex pairs
+  else if (FOREX_SET.has(name)) ratePerLotPerDay = -0.5;
 
   return ratePerLotPerDay * lots * daysHeld;
 }
+
+// Shared forex set for swap detection
+const FOREX_SET = new Set([
+  'EURUSD','GBPUSD','USDJPY','USDCHF','AUDUSD','NZDUSD','USDCAD',
+  'EURGBP','EURJPY','GBPJPY','AUDCAD','AUDCHF','AUDJPY','AUDNZD',
+  'CADCHF','CADJPY','CHFJPY','EURAUD','EURCAD','EURCHF','EURHUF',
+  'EURNOK','EURNZD','EURSEK','EURTRY','GBPAUD','GBPCAD','GBPCHF',
+  'GBPNZD','NZDCAD','NZDCHF','NZDJPY','TRYJPY','USDCLP','USDCNH',
+  'USDCOP','USDHKD','USDHUF','USDINR','USDKRW','USDMXN','USDNOK',
+  'USDPLN','USDSEK','USDTRY','USDTWD','USDZAR','ZARJPY',
+]);
 
 /**
  * Calculate commission for closing a position
