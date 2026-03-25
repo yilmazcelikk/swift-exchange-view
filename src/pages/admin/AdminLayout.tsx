@@ -33,6 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface PendingCounts {
   finance: number;
   kyc: number;
+  pendingOrders: number;
 }
 
 const buildNavSections = (badges: PendingCounts) => [
@@ -45,7 +46,7 @@ const buildNavSections = (badges: PendingCounts) => [
   {
     title: "İŞLEM YÖNETİMİ",
     items: [
-      { key: "positions", label: "Pozisyonlar", icon: TrendingUp, badge: 0 },
+      { key: "positions", label: "Pozisyonlar", icon: TrendingUp, badge: badges.pendingOrders },
       { key: "risk", label: "Risk Yönetimi", icon: ShieldAlert, badge: 0 },
       { key: "products", label: "Ürünler", icon: ShoppingBag, badge: 0 },
     ],
@@ -83,15 +84,16 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ finance: 0, kyc: 0 });
+  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ finance: 0, kyc: 0, pendingOrders: 0 });
 
   useEffect(() => {
     const loadBadges = async () => {
-      const [financeRes, kycRes] = await Promise.all([
+      const [financeRes, kycRes, ordersRes] = await Promise.all([
         supabase.from("transactions").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("documents").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
       ]);
-      setPendingCounts({ finance: financeRes.count || 0, kyc: kycRes.count || 0 });
+      setPendingCounts({ finance: financeRes.count || 0, kyc: kycRes.count || 0, pendingOrders: ordersRes.count || 0 });
     };
     if (isAdmin) {
       loadBadges();
@@ -107,9 +109,15 @@ const AdminLayout = () => {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, () => loadBadges())
         .subscribe();
 
+      const ordChannel = supabase
+        .channel('admin-layout-order-badges')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadBadges())
+        .subscribe();
+
       return () => {
         supabase.removeChannel(txChannel);
         supabase.removeChannel(docChannel);
+        supabase.removeChannel(ordChannel);
       };
     }
   }, [isAdmin]);
