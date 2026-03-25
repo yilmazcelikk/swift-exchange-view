@@ -493,7 +493,7 @@ const AdminUsers = () => {
       const leverageRatio = parseInt(newPositionForm.leverage.split(":")[1] || "200", 10);
       const margin = calculateMargin(newPositionForm.symbol_name, lots, entryPrice, leverageRatio);
 
-      const { error } = await supabase.from("orders").insert({
+      const insertData: any = {
         user_id: selectedUser.user_id,
         symbol_id: sym.id,
         symbol_name: sym.name,
@@ -508,7 +508,11 @@ const AdminUsers = () => {
         status: "open",
         pnl: 0,
         swap: 0,
-      });
+      };
+      if (newPositionForm.created_at) {
+        insertData.created_at = new Date(newPositionForm.created_at).toISOString();
+      }
+      const { error } = await supabase.from("orders").insert(insertData);
 
       if (error) {
         toast.error("Pozisyon açılamadı: " + error.message);
