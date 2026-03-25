@@ -51,10 +51,10 @@ function getContractSize(symbolName: string): number {
   return 1;
 }
 
-function calculatePnl(symbolName: string, type: string, lots: number, entryPrice: number, currentPrice: number): number {
+function calculatePnl(symbolName: string, type: string, lots: number, entryPrice: number, currentPrice: number, currencyDivisor: number = 1): number {
   const contractSize = getContractSize(symbolName);
   const diff = type === "buy" ? currentPrice - entryPrice : entryPrice - currentPrice;
-  return diff * lots * contractSize;
+  return (diff * lots * contractSize) / (currencyDivisor > 0 ? currencyDivisor : 1);
 }
 
 const COMMISSION_RATES: Record<string, number> = {
