@@ -1,4 +1,4 @@
-import { memo, forwardRef, useRef, useEffect, useState } from "react";
+import { memo, forwardRef, useRef, useEffect, useState, useCallback } from "react";
 import { useAnimatedPrice } from "@/hooks/useAnimatedPrice";
 import { useLiveTickPrice } from "@/hooks/useLiveTickPrice";
 
@@ -24,7 +24,24 @@ const AnimatedPriceBase = forwardRef<HTMLSpanElement, AnimatedPriceProps>(functi
   { value, className = "", duration = 600, live = false, changePercent = 0, disableFlashColor = false, formatFn },
   ref,
 ) {
-  const liveValue = useLiveTickPrice(value, { enabled: live, changePercent });
+  const spanRef = useRef<HTMLSpanElement | null>(null);
+  const [isVisible, setIsVisible] = useState(true);
+
+  // Only run live tick when element is visible in viewport
+  useEffect(() => {
+    const el = spanRef.current;
+    if (!el || !live) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { rootMargin: "100px" }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [live]);
+
+  const effectiveLive = live && isVisible;
+  const liveValue = useLiveTickPrice(value, { enabled: effectiveLive, changePercent });
   const displayValue = useAnimatedPrice(liveValue, duration);
   const prevValueRef = useRef(liveValue);
   const [flash, setFlash] = useState<"up" | "down" | null>(null);
@@ -41,8 +58,14 @@ const AnimatedPriceBase = forwardRef<HTMLSpanElement, AnimatedPriceProps>(functi
 
   const flashClass = disableFlashColor ? "" : (flash === "up" ? "text-buy" : flash === "down" ? "text-sell" : "");
 
+  const setRefs = useCallback((node: HTMLSpanElement | null) => {
+    spanRef.current = node;
+    if (typeof ref === "function") ref(node);
+    else if (ref) (ref as React.MutableRefObject<HTMLSpanElement | null>).current = node;
+  }, [ref]);
+
   return (
-    <span ref={ref} className={`tabular-nums transition-colors duration-300 ${className} ${flashClass}`}>
+    <span ref={setRefs} className={`tabular-nums transition-colors duration-300 ${className} ${flashClass}`}>
       {(formatFn || formatAnimatedPrice)(displayValue)}
     </span>
   );
