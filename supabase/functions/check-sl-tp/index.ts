@@ -314,7 +314,8 @@ Deno.serve(async (req) => {
 
         const { data: userProfile } = await supabase.from("profiles").select("account_type").eq("user_id", order.user_id).single();
         const accountType = userProfile?.account_type || "standard";
-        const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), closePrice);
+        const bistDivisor = exchangeMap.get(order.symbol_id) === 'BIST' ? usdTryRate : 1;
+        const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), closePrice, bistDivisor);
         const commission = calculateCommission(order.symbol_name, Number(order.lots), closePrice, accountType);
         const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
         const swap = daysHeld > 0 ? calculateSwap(order.symbol_name, Number(order.lots), daysHeld) : 0;
