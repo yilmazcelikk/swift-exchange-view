@@ -407,8 +407,8 @@ const AdminPositions = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-lg md:text-2xl font-bold">Açık Pozisyonlar</h2>
-          <p className="text-sm text-muted-foreground">{orders.length} pozisyon • {uniqueUsers} kullanıcı • Canlı güncelleme</p>
+          <h2 className="text-lg md:text-2xl font-bold">Pozisyonlar</h2>
+          <p className="text-sm text-muted-foreground">{orders.length} açık • {pendingOrders.length} bekleyen • {uniqueUsers} kullanıcı</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -420,6 +420,22 @@ const AdminPositions = () => {
             Yenile
           </Button>
         </div>
+      </div>
+
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-muted/50 rounded-lg w-fit">
+        <button
+          onClick={() => setActiveTab("open")}
+          className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${activeTab === "open" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Açık Pozisyonlar ({orders.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${activeTab === "pending" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Bekleyen Emirler ({pendingOrders.length})
+        </button>
       </div>
 
       {/* Summary Cards - Enhanced */}
