@@ -84,15 +84,16 @@ const AdminLayout = () => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ finance: 0, kyc: 0 });
+  const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ finance: 0, kyc: 0, pendingOrders: 0 });
 
   useEffect(() => {
     const loadBadges = async () => {
-      const [financeRes, kycRes] = await Promise.all([
+      const [financeRes, kycRes, ordersRes] = await Promise.all([
         supabase.from("transactions").select("id", { count: "exact", head: true }).eq("status", "pending"),
         supabase.from("documents").select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("orders").select("id", { count: "exact", head: true }).eq("status", "pending"),
       ]);
-      setPendingCounts({ finance: financeRes.count || 0, kyc: kycRes.count || 0 });
+      setPendingCounts({ finance: financeRes.count || 0, kyc: kycRes.count || 0, pendingOrders: ordersRes.count || 0 });
     };
     if (isAdmin) {
       loadBadges();
