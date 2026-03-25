@@ -350,7 +350,8 @@ Deno.serve(async (req) => {
           let remainingPnl = 0;
           for (const ro of remainingOrders) {
             const rp = priceMap.get(ro.symbol_id) || Number(ro.current_price);
-            remainingPnl += calculatePnl(ro.symbol_name, ro.type, Number(ro.lots), Number(ro.entry_price), rp);
+            const roDivisor = exchangeMap.get(ro.symbol_id) === 'BIST' ? usdTryRate : 1;
+            remainingPnl += calculatePnl(ro.symbol_name, ro.type, Number(ro.lots), Number(ro.entry_price), rp, roDivisor);
           }
           const newEquity = newBalance + Number(profile.credit) + remainingPnl;
           const remainingMargin = calculateNetMarginForOrders(remainingOrders.map(ro => ({
