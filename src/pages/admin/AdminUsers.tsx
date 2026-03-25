@@ -107,6 +107,7 @@ const AdminUsers = () => {
     stop_loss: "",
     take_profit: "",
     leverage: "1:200",
+    created_at: "",
   });
   const [symbols, setSymbols] = useState<{ id: string; name: string; current_price: number }[]>([]);
   const [newPositionSaving, setNewPositionSaving] = useState(false);
