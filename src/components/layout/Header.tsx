@@ -20,6 +20,7 @@ interface OpenOrder {
 
 export function Header() {
   const { user } = useAuth();
+  const usdTryRate = useUsdTryRate();
   const [profile, setProfile] = useState<{ balance: number; equity: number; free_margin: number; credit: number } | null>(null);
   const [openOrders, setOpenOrders] = useState<OpenOrder[]>([]);
 
