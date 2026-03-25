@@ -777,6 +777,79 @@ const AdminPositions = () => {
           );
         })}
       </div>
+      </>)}
+
+      {/* Pending Orders Tab */}
+      {activeTab === "pending" && (
+        <div className="space-y-2">
+          {pendingOrders.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-8">Bekleyen emir bulunmuyor.</p>
+          ) : (
+            pendingOrders.map(order => {
+              const profile = profiles.get(order.user_id);
+              const orderTypeLabel = order.order_type === "buy_limit" ? "Buy Limit" : order.order_type === "sell_limit" ? "Sell Limit" : order.order_type === "buy_stop" ? "Buy Stop" : order.order_type === "sell_stop" ? "Sell Stop" : order.order_type;
+              const isBuyType = order.order_type.startsWith("buy");
+              return (
+                <Card key={order.id} className="bg-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold">{order.symbol_name}</span>
+                          <Badge className={`text-[10px] px-1.5 py-0 h-4 border-0 ${isBuyType ? "bg-buy/15 text-buy" : "bg-sell/15 text-sell"}`}>
+                            {orderTypeLabel}
+                          </Badge>
+                          <span className="text-xs text-foreground font-mono font-medium">{order.lots} lot</span>
+                          <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{order.leverage}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-muted-foreground">Hedef: <span className="font-mono text-foreground font-medium">{formatUsd(Number((order as any).target_price || 0))}</span></span>
+                          <span className="text-muted-foreground">Güncel: <span className="font-mono text-foreground">{formatUsd(order.current_price)}</span></span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                          <span>Kullanıcı: <span className="text-foreground font-medium">{getUserLabel(order.user_id)}</span></span>
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{formatDate(order.created_at)}</span>
+                          {order.stop_loss && <span className="text-sell font-mono">SL: {formatUsd(order.stop_loss)}</span>}
+                          {order.take_profit && <span className="text-buy font-mono">TP: {formatUsd(order.take_profit)}</span>}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-sell border-sell/30 hover:bg-sell/10 shrink-0"
+                        onClick={() => setCancellingOrder(order)}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" />
+                        İptal
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Cancel Pending Order Dialog */}
+      <AlertDialog open={!!cancellingOrder} onOpenChange={(open) => !open && setCancellingOrder(null)}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bekleyen Emri İptal Et</AlertDialogTitle>
+            <AlertDialogDescription>
+              {cancellingOrder && (
+                <span>{getUserLabel(cancellingOrder.user_id)} kullanıcısının <strong>{cancellingOrder.symbol_name}</strong> {cancellingOrder.order_type} emrini iptal etmek istediğinize emin misiniz?</span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction onClick={() => cancellingOrder && cancelPendingOrder(cancellingOrder)} className="bg-sell hover:bg-sell/90 text-sell-foreground">
+              Emri İptal Et
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Close dialog */}
       <AlertDialog open={!!closingOrder} onOpenChange={(open) => !open && setClosingOrder(null)}>
