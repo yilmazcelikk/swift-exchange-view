@@ -34,6 +34,7 @@ const Dashboard = () => {
   const [editTP, setEditTP] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0, leverage: "1:200", accountType: "standard" });
+  const usdTryRate = useUsdTryRate();
 
   const leverageRatio = parseInt(profile.leverage.split(":")[1] || "200", 10);
 
