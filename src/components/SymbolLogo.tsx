@@ -90,6 +90,7 @@ function preloadLogo(symbol: string, category?: string): Promise<string | null> 
   const promise = tryLoadUrls(urls).then(url => {
     logoCache.set(key, url);
     preloadPromises.delete(key);
+    persistCache();
     return url;
   });
   
