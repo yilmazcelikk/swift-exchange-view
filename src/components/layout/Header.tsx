@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculatePnl, calculateMargin } from "@/lib/trading";
 import { shouldSkipOrderRefetch } from "@/lib/realtime";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 
 interface OpenOrder {
   id: string;
@@ -14,10 +15,12 @@ interface OpenOrder {
   entry_price: number;
   current_price: number;
   leverage: string;
+  exchange: string | null;
 }
 
 export function Header() {
   const { user } = useAuth();
+  const usdTryRate = useUsdTryRate();
   const [profile, setProfile] = useState<{ balance: number; equity: number; free_margin: number; credit: number } | null>(null);
   const [openOrders, setOpenOrders] = useState<OpenOrder[]>([]);
 
@@ -35,10 +38,12 @@ export function Header() {
       if (data && data.length > 0) {
         const symbolIds = [...new Set(data.map(o => o.symbol_id).filter(Boolean))];
         let priceMap = new Map<string, number>();
+        let exchangeMap = new Map<string, string | null>();
 
         if (symbolIds.length > 0) {
-          const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
+          const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, exchange").in("id", symbolIds);
           priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+          exchangeMap = new Map((symbolsData ?? []).map(s => [s.id, s.exchange]));
         }
 
         setOpenOrders(data.map(o => ({
@@ -47,6 +52,7 @@ export function Header() {
           entry_price: Number(o.entry_price),
           current_price: priceMap.get(o.symbol_id) || Number(o.current_price),
           leverage: o.leverage || "1:200",
+          exchange: exchangeMap.get(o.symbol_id) || null,
         })));
       } else {
         setOpenOrders([]);
@@ -103,7 +109,8 @@ export function Header() {
     }
 
     const totalPnl = openOrders.reduce((sum, o) => {
-      return sum + calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, o.current_price);
+      const divisor = o.exchange === 'BIST' ? usdTryRate : 1;
+      return sum + calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, o.current_price, divisor);
     }, 0);
 
     const usedMargin = openOrders.reduce((sum, o) => {
@@ -114,7 +121,7 @@ export function Header() {
     const equity = profile.balance + profile.credit + totalPnl;
     const freeMargin = equity - usedMargin;
     return { dynamicEquity: equity, dynamicFreeMargin: freeMargin };
-  }, [profile, openOrders]);
+  }, [profile, openOrders, usdTryRate]);
 
   const stats = [
     { label: "Bakiye", value: `$${(profile?.balance ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },

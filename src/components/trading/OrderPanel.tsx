@@ -2,11 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, ChevronDown } from "lucide-react";
-import { getSpread as calcSpread, calculateMargin, calculateNetMargin, getContractSize } from "@/lib/trading";
+import { getSpread as calcSpread, calculateMargin, calculateNetMargin, getContractSize, calculatePnl } from "@/lib/trading";
 import { getMarketStatus } from "@/lib/marketHours";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 
 interface DBSymbol {
   id: string;
@@ -27,6 +28,7 @@ interface OrderPanelProps {
 
 export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice }: OrderPanelProps) {
   const navigate = useNavigate();
+  const usdTryRate = useUsdTryRate();
   const [lots, setLots] = useState(0.1);
   const [orderType, setOrderType] = useState<"market" | "buy_limit" | "sell_limit" | "buy_stop" | "sell_stop">("market");
   const [targetPrice, setTargetPrice] = useState("");
@@ -93,18 +95,18 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
     // Get live prices for open positions
     const openSymbolIds = [...new Set((openOrders || []).map((o: any) => o.symbol_id))];
     let livePriceMap: Record<string, number> = {};
+    let exchangeMap: Record<string, string | null> = {};
     if (openSymbolIds.length > 0) {
-      const { data: symData } = await supabase.from("symbols").select("id, current_price").in("id", openSymbolIds);
-      if (symData) symData.forEach((s: any) => { livePriceMap[s.id] = Number(s.current_price); });
+      const { data: symData } = await supabase.from("symbols").select("id, current_price, exchange").in("id", openSymbolIds);
+      if (symData) symData.forEach((s: any) => { livePriceMap[s.id] = Number(s.current_price); exchangeMap[s.id] = s.exchange; });
     }
 
-    // Calculate unrealized PnL
+    // Calculate unrealized PnL with currency conversion for BIST stocks
     let unrealizedPnl = 0;
     for (const o of (openOrders || []) as any[]) {
-      const cs = getContractSize(o.symbol_name);
       const liveP = livePriceMap[o.symbol_id] || Number(o.entry_price);
-      const diff = o.type === "buy" ? liveP - Number(o.entry_price) : Number(o.entry_price) - liveP;
-      unrealizedPnl += diff * Number(o.lots) * cs;
+      const divisor = exchangeMap[o.symbol_id] === 'BIST' ? usdTryRate : 1;
+      unrealizedPnl += calculatePnl(o.symbol_name, o.type, Number(o.lots), Number(o.entry_price), liveP, divisor);
     }
 
     // Calculate net margin with hedge netting

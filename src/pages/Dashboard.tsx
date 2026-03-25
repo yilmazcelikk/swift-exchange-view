@@ -15,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission, calculateSwap, calculateNetMargin } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 import { getMarketStatus } from "@/lib/marketHours";
 import { shouldSkipOrderRefetch } from "@/lib/realtime";
 
@@ -32,6 +33,7 @@ const Dashboard = () => {
   const [editTP, setEditTP] = useState("");
   const [editSaving, setEditSaving] = useState(false);
   const [profile, setProfile] = useState({ balance: 0, equity: 0, freeMargin: 0, credit: 0, leverage: "1:200", accountType: "standard" });
+  const usdTryRate = useUsdTryRate();
 
   const leverageRatio = parseInt(profile.leverage.split(":")[1] || "200", 10);
 
@@ -169,10 +171,11 @@ const Dashboard = () => {
   const liveOrders = useMemo(() => {
     return openOrders.map(o => {
       const livePrice = livePrices[o.symbolId] ?? o.currentPrice;
-      const pnl = calculatePnl(o.symbolName, o.type, o.lots, o.entryPrice, livePrice);
+      const divisor = symbolExchanges[o.symbolId] === 'BIST' ? usdTryRate : 1;
+      const pnl = calculatePnl(o.symbolName, o.type, o.lots, o.entryPrice, livePrice, divisor);
       return { ...o, currentPrice: livePrice, pnl };
     });
-  }, [openOrders, livePrices]);
+  }, [openOrders, livePrices, usdTryRate, symbolExchanges]);
 
   const totalOpenPnl = liveOrders.reduce((sum, o) => sum + o.pnl, 0);
   const dynamicEquity = profile.balance + profile.credit + totalOpenPnl;

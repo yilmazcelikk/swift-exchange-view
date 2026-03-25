@@ -51,10 +51,10 @@ function getContractSize(symbolName: string): number {
   return 1;
 }
 
-function calculatePnl(symbolName: string, type: string, lots: number, entryPrice: number, currentPrice: number): number {
+function calculatePnl(symbolName: string, type: string, lots: number, entryPrice: number, currentPrice: number, currencyDivisor: number = 1): number {
   const contractSize = getContractSize(symbolName);
   const diff = type === "buy" ? currentPrice - entryPrice : entryPrice - currentPrice;
-  return diff * lots * contractSize;
+  return (diff * lots * contractSize) / (currencyDivisor > 0 ? currencyDivisor : 1);
 }
 
 const COMMISSION_RATES: Record<string, number> = {
@@ -195,9 +195,14 @@ Deno.serve(async (req) => {
     // Get current prices (only needed when there are orders)
     const { data: symbols } = await supabase
       .from("symbols")
-      .select("id, current_price, name");
+      .select("id, current_price, name, exchange");
     const priceMap = new Map(symbols?.map(s => [s.id, Number(s.current_price)]) || []);
     const nameMap = new Map(symbols?.map(s => [s.id, s.name]) || []);
+    const exchangeMap = new Map(symbols?.map(s => [s.id, s.exchange]) || []);
+
+    // Get USDTRY rate for BIST stock PnL conversion
+    const usdTrySymbol = symbols?.find(s => s.name === "USDTRY");
+    const usdTryRate = usdTrySymbol && Number(usdTrySymbol.current_price) > 0 ? Number(usdTrySymbol.current_price) : 38;
 
     let closedCount = 0;
     let stopOutClosedCount = 0;
@@ -309,7 +314,8 @@ Deno.serve(async (req) => {
 
         const { data: userProfile } = await supabase.from("profiles").select("account_type").eq("user_id", order.user_id).single();
         const accountType = userProfile?.account_type || "standard";
-        const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), closePrice);
+        const bistDivisor = exchangeMap.get(order.symbol_id) === 'BIST' ? usdTryRate : 1;
+        const pnl = calculatePnl(order.symbol_name, type, Number(order.lots), Number(order.entry_price), closePrice, bistDivisor);
         const commission = calculateCommission(order.symbol_name, Number(order.lots), closePrice, accountType);
         const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(order.created_at).getTime()) / 86400000));
         const swap = daysHeld > 0 ? calculateSwap(order.symbol_name, Number(order.lots), daysHeld) : 0;
@@ -344,7 +350,8 @@ Deno.serve(async (req) => {
           let remainingPnl = 0;
           for (const ro of remainingOrders) {
             const rp = priceMap.get(ro.symbol_id) || Number(ro.current_price);
-            remainingPnl += calculatePnl(ro.symbol_name, ro.type, Number(ro.lots), Number(ro.entry_price), rp);
+            const roDivisor = exchangeMap.get(ro.symbol_id) === 'BIST' ? usdTryRate : 1;
+            remainingPnl += calculatePnl(ro.symbol_name, ro.type, Number(ro.lots), Number(ro.entry_price), rp, roDivisor);
           }
           const newEquity = newBalance + Number(profile.credit) + remainingPnl;
           const remainingMargin = calculateNetMarginForOrders(remainingOrders.map(ro => ({
@@ -391,7 +398,8 @@ Deno.serve(async (req) => {
 
         for (const order of orders) {
           const cp = priceMap.get(order.symbol_id) || Number(order.current_price);
-          const pnl = calculatePnl(order.symbol_name, order.type, Number(order.lots), Number(order.entry_price), cp);
+          const orderDivisor = exchangeMap.get(order.symbol_id) === 'BIST' ? usdTryRate : 1;
+          const pnl = calculatePnl(order.symbol_name, order.type, Number(order.lots), Number(order.entry_price), cp, orderDivisor);
           const oLev = parseInt((order.leverage || "1:200").split(":")[1] || "200", 10);
           const margin = calculateMargin(order.symbol_name, Number(order.lots), Number(order.entry_price), oLev);
           totalPnl += pnl;

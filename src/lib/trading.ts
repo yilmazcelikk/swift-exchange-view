@@ -57,12 +57,13 @@ export function calculatePnl(
   lots: number,
   entryPrice: number,
   currentPrice: number,
+  currencyDivisor: number = 1,
 ): number {
   const contractSize = getContractSize(symbolName);
   const priceDiff = type === 'buy'
     ? currentPrice - entryPrice
     : entryPrice - currentPrice;
-  return priceDiff * lots * contractSize;
+  return (priceDiff * lots * contractSize) / (currencyDivisor > 0 ? currencyDivisor : 1);
 }
 
 /**
