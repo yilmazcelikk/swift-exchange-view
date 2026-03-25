@@ -96,18 +96,18 @@ export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice 
     // Get live prices for open positions
     const openSymbolIds = [...new Set((openOrders || []).map((o: any) => o.symbol_id))];
     let livePriceMap: Record<string, number> = {};
+    let exchangeMap: Record<string, string | null> = {};
     if (openSymbolIds.length > 0) {
-      const { data: symData } = await supabase.from("symbols").select("id, current_price").in("id", openSymbolIds);
-      if (symData) symData.forEach((s: any) => { livePriceMap[s.id] = Number(s.current_price); });
+      const { data: symData } = await supabase.from("symbols").select("id, current_price, exchange").in("id", openSymbolIds);
+      if (symData) symData.forEach((s: any) => { livePriceMap[s.id] = Number(s.current_price); exchangeMap[s.id] = s.exchange; });
     }
 
-    // Calculate unrealized PnL
+    // Calculate unrealized PnL with currency conversion for BIST stocks
     let unrealizedPnl = 0;
     for (const o of (openOrders || []) as any[]) {
-      const cs = getContractSize(o.symbol_name);
       const liveP = livePriceMap[o.symbol_id] || Number(o.entry_price);
-      const diff = o.type === "buy" ? liveP - Number(o.entry_price) : Number(o.entry_price) - liveP;
-      unrealizedPnl += diff * Number(o.lots) * cs;
+      const divisor = exchangeMap[o.symbol_id] === 'BIST' ? usdTryRate : 1;
+      unrealizedPnl += calculatePnl(o.symbol_name, o.type, Number(o.lots), Number(o.entry_price), liveP, divisor);
     }
 
     // Calculate net margin with hedge netting
