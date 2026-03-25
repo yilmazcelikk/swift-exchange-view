@@ -48,10 +48,29 @@ function getInitials(s: string): string {
   return s.replace(/(USD[T]?|EUR|GBP|JPY|TRY)$/i, "").slice(0, 2).toUpperCase();
 }
 
-// Global cache: symbol -> resolved URL or null (failed all)
+// Persistent cache backed by localStorage
+const CACHE_KEY = "symbol_logo_cache_v1";
 const logoCache = new Map<string, string | null>();
-// Global in-flight preloads
 const preloadPromises = new Map<string, Promise<string | null>>();
+
+// Load persisted cache on startup
+try {
+  const stored = localStorage.getItem(CACHE_KEY);
+  if (stored) {
+    const parsed = JSON.parse(stored) as Record<string, string | null>;
+    for (const [k, v] of Object.entries(parsed)) {
+      logoCache.set(k, v);
+    }
+  }
+} catch {}
+
+function persistCache() {
+  try {
+    const obj: Record<string, string | null> = {};
+    logoCache.forEach((v, k) => { obj[k] = v; });
+    localStorage.setItem(CACHE_KEY, JSON.stringify(obj));
+  } catch {}
+}
 
 function preloadLogo(symbol: string, category?: string): Promise<string | null> {
   const key = `${symbol}|${category || ""}`;
@@ -71,6 +90,7 @@ function preloadLogo(symbol: string, category?: string): Promise<string | null> 
   const promise = tryLoadUrls(urls).then(url => {
     logoCache.set(key, url);
     preloadPromises.delete(key);
+    persistCache();
     return url;
   });
   
