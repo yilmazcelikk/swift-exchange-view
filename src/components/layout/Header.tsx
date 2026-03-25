@@ -121,7 +121,7 @@ export function Header() {
     const equity = profile.balance + profile.credit + totalPnl;
     const freeMargin = equity - usedMargin;
     return { dynamicEquity: equity, dynamicFreeMargin: freeMargin };
-  }, [profile, openOrders]);
+  }, [profile, openOrders, usdTryRate]);
 
   const stats = [
     { label: "Bakiye", value: `$${(profile?.balance ?? 0).toLocaleString('tr-TR', { minimumFractionDigits: 2 })}` },
