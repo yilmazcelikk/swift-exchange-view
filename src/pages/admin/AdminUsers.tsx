@@ -107,6 +107,7 @@ const AdminUsers = () => {
     stop_loss: "",
     take_profit: "",
     leverage: "1:200",
+    created_at: "",
   });
   const [symbols, setSymbols] = useState<{ id: string; name: string; current_price: number }[]>([]);
   const [newPositionSaving, setNewPositionSaving] = useState(false);
@@ -473,6 +474,7 @@ const AdminUsers = () => {
       stop_loss: "",
       take_profit: "",
       leverage: selectedUser.leverage || "1:200",
+      created_at: "",
     });
     setShowNewPosition(true);
   };
@@ -492,7 +494,7 @@ const AdminUsers = () => {
       const leverageRatio = parseInt(newPositionForm.leverage.split(":")[1] || "200", 10);
       const margin = calculateMargin(newPositionForm.symbol_name, lots, entryPrice, leverageRatio);
 
-      const { error } = await supabase.from("orders").insert({
+      const insertData: any = {
         user_id: selectedUser.user_id,
         symbol_id: sym.id,
         symbol_name: sym.name,
@@ -507,7 +509,11 @@ const AdminUsers = () => {
         status: "open",
         pnl: 0,
         swap: 0,
-      });
+      };
+      if (newPositionForm.created_at) {
+        insertData.created_at = new Date(newPositionForm.created_at).toISOString();
+      }
+      const { error } = await supabase.from("orders").insert(insertData);
 
       if (error) {
         toast.error("Pozisyon açılamadı: " + error.message);
@@ -1349,7 +1355,17 @@ const AdminUsers = () => {
               </Select>
             </div>
 
-            {/* Margin Info */}
+            {/* Backdated Date */}
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Açılış Tarihi (opsiyonel)</label>
+              <Input
+                type="datetime-local"
+                value={newPositionForm.created_at}
+                onChange={(e) => setNewPositionForm(prev => ({ ...prev, created_at: e.target.value }))}
+                className="bg-muted/50 h-9 text-sm"
+              />
+              <p className="text-[9px] text-muted-foreground mt-1">Boş bırakılırsa şu anki tarih kullanılır</p>
+            </div>
             {(() => {
               const lots = parseFloat(newPositionForm.lots) || 0;
               const price = parseFloat(newPositionForm.entry_price) || 0;

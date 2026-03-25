@@ -52,8 +52,11 @@ interface UserProfile {
 
 const AdminPositions = () => {
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [pendingOrders, setPendingOrders] = useState<OrderRow[]>([]);
+  const [activeTab, setActiveTab] = useState<"open" | "pending">("open");
   const [profiles, setProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [closingOrder, setClosingOrder] = useState<OrderRow | null>(null);
+  const [cancellingOrder, setCancellingOrder] = useState<OrderRow | null>(null);
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
   const [editEntry, setEditEntry] = useState("");
   const [editSL, setEditSL] = useState("");
@@ -113,14 +116,44 @@ const AdminPositions = () => {
     }
   }, []);
 
+  const loadPendingOrders = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) { console.error("loadPendingOrders error:", error); return; }
+      setPendingOrders(
+        (data || []).map((o) => ({
+          ...o, lots: Number(o.lots), entry_price: Number(o.entry_price),
+          current_price: Number(o.current_price), pnl: 0, swap: Number(o.swap || 0),
+        }))
+      );
+    } catch (err) {
+      console.error("loadPendingOrders unexpected error:", err);
+    }
+  }, []);
+
+  const cancelPendingOrder = async (order: OrderRow) => {
+    const { error } = await supabase.from("orders").delete().eq("id", order.id).eq("status", "pending");
+    if (error) {
+      toast.error("Emir iptal edilemedi: " + error.message);
+    } else {
+      toast.success(`${order.symbol_name} bekleyen emir iptal edildi`);
+      setCancellingOrder(null);
+      loadPendingOrders();
+    }
+  };
+
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      await Promise.all([loadOrders(), loadProfiles()]);
+      await Promise.all([loadOrders(), loadPendingOrders(), loadProfiles()]);
     } finally {
       setLoading(false);
     }
-  }, [loadOrders, loadProfiles]);
+  }, [loadOrders, loadPendingOrders, loadProfiles]);
 
   useEffect(() => {
     void loadAll();
@@ -130,6 +163,7 @@ const AdminPositions = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
         if (shouldSkipOrderRefetch(payload as any)) return;
         void loadOrders();
+        void loadPendingOrders();
       })
       .subscribe();
 
@@ -373,8 +407,8 @@ const AdminPositions = () => {
       {/* Header */}
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <h2 className="text-lg md:text-2xl font-bold">Açık Pozisyonlar</h2>
-          <p className="text-sm text-muted-foreground">{orders.length} pozisyon • {uniqueUsers} kullanıcı • Canlı güncelleme</p>
+          <h2 className="text-lg md:text-2xl font-bold">Pozisyonlar</h2>
+          <p className="text-sm text-muted-foreground">{orders.length} açık • {pendingOrders.length} bekleyen • {uniqueUsers} kullanıcı</p>
         </div>
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -388,6 +422,23 @@ const AdminPositions = () => {
         </div>
       </div>
 
+      {/* Tabs */}
+      <div className="flex gap-1 p-1 bg-muted/50 rounded-lg w-fit">
+        <button
+          onClick={() => setActiveTab("open")}
+          className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${activeTab === "open" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Açık Pozisyonlar ({orders.length})
+        </button>
+        <button
+          onClick={() => setActiveTab("pending")}
+          className={`px-4 py-1.5 rounded-md text-xs font-semibold transition-colors ${activeTab === "pending" ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
+        >
+          Bekleyen Emirler ({pendingOrders.length})
+        </button>
+      </div>
+
+      {activeTab === "open" && (<>
       {/* Summary Cards - Enhanced */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="bg-card border-border relative overflow-hidden">
@@ -726,6 +777,79 @@ const AdminPositions = () => {
           );
         })}
       </div>
+      </>)}
+
+      {/* Pending Orders Tab */}
+      {activeTab === "pending" && (
+        <div className="space-y-2">
+          {pendingOrders.length === 0 ? (
+            <p className="text-center text-sm text-muted-foreground py-8">Bekleyen emir bulunmuyor.</p>
+          ) : (
+            pendingOrders.map(order => {
+              const profile = profiles.get(order.user_id);
+              const orderTypeLabel = order.order_type === "buy_limit" ? "Buy Limit" : order.order_type === "sell_limit" ? "Sell Limit" : order.order_type === "buy_stop" ? "Buy Stop" : order.order_type === "sell_stop" ? "Sell Stop" : order.order_type;
+              const isBuyType = order.order_type.startsWith("buy");
+              return (
+                <Card key={order.id} className="bg-card border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-bold">{order.symbol_name}</span>
+                          <Badge className={`text-[10px] px-1.5 py-0 h-4 border-0 ${isBuyType ? "bg-buy/15 text-buy" : "bg-sell/15 text-sell"}`}>
+                            {orderTypeLabel}
+                          </Badge>
+                          <span className="text-xs text-foreground font-mono font-medium">{order.lots} lot</span>
+                          <span className="text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded">{order.leverage}</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-xs">
+                          <span className="text-muted-foreground">Hedef: <span className="font-mono text-foreground font-medium">{formatUsd(Number((order as any).target_price || 0))}</span></span>
+                          <span className="text-muted-foreground">Güncel: <span className="font-mono text-foreground">{formatUsd(order.current_price)}</span></span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                          <span>Kullanıcı: <span className="text-foreground font-medium">{getUserLabel(order.user_id)}</span></span>
+                          <span className="flex items-center gap-1"><Clock className="h-3 w-3" />{formatDate(order.created_at)}</span>
+                          {order.stop_loss && <span className="text-sell font-mono">SL: {formatUsd(order.stop_loss)}</span>}
+                          {order.take_profit && <span className="text-buy font-mono">TP: {formatUsd(order.take_profit)}</span>}
+                        </div>
+                      </div>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="text-sell border-sell/30 hover:bg-sell/10 shrink-0"
+                        onClick={() => setCancellingOrder(order)}
+                      >
+                        <X className="h-3.5 w-3.5 mr-1" />
+                        İptal
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
+      )}
+
+      {/* Cancel Pending Order Dialog */}
+      <AlertDialog open={!!cancellingOrder} onOpenChange={(open) => !open && setCancellingOrder(null)}>
+        <AlertDialogContent className="max-w-sm">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Bekleyen Emri İptal Et</AlertDialogTitle>
+            <AlertDialogDescription>
+              {cancellingOrder && (
+                <span>{getUserLabel(cancellingOrder.user_id)} kullanıcısının <strong>{cancellingOrder.symbol_name}</strong> {cancellingOrder.order_type} emrini iptal etmek istediğinize emin misiniz?</span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+            <AlertDialogAction onClick={() => cancellingOrder && cancelPendingOrder(cancellingOrder)} className="bg-sell hover:bg-sell/90 text-sell-foreground">
+              Emri İptal Et
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Close dialog */}
       <AlertDialog open={!!closingOrder} onOpenChange={(open) => !open && setClosingOrder(null)}>
