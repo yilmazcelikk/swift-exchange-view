@@ -64,6 +64,9 @@ const Trading = () => {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'symbols' }, (payload) => {
         if (payload.eventType === 'DELETE') return;
 
+        // Mark realtime as alive for smart fallback
+        (window as any).__tradingRealtimeAlive?.();
+
         const updated = payload.new as any;
         if (!updated?.id) return;
 
