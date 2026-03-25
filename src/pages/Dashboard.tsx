@@ -172,10 +172,11 @@ const Dashboard = () => {
   const liveOrders = useMemo(() => {
     return openOrders.map(o => {
       const livePrice = livePrices[o.symbolId] ?? o.currentPrice;
-      const pnl = calculatePnl(o.symbolName, o.type, o.lots, o.entryPrice, livePrice);
+      const divisor = symbolExchanges[o.symbolId] === 'BIST' ? usdTryRate : 1;
+      const pnl = calculatePnl(o.symbolName, o.type, o.lots, o.entryPrice, livePrice, divisor);
       return { ...o, currentPrice: livePrice, pnl };
     });
-  }, [openOrders, livePrices]);
+  }, [openOrders, livePrices, usdTryRate, symbolExchanges]);
 
   const totalOpenPnl = liveOrders.reduce((sum, o) => sum + o.pnl, 0);
   const dynamicEquity = profile.balance + profile.credit + totalOpenPnl;

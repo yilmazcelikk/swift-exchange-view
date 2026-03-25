@@ -40,9 +40,12 @@ export function Header() {
         let priceMap = new Map<string, number>();
 
         if (symbolIds.length > 0) {
-          const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
+          const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, exchange").in("id", symbolIds);
           priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+          exchangeMap = new Map((symbolsData ?? []).map(s => [s.id, s.exchange]));
         }
+
+        let exchangeMap = new Map<string, string | null>();
 
         setOpenOrders(data.map(o => ({
           ...o,
