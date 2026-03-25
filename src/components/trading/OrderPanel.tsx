@@ -29,6 +29,7 @@ interface OrderPanelProps {
 
 export function OrderPanel({ symbol, userId, leverage, accountType, formatPrice }: OrderPanelProps) {
   const navigate = useNavigate();
+  const usdTryRate = useUsdTryRate();
   const [lots, setLots] = useState(0.1);
   const [orderType, setOrderType] = useState<"market" | "buy_limit" | "sell_limit" | "buy_stop" | "sell_stop">("market");
   const [targetPrice, setTargetPrice] = useState("");
