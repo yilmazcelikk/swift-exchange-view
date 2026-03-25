@@ -109,9 +109,15 @@ const AdminLayout = () => {
         .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, () => loadBadges())
         .subscribe();
 
+      const ordChannel = supabase
+        .channel('admin-layout-order-badges')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadBadges())
+        .subscribe();
+
       return () => {
         supabase.removeChannel(txChannel);
         supabase.removeChannel(docChannel);
+        supabase.removeChannel(ordChannel);
       };
     }
   }, [isAdmin]);
