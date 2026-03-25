@@ -46,7 +46,7 @@ const buildNavSections = (badges: PendingCounts) => [
   {
     title: "İŞLEM YÖNETİMİ",
     items: [
-      { key: "positions", label: "Pozisyonlar", icon: TrendingUp, badge: 0 },
+      { key: "positions", label: "Pozisyonlar", icon: TrendingUp, badge: badges.pendingOrders },
       { key: "risk", label: "Risk Yönetimi", icon: ShieldAlert, badge: 0 },
       { key: "products", label: "Ürünler", icon: ShoppingBag, badge: 0 },
     ],
