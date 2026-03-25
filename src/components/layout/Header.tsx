@@ -109,7 +109,8 @@ export function Header() {
     }
 
     const totalPnl = openOrders.reduce((sum, o) => {
-      return sum + calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, o.current_price);
+      const divisor = o.exchange === 'BIST' ? usdTryRate : 1;
+      return sum + calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, o.current_price, divisor);
     }, 0);
 
     const usedMargin = openOrders.reduce((sum, o) => {
