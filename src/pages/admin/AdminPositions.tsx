@@ -163,6 +163,7 @@ const AdminPositions = () => {
       .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, (payload) => {
         if (shouldSkipOrderRefetch(payload as any)) return;
         void loadOrders();
+        void loadPendingOrders();
       })
       .subscribe();
 
