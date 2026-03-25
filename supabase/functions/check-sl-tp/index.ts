@@ -195,9 +195,14 @@ Deno.serve(async (req) => {
     // Get current prices (only needed when there are orders)
     const { data: symbols } = await supabase
       .from("symbols")
-      .select("id, current_price, name");
+      .select("id, current_price, name, exchange");
     const priceMap = new Map(symbols?.map(s => [s.id, Number(s.current_price)]) || []);
     const nameMap = new Map(symbols?.map(s => [s.id, s.name]) || []);
+    const exchangeMap = new Map(symbols?.map(s => [s.id, s.exchange]) || []);
+
+    // Get USDTRY rate for BIST stock PnL conversion
+    const usdTrySymbol = symbols?.find(s => s.name === "USDTRY");
+    const usdTryRate = usdTrySymbol && Number(usdTrySymbol.current_price) > 0 ? Number(usdTrySymbol.current_price) : 38;
 
     let closedCount = 0;
     let stopOutClosedCount = 0;
