@@ -438,6 +438,7 @@ const AdminPositions = () => {
         </button>
       </div>
 
+      {activeTab === "open" && (<>
       {/* Summary Cards - Enhanced */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <Card className="bg-card border-border relative overflow-hidden">
