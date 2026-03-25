@@ -15,6 +15,7 @@ interface OpenOrder {
   entry_price: number;
   current_price: number;
   leverage: string;
+  exchange: string | null;
 }
 
 export function Header() {
