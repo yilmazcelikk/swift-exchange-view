@@ -116,10 +116,40 @@ const AdminPositions = () => {
     }
   }, []);
 
+  const loadPendingOrders = useCallback(async () => {
+    try {
+      const { data, error } = await supabase
+        .from("orders")
+        .select("*")
+        .eq("status", "pending")
+        .order("created_at", { ascending: false });
+      if (error) { console.error("loadPendingOrders error:", error); return; }
+      setPendingOrders(
+        (data || []).map((o) => ({
+          ...o, lots: Number(o.lots), entry_price: Number(o.entry_price),
+          current_price: Number(o.current_price), pnl: 0, swap: Number(o.swap || 0),
+        }))
+      );
+    } catch (err) {
+      console.error("loadPendingOrders unexpected error:", err);
+    }
+  }, []);
+
+  const cancelPendingOrder = async (order: OrderRow) => {
+    const { error } = await supabase.from("orders").delete().eq("id", order.id).eq("status", "pending");
+    if (error) {
+      toast.error("Emir iptal edilemedi: " + error.message);
+    } else {
+      toast.success(`${order.symbol_name} bekleyen emir iptal edildi`);
+      setCancellingOrder(null);
+      loadPendingOrders();
+    }
+  };
+
   const loadAll = useCallback(async () => {
     setLoading(true);
     try {
-      await Promise.all([loadOrders(), loadProfiles()]);
+      await Promise.all([loadOrders(), loadPendingOrders(), loadProfiles()]);
     } finally {
       setLoading(false);
     }
