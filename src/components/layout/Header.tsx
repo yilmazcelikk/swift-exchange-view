@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculatePnl, calculateMargin } from "@/lib/trading";
 import { shouldSkipOrderRefetch } from "@/lib/realtime";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 
 interface OpenOrder {
   id: string;
