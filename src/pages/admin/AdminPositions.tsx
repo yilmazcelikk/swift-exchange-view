@@ -153,7 +153,7 @@ const AdminPositions = () => {
     } finally {
       setLoading(false);
     }
-  }, [loadOrders, loadProfiles]);
+  }, [loadOrders, loadPendingOrders, loadProfiles]);
 
   useEffect(() => {
     void loadAll();
