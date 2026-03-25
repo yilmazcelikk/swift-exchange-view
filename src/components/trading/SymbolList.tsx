@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Search, Gem, BarChart3, Bitcoin, Building2, Globe } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { AnimatedPrice } from "@/components/AnimatedPrice";
 import { SymbolLogo } from "@/components/SymbolLogo";
-import { resolveLogoUrl } from "@/data/symbolLogos";
 import { getMarketStatus } from "@/lib/marketHours";
 
 export interface DBSymbol {
@@ -39,46 +38,44 @@ export function SymbolList({ symbols, loading, onSelectSymbol }: SymbolListProps
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredSymbols = symbols
-    .filter((s) => {
-      const matchesCategory = selectedCategory === "all" || s.category === selectedCategory;
-      const matchesSearch =
-        !searchQuery ||
-        s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        s.display_name.toLowerCase().includes(searchQuery.toLowerCase());
-      return matchesCategory && matchesSearch;
-    })
-    .sort((a, b) => {
-      if (a.name === "BIMAS" && b.name !== "BIMAS") return 1;
-      if (b.name === "BIMAS" && a.name !== "BIMAS") return -1;
+  const filteredSymbols = useMemo(() => 
+    symbols
+      .filter((s) => {
+        const matchesCategory = selectedCategory === "all" || s.category === selectedCategory;
+        const matchesSearch =
+          !searchQuery ||
+          s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          s.display_name.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesCategory && matchesSearch;
+      })
+      .sort((a, b) => {
+        if (a.name === "BIMAS" && b.name !== "BIMAS") return 1;
+        if (b.name === "BIMAS" && a.name !== "BIMAS") return -1;
 
-      // "Tümü" sekmesinde: önce BIST hisseleri, sonra diğerleri
-      if (selectedCategory === "all") {
-        const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
-        const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
-        if (aIsBist !== bIsBist) return aIsBist - bIsBist;
-      }
+        if (selectedCategory === "all") {
+          const aIsBist = a.category === "stock" && a.exchange === "BIST" ? 0 : 1;
+          const bIsBist = b.category === "stock" && b.exchange === "BIST" ? 0 : 1;
+          if (aIsBist !== bIsBist) return aIsBist - bIsBist;
+        }
 
-      const aHasLogo = resolveLogoUrl(a.name, a.category) ? 0 : 1;
-      const bHasLogo = resolveLogoUrl(b.name, b.category) ? 0 : 1;
-      if (aHasLogo !== bHasLogo) return aHasLogo - bHasLogo;
-
-      if (selectedCategory === "stock") {
-        const aIsBist = a.exchange === "BIST" ? 0 : 1;
-        const bIsBist = b.exchange === "BIST" ? 0 : 1;
-        if (aIsBist !== bIsBist) return aIsBist - bIsBist;
-      }
-      if (selectedCategory === "all" || selectedCategory === "commodity") {
-        const COMMODITY_ORDER = ["XAUUSD", "XAGUSD"];
-        const aPri = COMMODITY_ORDER.indexOf(a.name);
-        const bPri = COMMODITY_ORDER.indexOf(b.name);
-        if (aPri !== bPri) return (aPri >= 0 ? aPri : 999) - (bPri >= 0 ? bPri : 999);
-      }
-      if ((selectedCategory === "crypto") || (selectedCategory === "all" && a.category === "crypto" && b.category === "crypto")) {
-        return (b.current_price || 0) - (a.current_price || 0);
-      }
-      return a.name.localeCompare(b.name);
-    });
+        if (selectedCategory === "stock") {
+          const aIsBist = a.exchange === "BIST" ? 0 : 1;
+          const bIsBist = b.exchange === "BIST" ? 0 : 1;
+          if (aIsBist !== bIsBist) return aIsBist - bIsBist;
+        }
+        if (selectedCategory === "all" || selectedCategory === "commodity") {
+          const COMMODITY_ORDER = ["XAUUSD", "XAGUSD"];
+          const aPri = COMMODITY_ORDER.indexOf(a.name);
+          const bPri = COMMODITY_ORDER.indexOf(b.name);
+          if (aPri !== bPri) return (aPri >= 0 ? aPri : 999) - (bPri >= 0 ? bPri : 999);
+        }
+        if ((selectedCategory === "crypto") || (selectedCategory === "all" && a.category === "crypto" && b.category === "crypto")) {
+          return (b.current_price || 0) - (a.current_price || 0);
+        }
+        return a.name.localeCompare(b.name);
+      }),
+    [symbols, selectedCategory, searchQuery]
+  );
 
   return (
     <div className="flex flex-col h-full animate-slide-up">
