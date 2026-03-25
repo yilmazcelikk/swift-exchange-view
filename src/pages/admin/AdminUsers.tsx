@@ -474,6 +474,7 @@ const AdminUsers = () => {
       stop_loss: "",
       take_profit: "",
       leverage: selectedUser.leverage || "1:200",
+      created_at: "",
     });
     setShowNewPosition(true);
   };
