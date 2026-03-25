@@ -33,6 +33,7 @@ import { supabase } from "@/integrations/supabase/client";
 interface PendingCounts {
   finance: number;
   kyc: number;
+  pendingOrders: number;
 }
 
 const buildNavSections = (badges: PendingCounts) => [
