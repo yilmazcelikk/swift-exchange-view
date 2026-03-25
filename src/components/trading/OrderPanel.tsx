@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Minus, Plus, ChevronDown } from "lucide-react";
-import { getSpread as calcSpread, calculateMargin, calculateNetMargin, getContractSize } from "@/lib/trading";
+import { getSpread as calcSpread, calculateMargin, calculateNetMargin, getContractSize, calculatePnl } from "@/lib/trading";
 import { getMarketStatus } from "@/lib/marketHours";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 import { useNavigate } from "react-router-dom";
 
 interface DBSymbol {
