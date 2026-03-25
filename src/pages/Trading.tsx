@@ -11,22 +11,7 @@ import { TradingViewChart } from "@/components/trading/TradingViewChart";
 import { BISTChart } from "@/components/trading/BISTChart";
 import { OrderPanel } from "@/components/trading/OrderPanel";
 
-// BIST stock symbols that should use our custom chart
-const BIST_SYMBOLS = new Set([
-  "THYAO","GARAN","AKBNK","SISE","EREGL","KCHOL","SAHOL","TUPRS","YKBNK",
-  "ISCTR","ASELS","BIMAS","PGSUS","EKGYO","PETKM","TOASO","TAVHL","FROTO",
-  "TCELL","HALKB","VAKBN","DOHOL","ENKAI","ARCLK","VESTL","MGROS","SOKM",
-  "GUBRF","SASA","OYAKC","TTKOM","TSKB","AKSA","CIMSA","AEFES","ULKER",
-  "DOAS","OTKAR","ISGYO","KRDMD","GESAN","KONTR","ODAS","BRYAT","TTRAK",
-  "EUPWR","AGHOL","MAVI","LOGO","KOZAL","KOZAA","TKFEN","TURSG","SKBNK",
-  "ALBRK","CCOLA","ISMEN","HLGYO","ENJSA","AKENR","AKSEN","ECZYT","MPARK",
-  "ALARK","BERA",
-  // BIST 100 new (March 2026)
-  "DSTKF","ASTOR","TRALT","MAGEN","KTLEV","PASEU","TRMET","ANSGR","RALYH",
-  "ENERY","TABGD","BSOKE","DAPGM","CWENE","GENIL","GRSEL","TRENJ","IZENR",
-  "GRTHO","EFOR","GLRMK","FENER","OBAMS","GSRAY","TUKAS","KCAER","REEDR",
-  "PATEK","BALSU","TSPOR",
-]);
+// BIST detection uses exchange field from DB — no hardcoded list needed
 
 interface OpenPosition {
   id: string;
@@ -99,20 +84,36 @@ const Trading = () => {
     };
   }, []);
 
-  // Fallback refresh for cases where realtime drops
+  // Smart fallback: only poll when realtime might have dropped
   useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      loadSymbols();
+    let fallbackTimer: number | undefined;
+    let lastRealtimeAt = Date.now();
+
+    // Track realtime activity
+    const markAlive = () => { lastRealtimeAt = Date.now(); };
+    const checkInterval = window.setInterval(() => {
+      const silentMs = Date.now() - lastRealtimeAt;
+      // If no realtime update for 30s, do a fallback fetch
+      if (silentMs > 30000) {
+        loadSymbols();
+      }
     }, 15000);
 
-    const onFocus = () => loadSymbols();
+    const onFocus = () => {
+      // On focus, only fetch if stale (>10s since last realtime)
+      if (Date.now() - lastRealtimeAt > 10000) loadSymbols();
+    };
     window.addEventListener("focus", onFocus);
 
+    // Patch: listen to realtime to track activity
+    (window as any).__tradingRealtimeAlive = markAlive;
+
     return () => {
-      window.clearInterval(intervalId);
+      window.clearInterval(checkInterval);
       window.removeEventListener("focus", onFocus);
+      delete (window as any).__tradingRealtimeAlive;
     };
-  }, [selectedSymbol?.id]);
+  }, []);
 
   const loadSymbols = async () => {
     const { data, error } = await supabase
@@ -160,7 +161,7 @@ const Trading = () => {
   const price = selectedSymbol.current_price || 0;
   const currentMarketStatus = getMarketStatus(selectedSymbol.name, selectedSymbol.category, selectedSymbol.exchange);
   const isPositive = (selectedSymbol.change_percent ?? 0) >= 0;
-  const isBISTStock = BIST_SYMBOLS.has(selectedSymbol.name) || selectedSymbol.exchange === "BIST";
+  const isBISTStock = selectedSymbol.exchange === "BIST";
 
   return (
     <div className="flex flex-col h-full animate-slide-up overscroll-none" style={{ WebkitOverflowScrolling: 'touch', overscrollBehavior: 'contain' }}>
