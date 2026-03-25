@@ -18,7 +18,6 @@ import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
 import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 import { getMarketStatus } from "@/lib/marketHours";
 import { shouldSkipOrderRefetch } from "@/lib/realtime";
-import { shouldSkipOrderRefetch } from "@/lib/realtime";
 
 const Dashboard = () => {
   const { user: authUser } = useAuth();

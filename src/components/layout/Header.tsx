@@ -38,6 +38,7 @@ export function Header() {
       if (data && data.length > 0) {
         const symbolIds = [...new Set(data.map(o => o.symbol_id).filter(Boolean))];
         let priceMap = new Map<string, number>();
+        let exchangeMap = new Map<string, string | null>();
 
         if (symbolIds.length > 0) {
           const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, exchange").in("id", symbolIds);
@@ -45,14 +46,13 @@ export function Header() {
           exchangeMap = new Map((symbolsData ?? []).map(s => [s.id, s.exchange]));
         }
 
-        let exchangeMap = new Map<string, string | null>();
-
         setOpenOrders(data.map(o => ({
           ...o,
           lots: Number(o.lots),
           entry_price: Number(o.entry_price),
           current_price: priceMap.get(o.symbol_id) || Number(o.current_price),
           leverage: o.leverage || "1:200",
+          exchange: exchangeMap.get(o.symbol_id) || null,
         })));
       } else {
         setOpenOrders([]);
