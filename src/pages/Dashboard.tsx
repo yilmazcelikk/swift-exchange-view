@@ -15,7 +15,9 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission, calculateSwap, calculateNetMargin } from "@/lib/trading";
 import { useLiveSymbolPrices } from "@/hooks/useLiveSymbolPrices";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 import { getMarketStatus } from "@/lib/marketHours";
+import { shouldSkipOrderRefetch } from "@/lib/realtime";
 import { shouldSkipOrderRefetch } from "@/lib/realtime";
 
 const Dashboard = () => {
