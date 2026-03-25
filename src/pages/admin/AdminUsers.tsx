@@ -1355,7 +1355,17 @@ const AdminUsers = () => {
               </Select>
             </div>
 
-            {/* Margin Info */}
+            {/* Backdated Date */}
+            <div>
+              <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">Açılış Tarihi (opsiyonel)</label>
+              <Input
+                type="datetime-local"
+                value={newPositionForm.created_at}
+                onChange={(e) => setNewPositionForm(prev => ({ ...prev, created_at: e.target.value }))}
+                className="bg-muted/50 h-9 text-sm"
+              />
+              <p className="text-[9px] text-muted-foreground mt-1">Boş bırakılırsa şu anki tarih kullanılır</p>
+            </div>
             {(() => {
               const lots = parseFloat(newPositionForm.lots) || 0;
               const price = parseFloat(newPositionForm.entry_price) || 0;

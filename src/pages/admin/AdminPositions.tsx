@@ -52,8 +52,11 @@ interface UserProfile {
 
 const AdminPositions = () => {
   const [orders, setOrders] = useState<OrderRow[]>([]);
+  const [pendingOrders, setPendingOrders] = useState<OrderRow[]>([]);
+  const [activeTab, setActiveTab] = useState<"open" | "pending">("open");
   const [profiles, setProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [closingOrder, setClosingOrder] = useState<OrderRow | null>(null);
+  const [cancellingOrder, setCancellingOrder] = useState<OrderRow | null>(null);
   const [editingOrder, setEditingOrder] = useState<OrderRow | null>(null);
   const [editEntry, setEditEntry] = useState("");
   const [editSL, setEditSL] = useState("");
