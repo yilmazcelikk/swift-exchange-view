@@ -239,8 +239,8 @@ const Dashboard = () => {
 
     const liveOrder = liveOrders.find(o => o.id === order.id) || order;
     const commission = calculateCommission(liveOrder.symbolName, liveOrder.lots, liveOrder.currentPrice, profile.accountType);
-    const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 86400000));
-    const swap = calculateSwap(liveOrder.symbolName, liveOrder.lots, daysHeld);
+    const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(order.createdAt).getTime()) / 86400000));
+    const swap = daysHeld > 0 ? calculateSwap(liveOrder.symbolName, liveOrder.lots, daysHeld) : 0;
     const netPnl = liveOrder.pnl - commission + swap;
 
     // Use atomic DB function
@@ -309,8 +309,8 @@ const Dashboard = () => {
   const liveSelectedOrder = selectedOrder ? liveOrders.find(o => o.id === selectedOrder.id) || selectedOrder : null;
   const liveClosingOrder = closingOrder ? liveOrders.find(o => o.id === closingOrder.id) || closingOrder : null;
   const closingCommission = liveClosingOrder ? calculateCommission(liveClosingOrder.symbolName, liveClosingOrder.lots, liveClosingOrder.currentPrice, profile.accountType) : 0;
-  const closingDaysHeld = liveClosingOrder ? Math.max(1, Math.floor((Date.now() - new Date(liveClosingOrder.createdAt).getTime()) / 86400000)) : 0;
-  const closingSwap = liveClosingOrder ? calculateSwap(liveClosingOrder.symbolName, liveClosingOrder.lots, closingDaysHeld) : 0;
+  const closingDaysHeld = liveClosingOrder ? Math.max(0, Math.floor((Date.now() - new Date(liveClosingOrder.createdAt).getTime()) / 86400000)) : 0;
+  const closingSwap = liveClosingOrder && closingDaysHeld > 0 ? calculateSwap(liveClosingOrder.symbolName, liveClosingOrder.lots, closingDaysHeld) : 0;
   const closingNetPnl = liveClosingOrder ? liveClosingOrder.pnl - closingCommission + closingSwap : 0;
 
   const formatUsd = (v: number) => v.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
