@@ -69,6 +69,37 @@ const AdminPositions = () => {
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const usdTryRate = useUsdTryRate();
+  const safeUsdTryRate = usdTryRate > 0 ? usdTryRate : 1;
+
+  const resolveSymbolSnapshot = useCallback(async (symbolId: string, symbolName: string, fallbackPrice: number) => {
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+    if (uuidRegex.test(symbolId)) {
+      const { data: byId } = await supabase
+        .from("symbols")
+        .select("current_price, exchange")
+        .eq("id", symbolId)
+        .maybeSingle();
+
+      if (byId) {
+        return {
+          currentPrice: Number(byId.current_price ?? fallbackPrice),
+          exchange: byId.exchange,
+        };
+      }
+    }
+
+    const { data: byName } = await supabase
+      .from("symbols")
+      .select("current_price, exchange")
+      .eq("name", symbolName)
+      .maybeSingle();
+
+    return {
+      currentPrice: Number(byName?.current_price ?? fallbackPrice),
+      exchange: byName?.exchange ?? null,
+    };
+  }, []);
 
   const loadProfiles = useCallback(async () => {
     try {
@@ -111,7 +142,7 @@ const AdminPositions = () => {
       setOrders(
         data.map((o) => {
           const currentPrice = priceMap.get(o.symbol_id) ?? Number(o.current_price);
-          const divisor = exchangeMap.get(o.symbol_id) === 'BIST' ? usdTryRate : 1;
+          const divisor = exchangeMap.get(o.symbol_id) === 'BIST' ? safeUsdTryRate : 1;
           const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), currentPrice, divisor);
           return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl, swap: Number(o.swap || 0) };
         })
@@ -119,7 +150,7 @@ const AdminPositions = () => {
     } catch (err) {
       console.error("loadOrders unexpected error:", err);
     }
-  }, [usdTryRate]);
+  }, [safeUsdTryRate]);
 
   const loadPendingOrders = useCallback(async () => {
     try {
@@ -207,7 +238,8 @@ const AdminPositions = () => {
         const nextPrice = Number(updated.current_price);
         setOrders((prev) => prev.map((o) => {
           if (o.symbol_id !== updated.id) return o;
-          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, nextPrice);
+          const divisor = updated.exchange === "BIST" ? safeUsdTryRate : 1;
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, nextPrice, divisor);
           return { ...o, current_price: nextPrice, pnl };
         }));
       })
@@ -218,7 +250,7 @@ const AdminPositions = () => {
       supabase.removeChannel(profilesChannel);
       supabase.removeChannel(symbolsChannel);
     };
-  }, [loadAll, loadOrders, loadProfiles]);
+  }, [loadAll, loadOrders, loadProfiles, safeUsdTryRate]);
 
   const toggleUser = (userId: string) => {
     setExpandedUsers(prev => {
@@ -304,14 +336,14 @@ const AdminPositions = () => {
     }
 
     // Get live price and exchange from symbols
-    const { data: symData } = await supabase
-      .from("symbols")
-      .select("current_price, exchange")
-      .eq("id", freshOrder.symbol_id)
-      .single();
-    const livePrice = symData ? Number(symData.current_price) : Number(freshOrder.current_price);
-    const isBIST = symData?.exchange === 'BIST';
-    const bistDivisor = isBIST ? usdTryRate : 1;
+    const symbolSnapshot = await resolveSymbolSnapshot(
+      String(freshOrder.symbol_id),
+      freshOrder.symbol_name,
+      Number(freshOrder.current_price)
+    );
+    const livePrice = symbolSnapshot.currentPrice;
+    const isBIST = symbolSnapshot.exchange === 'BIST';
+    const bistDivisor = isBIST ? safeUsdTryRate : 1;
 
     // Recalculate PnL with fresh data
     const freshPnl = calculatePnl(
