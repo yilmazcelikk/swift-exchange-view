@@ -212,7 +212,7 @@ export function calculateSwap(
   daysHeld: number,
 ): number {
   const name = symbolName.toUpperCase();
-  let ratePerLotPerDay = -0.02; // default for stocks (BIST etc.) - very low
+  let ratePerLotPerDay = -0.0002; // default for stocks (BIST etc.) - very low per lot
 
   // Precious metals
   if (['XAUUSD', 'XAGUSD', 'XPTUSD', 'XPDUSD'].some(s => name === s)) ratePerLotPerDay = -1.2;

@@ -147,7 +147,7 @@ function calculateNetMarginForOrders(orders: { symbol_name: string; lots: number
 
 function calculateSwap(symbolName: string, lots: number, daysHeld: number): number {
   const name = symbolName.toUpperCase();
-  let rate = -0.02; // default for stocks (BIST etc.)
+  let rate = -0.0002; // default for stocks (BIST etc.) - very low per lot
   if (["XAUUSD", "XAGUSD", "XPTUSD", "XPDUSD"].includes(name)) rate = -1.2;
   else if (["USOIL", "UKOIL", "NATGAS"].includes(name)) rate = -0.8;
   else if (["BTCUSD", "ETHUSD", "BNBUSD", "SOLUSD", "XRPUSD", "DOGEUSD", "ADAUSD"].includes(name)) rate = -2.0;
