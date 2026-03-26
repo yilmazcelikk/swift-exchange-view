@@ -119,7 +119,7 @@ const AdminPositions = () => {
     } catch (err) {
       console.error("loadOrders unexpected error:", err);
     }
-  }, []);
+  }, [usdTryRate]);
 
   const loadPendingOrders = useCallback(async () => {
     try {
