@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { calculatePnl, calculateMargin, calculateCommission, calculateSwap, ACCOUNT_TYPE_LABELS } from "@/lib/trading";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -115,6 +116,7 @@ const AdminUsers = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const itemsPerPage = 25;
+  const usdTryRate = useUsdTryRate();
 
   useEffect(() => {
     loadProfiles(true);
@@ -140,18 +142,21 @@ const AdminUsers = () => {
         // Fetch live prices for symbols
         const symbolIds = [...new Set(ordersData.map(o => (o as any).symbol_id).filter(Boolean))];
         let priceMap = new Map<string, number>();
+        let exchangeMap = new Map<string, string | null>();
 
         if (symbolIds.length > 0) {
           const { data: symbolsData } = await supabase
             .from("symbols")
-            .select("id, current_price")
+            .select("id, current_price, exchange")
             .in("id", symbolIds);
           priceMap = new Map((symbolsData ?? []).map(s => [s.id, Number(s.current_price)]));
+          exchangeMap = new Map((symbolsData ?? []).map(s => [s.id, s.exchange]));
         }
 
         const enriched = ordersData.map(o => {
           const livePrice = priceMap.get((o as any).symbol_id) || Number(o.current_price);
-          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice);
+          const divisor = exchangeMap.get((o as any).symbol_id) === "BIST" ? (usdTryRate > 0 ? usdTryRate : 1) : 1;
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), livePrice, divisor);
           return { ...o, current_price: livePrice, pnl } as OrderRow;
         });
         setSelectedUserOrders(enriched);
@@ -162,7 +167,7 @@ const AdminUsers = () => {
       console.error("loadUserOrders error:", err);
     }
     setLoadingOrders(false);
-  }, []);
+  }, [usdTryRate]);
 
   // Real-time subscription for selected user's orders — instant updates, no polling
   useEffect(() => {
@@ -185,7 +190,8 @@ const AdminUsers = () => {
           const nextPrice = Number(updated.current_price);
           setSelectedUserOrders((prev) => prev.map((o) => {
             if (o.symbol_id !== updated.id) return o;
-            const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), nextPrice);
+            const divisor = updated.exchange === "BIST" ? (usdTryRate > 0 ? usdTryRate : 1) : 1;
+            const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), nextPrice, divisor);
             return { ...o, current_price: nextPrice, pnl };
           }));
         })
@@ -198,7 +204,7 @@ const AdminUsers = () => {
     } else {
       setSelectedUserOrders([]);
     }
-  }, [selectedUser, loadUserOrders]);
+  }, [selectedUser, loadUserOrders, usdTryRate]);
 
   // Real-time subscription for profiles list — instant updates, no polling
   useEffect(() => {
@@ -375,7 +381,6 @@ const AdminUsers = () => {
         lots: parseFloat(orderEditForm.lots) || editingOrder.lots,
         stop_loss: orderEditForm.stop_loss ? parseFloat(orderEditForm.stop_loss) : null,
         take_profit: orderEditForm.take_profit ? parseFloat(orderEditForm.take_profit) : null,
-        pnl: parseFloat(orderEditForm.pnl) || 0,
         type: orderEditForm.type,
       })
       .eq("id", editingOrder.id);
@@ -390,15 +395,47 @@ const AdminUsers = () => {
 
   const handleOrderClose = async () => {
     if (!editingOrder || !selectedUser) return;
-    const closePnl = parseFloat(orderEditForm.pnl) || 0;
-    const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price), selectedUser?.account_type || "standard");
-    const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(editingOrder.created_at).getTime()) / 86400000));
-    const swap = daysHeld > 0 ? calculateSwap(editingOrder.symbol_name, Number(editingOrder.lots), daysHeld) : 0;
-    const netPnl = closePnl - commission + swap;
+    const { data: freshOrder } = await supabase
+      .from("orders")
+      .select("id, user_id, symbol_id, symbol_name, type, lots, entry_price, current_price, created_at")
+      .eq("id", editingOrder.id)
+      .eq("status", "open")
+      .single();
+
+    if (!freshOrder) {
+      toast.error("Pozisyon bulunamadı veya zaten kapatılmış.");
+      return;
+    }
+
+    const { data: symbolData } = await supabase
+      .from("symbols")
+      .select("current_price, exchange")
+      .eq("id", freshOrder.symbol_id)
+      .single();
+
+    const livePrice = symbolData ? Number(symbolData.current_price) : Number(freshOrder.current_price);
+    const divisor = symbolData?.exchange === "BIST" ? (usdTryRate > 0 ? usdTryRate : 1) : 1;
+    const freshPnl = calculatePnl(
+      freshOrder.symbol_name,
+      freshOrder.type as "buy" | "sell",
+      Number(freshOrder.lots),
+      Number(freshOrder.entry_price),
+      livePrice,
+      divisor,
+    );
+    const commission = calculateCommission(
+      freshOrder.symbol_name,
+      Number(freshOrder.lots),
+      livePrice,
+      selectedUser?.account_type || "standard",
+    );
+    const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(freshOrder.created_at).getTime()) / 86400000));
+    const swap = daysHeld > 0 ? calculateSwap(freshOrder.symbol_name, Number(freshOrder.lots), daysHeld) : 0;
+    const netPnl = freshPnl - commission + swap;
 
     const { data, error } = await supabase.rpc("close_position", {
-      p_order_id: editingOrder.id,
-      p_close_price: Number(editingOrder.current_price),
+      p_order_id: freshOrder.id,
+      p_close_price: livePrice,
       p_net_pnl: netPnl,
       p_swap: swap,
       p_close_reason: "admin_close",
@@ -409,7 +446,7 @@ const AdminUsers = () => {
     } else if (data && typeof data === "object" && !(data as any).success) {
       toast.error("Kapatma başarısız: " + ((data as any).reason || "Bilinmeyen hata"));
     } else {
-      toast.success("Pozisyon kapatıldı");
+      toast.success(`Pozisyon kapatıldı (Net K/Z: ${netPnl.toLocaleString("tr-TR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} USD)`);
       setEditingOrder(null);
       loadUserOrders(selectedUser.user_id);
       loadProfiles();
