@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { calculatePnl, calculateMargin, calculateCommission, calculateSwap } from "@/lib/trading";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
@@ -67,6 +68,7 @@ const AdminPositions = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const usdTryRate = useUsdTryRate();
 
   const loadProfiles = useCallback(async () => {
     try {
@@ -95,26 +97,29 @@ const AdminPositions = () => {
 
       const symbolIds = [...new Set(data.map((o) => o.symbol_id).filter(Boolean))];
       let priceMap = new Map<string, number>();
+      let exchangeMap = new Map<string, string | null>();
 
       if (symbolIds.length > 0) {
         const { data: symbolsData } = await supabase
           .from("symbols")
-          .select("id, current_price")
+          .select("id, current_price, exchange")
           .in("id", symbolIds);
         priceMap = new Map((symbolsData ?? []).map((s) => [s.id, Number(s.current_price)]));
+        exchangeMap = new Map((symbolsData ?? []).map((s) => [s.id, s.exchange]));
       }
 
       setOrders(
         data.map((o) => {
           const currentPrice = priceMap.get(o.symbol_id) ?? Number(o.current_price);
-          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), currentPrice);
+          const divisor = exchangeMap.get(o.symbol_id) === 'BIST' ? usdTryRate : 1;
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), currentPrice, divisor);
           return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: currentPrice, pnl, swap: Number(o.swap || 0) };
         })
       );
     } catch (err) {
       console.error("loadOrders unexpected error:", err);
     }
-  }, []);
+  }, [usdTryRate]);
 
   const loadPendingOrders = useCallback(async () => {
     try {
@@ -298,13 +303,15 @@ const AdminPositions = () => {
       return;
     }
 
-    // Get live price from symbols
+    // Get live price and exchange from symbols
     const { data: symData } = await supabase
       .from("symbols")
-      .select("current_price")
+      .select("current_price, exchange")
       .eq("id", freshOrder.symbol_id)
       .single();
     const livePrice = symData ? Number(symData.current_price) : Number(freshOrder.current_price);
+    const isBIST = symData?.exchange === 'BIST';
+    const bistDivisor = isBIST ? usdTryRate : 1;
 
     // Recalculate PnL with fresh data
     const freshPnl = calculatePnl(
@@ -312,7 +319,8 @@ const AdminPositions = () => {
       freshOrder.type as "buy" | "sell",
       Number(freshOrder.lots),
       Number(freshOrder.entry_price),
-      livePrice
+      livePrice,
+      bistDivisor
     );
 
     // Fetch user's actual account type for correct commission
