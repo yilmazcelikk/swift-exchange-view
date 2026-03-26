@@ -392,8 +392,8 @@ const AdminUsers = () => {
     if (!editingOrder || !selectedUser) return;
     const closePnl = parseFloat(orderEditForm.pnl) || 0;
     const commission = calculateCommission(editingOrder.symbol_name, Number(editingOrder.lots), Number(editingOrder.current_price), selectedUser?.account_type || "standard");
-    const daysHeld = Math.max(1, Math.floor((Date.now() - new Date(editingOrder.created_at).getTime()) / 86400000));
-    const swap = calculateSwap(editingOrder.symbol_name, Number(editingOrder.lots), daysHeld);
+    const daysHeld = Math.max(0, Math.floor((Date.now() - new Date(editingOrder.created_at).getTime()) / 86400000));
+    const swap = daysHeld > 0 ? calculateSwap(editingOrder.symbol_name, Number(editingOrder.lots), daysHeld) : 0;
     const netPnl = closePnl - commission + swap;
 
     const { data, error } = await supabase.rpc("close_position", {
