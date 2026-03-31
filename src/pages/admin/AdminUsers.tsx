@@ -292,6 +292,7 @@ const AdminUsers = () => {
   const filteredProfiles = profiles.filter(
     (p) =>
       (p.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (p.email || "").toLowerCase().includes(search.toLowerCase()) ||
       p.user_id.toLowerCase().includes(search.toLowerCase()) ||
       String(p.meta_id).includes(search)
   );
