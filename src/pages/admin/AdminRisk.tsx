@@ -137,7 +137,8 @@ const AdminRisk = () => {
         const nextPrice = Number(updated.current_price);
         setOrders((prev) => prev.map((o) => {
           if (o.symbol_id !== updated.id) return o;
-          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, nextPrice);
+          const divisor = symbolExchanges.get(o.symbol_id) === 'BIST' ? safeUsdTryRate : 1;
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, nextPrice, divisor);
           return { ...o, current_price: nextPrice, pnl };
         }));
       })
