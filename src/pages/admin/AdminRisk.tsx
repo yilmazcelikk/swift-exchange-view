@@ -11,6 +11,7 @@ import {
   ArrowUpRight, ArrowDownRight, Eye,
 } from "lucide-react";
 import { calculatePnl, calculateMargin } from "@/lib/trading";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 import { isUpdateWithoutRowData, shouldSkipOrderRefetch } from "@/lib/realtime";
 
 interface OrderRow {
