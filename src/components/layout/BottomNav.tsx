@@ -11,7 +11,16 @@ const navItems = [
 
 export function BottomNav() {
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border will-change-transform" style={{ paddingBottom: 'var(--app-safe-bottom)', transform: 'translateZ(0)' }}>
+    <nav
+      className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-card border-t border-border"
+      style={{
+        paddingBottom: 'var(--app-safe-bottom)',
+        transform: 'translate3d(0, 0, 0)',
+        backfaceVisibility: 'hidden',
+        WebkitBackfaceVisibility: 'hidden',
+        isolation: 'isolate',
+      }}
+    >
       <div className="flex items-center justify-around h-14">
         {navItems.map((item) => (
           <NavLink
