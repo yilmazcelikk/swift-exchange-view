@@ -36,6 +36,7 @@ interface Profile {
   id: string;
   user_id: string;
   full_name: string | null;
+  email: string | null;
   phone: string | null;
   tc_identity: string | null;
   balance: number;
