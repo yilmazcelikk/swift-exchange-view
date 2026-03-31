@@ -142,7 +142,19 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
       }));
 
       const allActivities = [...txActivities, ...userActivities]
-        .sort((a, b) => 0) // keep order as-is (mixed)
+        .sort((a, b) => {
+          // Parse time ago back - newer items first
+          const parseTimeAgo = (t: string) => {
+            const num = parseInt(t);
+            if (t.includes('sn')) return num;
+            if (t.includes('dk')) return num * 60;
+            if (t.includes('sa')) return num * 3600;
+            if (t.includes('g')) return num * 86400;
+            return Infinity;
+          };
+          return parseTimeAgo(a.time) - parseTimeAgo(b.time);
+        })
+        .slice(0, 8);
         .slice(0, 8);
       setActivities(allActivities);
 
