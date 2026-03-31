@@ -207,6 +207,7 @@ export type Database = {
           country: string | null
           created_at: string
           credit: number
+          email: string | null
           equity: number
           free_margin: number
           full_name: string | null
@@ -231,6 +232,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           credit?: number
+          email?: string | null
           equity?: number
           free_margin?: number
           full_name?: string | null
@@ -255,6 +257,7 @@ export type Database = {
           country?: string | null
           created_at?: string
           credit?: number
+          email?: string | null
           equity?: number
           free_margin?: number
           full_name?: string | null
