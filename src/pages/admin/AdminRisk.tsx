@@ -11,6 +11,7 @@ import {
   ArrowUpRight, ArrowDownRight, Eye,
 } from "lucide-react";
 import { calculatePnl, calculateMargin } from "@/lib/trading";
+import { useUsdTryRate } from "@/hooks/useUsdTryRate";
 import { isUpdateWithoutRowData, shouldSkipOrderRefetch } from "@/lib/realtime";
 
 interface OrderRow {
@@ -40,8 +41,11 @@ interface UserProfile {
 const AdminRisk = () => {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [profiles, setProfiles] = useState<Map<string, UserProfile>>(new Map());
+  const [symbolExchanges, setSymbolExchanges] = useState<Map<string, string | null>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const usdTryRate = useUsdTryRate();
+  const safeUsdTryRate = usdTryRate > 0 ? usdTryRate : 1;
 
   const loadProfiles = useCallback(async () => {
     const { data } = await supabase.from("profiles").select("user_id, full_name, balance, credit, meta_id");
@@ -62,18 +66,24 @@ const AdminRisk = () => {
 
     const symbolIds = [...new Set(ordersRes.data.map((o: any) => o.symbol_id).filter(Boolean))];
     let priceMap = new Map<string, number>();
+    const exchMap = new Map<string, string | null>();
 
     if (symbolIds.length > 0) {
-      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price").in("id", symbolIds);
-      priceMap = new Map((symbolsData ?? []).map((s: any) => [s.id, Number(s.current_price)]));
+      const { data: symbolsData } = await supabase.from("symbols").select("id, current_price, exchange").in("id", symbolIds);
+      (symbolsData ?? []).forEach((s: any) => {
+        priceMap.set(s.id, Number(s.current_price));
+        exchMap.set(s.id, s.exchange);
+      });
     }
+    setSymbolExchanges(exchMap);
 
     setOrders(ordersRes.data.map((o: any) => {
       const cp = priceMap.get(o.symbol_id) ?? Number(o.current_price);
-      const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), cp);
+      const divisor = exchMap.get(o.symbol_id) === 'BIST' ? safeUsdTryRate : 1;
+      const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", Number(o.lots), Number(o.entry_price), cp, divisor);
       return { ...o, lots: Number(o.lots), entry_price: Number(o.entry_price), current_price: cp, pnl, swap: Number(o.swap || 0) };
     }));
-  }, []);
+  }, [safeUsdTryRate]);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -127,7 +137,8 @@ const AdminRisk = () => {
         const nextPrice = Number(updated.current_price);
         setOrders((prev) => prev.map((o) => {
           if (o.symbol_id !== updated.id) return o;
-          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, nextPrice);
+          const divisor = symbolExchanges.get(o.symbol_id) === 'BIST' ? safeUsdTryRate : 1;
+          const pnl = calculatePnl(o.symbol_name, o.type as "buy" | "sell", o.lots, o.entry_price, nextPrice, divisor);
           return { ...o, current_price: nextPrice, pnl };
         }));
       })

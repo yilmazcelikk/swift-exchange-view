@@ -42,7 +42,37 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
   const [loading, setLoading] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
 
-  useEffect(() => { loadStats(); }, []);
+  useEffect(() => {
+    loadStats();
+
+    // Realtime auto-refresh for dashboard stats
+    const txChannel = supabase
+      .channel('admin-dash-tx')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'transactions' }, () => loadStats())
+      .subscribe();
+
+    const profilesChannel = supabase
+      .channel('admin-dash-profiles')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, () => loadStats())
+      .subscribe();
+
+    const ordersChannel = supabase
+      .channel('admin-dash-orders')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'orders' }, () => loadStats())
+      .subscribe();
+
+    const docsChannel = supabase
+      .channel('admin-dash-docs')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'documents' }, () => loadStats())
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(txChannel);
+      supabase.removeChannel(profilesChannel);
+      supabase.removeChannel(ordersChannel);
+      supabase.removeChannel(docsChannel);
+    };
+  }, []);
 
   const loadStats = async () => {
     setLoading(true);
@@ -112,7 +142,18 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
       }));
 
       const allActivities = [...txActivities, ...userActivities]
-        .sort((a, b) => 0) // keep order as-is (mixed)
+        .sort((a, b) => {
+          // Parse time ago back - newer items first
+          const parseTimeAgo = (t: string) => {
+            const num = parseInt(t);
+            if (t.includes('sn')) return num;
+            if (t.includes('dk')) return num * 60;
+            if (t.includes('sa')) return num * 3600;
+            if (t.includes('g')) return num * 86400;
+            return Infinity;
+          };
+          return parseTimeAgo(a.time) - parseTimeAgo(b.time);
+        })
         .slice(0, 8);
       setActivities(allActivities);
 

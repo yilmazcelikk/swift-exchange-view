@@ -36,6 +36,7 @@ interface Profile {
   id: string;
   user_id: string;
   full_name: string | null;
+  email: string | null;
   phone: string | null;
   tc_identity: string | null;
   balance: number;
@@ -291,6 +292,7 @@ const AdminUsers = () => {
   const filteredProfiles = profiles.filter(
     (p) =>
       (p.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
+      (p.email || "").toLowerCase().includes(search.toLowerCase()) ||
       p.user_id.toLowerCase().includes(search.toLowerCase()) ||
       String(p.meta_id).includes(search)
   );
@@ -702,7 +704,7 @@ const AdminUsers = () => {
                             <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive font-medium">Engelli</span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground font-mono truncate">{profile.user_id.slice(0, 12)}...</p>
+                        <p className="text-xs text-muted-foreground truncate">{profile.email || profile.user_id.slice(0, 12) + "..."}</p>
                       </div>
                     </div>
                   </TableCell>
