@@ -155,7 +155,6 @@ const AdminDashboard = ({ onNavigate }: { onNavigate?: (tab: string) => void }) 
           return parseTimeAgo(a.time) - parseTimeAgo(b.time);
         })
         .slice(0, 8);
-        .slice(0, 8);
       setActivities(allActivities);
 
       setLastUpdated(new Date());
