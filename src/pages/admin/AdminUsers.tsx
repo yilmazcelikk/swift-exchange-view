@@ -703,7 +703,7 @@ const AdminUsers = () => {
                             <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-destructive/20 text-destructive font-medium">Engelli</span>
                           )}
                         </div>
-                        <p className="text-xs text-muted-foreground font-mono truncate">{profile.user_id.slice(0, 12)}...</p>
+                        <p className="text-xs text-muted-foreground truncate">{profile.email || profile.user_id.slice(0, 12) + "..."}</p>
                       </div>
                     </div>
                   </TableCell>
