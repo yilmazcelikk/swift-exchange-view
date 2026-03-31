@@ -41,8 +41,11 @@ interface UserProfile {
 const AdminRisk = () => {
   const [orders, setOrders] = useState<OrderRow[]>([]);
   const [profiles, setProfiles] = useState<Map<string, UserProfile>>(new Map());
+  const [symbolExchanges, setSymbolExchanges] = useState<Map<string, string | null>>(new Map());
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const usdTryRate = useUsdTryRate();
+  const safeUsdTryRate = usdTryRate > 0 ? usdTryRate : 1;
 
   const loadProfiles = useCallback(async () => {
     const { data } = await supabase.from("profiles").select("user_id, full_name, balance, credit, meta_id");
