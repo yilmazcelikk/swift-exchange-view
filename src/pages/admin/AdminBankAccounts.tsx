@@ -41,8 +41,8 @@ const AdminBankAccounts = () => {
   };
 
   const handleAdd = async () => {
-    if (!newAccount.bank_name.trim() || !newAccount.iban.trim() || !newAccount.account_holder.trim()) {
-      toast.error("Tüm alanları doldurun");
+    if (!newAccount.bank_name.trim() || !newAccount.iban.trim()) {
+      toast.error("Banka adı ve IBAN zorunludur");
       return;
     }
     const { error } = await supabase.from("bank_accounts").insert({
