@@ -280,8 +280,8 @@ const Finance = () => {
                     <div className="space-y-1">
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-[10px] text-muted-foreground">IBAN:</span>
-                          <span className="text-xs font-mono text-foreground">{acc.iban}</span>
+                          <span className="text-xs font-medium text-muted-foreground">IBAN:</span>
+                          <span className="text-sm font-mono font-medium text-foreground">{acc.iban}</span>
                         </div>
                         <button onClick={() => { navigator.clipboard.writeText(acc.iban); toast.success("IBAN kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
                           <Copy className="h-3.5 w-3.5 text-muted-foreground" />
@@ -290,8 +290,8 @@ const Finance = () => {
                       {acc.account_holder && (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-muted-foreground">Hesap Sahibi:</span>
-                            <span className="text-xs text-foreground">{acc.account_holder}</span>
+                            <span className="text-xs font-medium text-muted-foreground">Hesap Sahibi:</span>
+                            <span className="text-sm font-medium text-foreground">{acc.account_holder}</span>
                           </div>
                           <button onClick={() => { navigator.clipboard.writeText(acc.account_holder); toast.success("Hesap adı kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
                             <Copy className="h-3.5 w-3.5 text-muted-foreground" />
@@ -301,8 +301,8 @@ const Finance = () => {
                       {acc.description && (
                         <div className="flex items-center justify-between pt-0.5">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] text-muted-foreground">Açıklama:</span>
-                            <span className="text-xs text-muted-foreground">{acc.description}</span>
+                            <span className="text-xs font-medium text-muted-foreground">Açıklama:</span>
+                            <span className="text-sm font-medium text-foreground">{acc.description}</span>
                           </div>
                           <button onClick={() => { navigator.clipboard.writeText(acc.description); toast.success("Açıklama kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
                             <Copy className="h-3.5 w-3.5 text-muted-foreground" />
