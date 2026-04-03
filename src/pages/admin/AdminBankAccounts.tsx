@@ -21,6 +21,7 @@ interface BankAccount {
   iban: string;
   currency: string;
   is_active: boolean;
+  description: string | null;
 }
 
 const AdminBankAccounts = () => {
@@ -28,7 +29,7 @@ const AdminBankAccounts = () => {
   const [loading, setLoading] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const [newAccount, setNewAccount] = useState({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
+  const [newAccount, setNewAccount] = useState({ bank_name: "", account_holder: "", iban: "", currency: "TRY", description: "" });
 
   useEffect(() => { load(); }, []);
 
@@ -49,10 +50,11 @@ const AdminBankAccounts = () => {
       account_holder: newAccount.account_holder,
       iban: newAccount.iban,
       currency: newAccount.currency,
+      description: newAccount.description || null,
     });
     if (error) { toast.error("Ekleme başarısız: " + error.message); return; }
     toast.success("Banka hesabı eklendi");
-    setNewAccount({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
+    setNewAccount({ bank_name: "", account_holder: "", iban: "", currency: "TRY", description: "" });
     setShowAddDialog(false);
     load();
   };
@@ -142,12 +144,13 @@ const AdminBankAccounts = () => {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-border bg-muted/30">
-                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Banka</th>
-                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Hesap Sahibi</th>
-                    <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">IBAN</th>
-                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Birim</th>
-                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Durum</th>
-                    <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">İşlem</th>
+                     <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Banka</th>
+                     <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Hesap Sahibi</th>
+                     <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">IBAN</th>
+                     <th className="text-left text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Açıklama</th>
+                     <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Birim</th>
+                     <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">Durum</th>
+                     <th className="text-center text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-4 py-3">İşlem</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -162,10 +165,11 @@ const AdminBankAccounts = () => {
                         </div>
                       </td>
                       <td className="px-4 py-3.5 text-sm">{acc.account_holder}</td>
-                      <td className="px-4 py-3.5 text-xs font-mono text-muted-foreground">{acc.iban}</td>
-                      <td className="px-4 py-3.5 text-center">
-                        <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-md">{acc.currency}</span>
-                      </td>
+                       <td className="px-4 py-3.5 text-xs font-mono text-muted-foreground">{acc.iban}</td>
+                       <td className="px-4 py-3.5 text-xs text-muted-foreground">{acc.description || '-'}</td>
+                       <td className="px-4 py-3.5 text-center">
+                         <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-md">{acc.currency}</span>
+                       </td>
                       <td className="px-4 py-3.5 text-center">
                         <Switch checked={acc.is_active} onCheckedChange={() => toggleAccount(acc.id, acc.is_active)} />
                       </td>
@@ -205,6 +209,10 @@ const AdminBankAccounts = () => {
             <div>
               <label className="text-sm font-medium mb-1.5 block">Para Birimi</label>
               <Input placeholder="TRY" value={newAccount.currency} onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value.toUpperCase() })} className="bg-muted/50" />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Açıklama</label>
+              <Input placeholder="Opsiyonel açıklama" value={newAccount.description} onChange={(e) => setNewAccount({ ...newAccount, description: e.target.value })} className="bg-muted/50" />
             </div>
           </div>
           <DialogFooter>

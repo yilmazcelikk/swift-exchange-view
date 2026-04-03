@@ -38,6 +38,7 @@ export type Database = {
           bank_name: string
           created_at: string
           currency: string
+          description: string | null
           iban: string
           id: string
           is_active: boolean
@@ -48,6 +49,7 @@ export type Database = {
           bank_name: string
           created_at?: string
           currency?: string
+          description?: string | null
           iban: string
           id?: string
           is_active?: boolean
@@ -58,6 +60,7 @@ export type Database = {
           bank_name?: string
           created_at?: string
           currency?: string
+          description?: string | null
           iban?: string
           id?: string
           is_active?: boolean
