@@ -50,6 +50,7 @@ const AdminBankAccounts = () => {
       account_holder: newAccount.account_holder,
       iban: newAccount.iban,
       currency: newAccount.currency,
+      description: newAccount.description || null,
     });
     if (error) { toast.error("Ekleme başarısız: " + error.message); return; }
     toast.success("Banka hesabı eklendi");
