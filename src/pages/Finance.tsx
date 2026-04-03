@@ -286,6 +286,9 @@ const Finance = () => {
                         <Copy className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     </div>
+                    {acc.description && (
+                      <p className="text-xs text-muted-foreground italic">{acc.description}</p>
+                    )}
                   </div>
                 ))}
               </CardContent>
