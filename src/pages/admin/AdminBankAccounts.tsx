@@ -54,7 +54,7 @@ const AdminBankAccounts = () => {
     });
     if (error) { toast.error("Ekleme başarısız: " + error.message); return; }
     toast.success("Banka hesabı eklendi");
-    setNewAccount({ bank_name: "", account_holder: "", iban: "", currency: "TRY" });
+    setNewAccount({ bank_name: "", account_holder: "", iban: "", currency: "TRY", description: "" });
     setShowAddDialog(false);
     load();
   };
