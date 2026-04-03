@@ -21,6 +21,7 @@ interface BankAccount {
   iban: string;
   currency: string;
   is_active: boolean;
+  description: string | null;
 }
 
 const AdminBankAccounts = () => {
