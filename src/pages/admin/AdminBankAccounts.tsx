@@ -210,6 +210,10 @@ const AdminBankAccounts = () => {
               <label className="text-sm font-medium mb-1.5 block">Para Birimi</label>
               <Input placeholder="TRY" value={newAccount.currency} onChange={(e) => setNewAccount({ ...newAccount, currency: e.target.value.toUpperCase() })} className="bg-muted/50" />
             </div>
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Açıklama</label>
+              <Input placeholder="Opsiyonel açıklama" value={newAccount.description} onChange={(e) => setNewAccount({ ...newAccount, description: e.target.value })} className="bg-muted/50" />
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddDialog(false)}>İptal</Button>
