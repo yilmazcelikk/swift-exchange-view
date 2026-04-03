@@ -167,8 +167,9 @@ const AdminBankAccounts = () => {
                       <td className="px-4 py-3.5 text-sm">{acc.account_holder}</td>
                        <td className="px-4 py-3.5 text-xs font-mono text-muted-foreground">{acc.iban}</td>
                        <td className="px-4 py-3.5 text-xs text-muted-foreground">{acc.description || '-'}</td>
-                        <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-md">{acc.currency}</span>
-                      </td>
+                       <td className="px-4 py-3.5 text-center">
+                         <span className="text-xs font-medium bg-muted px-2 py-0.5 rounded-md">{acc.currency}</span>
+                       </td>
                       <td className="px-4 py-3.5 text-center">
                         <Switch checked={acc.is_active} onCheckedChange={() => toggleAccount(acc.id, acc.is_active)} />
                       </td>
