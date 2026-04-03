@@ -272,23 +272,39 @@ const Finance = () => {
               </CardHeader>
               <CardContent className="space-y-2">
                 {bankAccounts.map((acc: any) => (
-                  <div key={acc.id} className="p-3 rounded-lg bg-muted/50 space-y-1.5">
-                    <p className="font-semibold text-sm">{acc.bank_name}</p>
+                  <div key={acc.id} className="p-3 rounded-lg bg-muted/50 space-y-2">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs font-mono text-foreground">{acc.iban}</p>
-                      <button onClick={() => { navigator.clipboard.writeText(acc.iban); toast.success("IBAN kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
-                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                      </button>
+                      <span className="font-semibold text-sm">{acc.bank_name}</span>
+                      {acc.currency && <span className="text-[10px] font-medium bg-primary/10 text-primary px-1.5 py-0.5 rounded">{acc.currency}</span>}
                     </div>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-muted-foreground">{acc.account_holder}</p>
-                      <button onClick={() => { navigator.clipboard.writeText(acc.account_holder); toast.success("Hesap adı kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
-                        <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-                      </button>
+                    <div className="space-y-1">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[10px] text-muted-foreground">IBAN:</span>
+                          <span className="text-xs font-mono text-foreground">{acc.iban}</span>
+                        </div>
+                        <button onClick={() => { navigator.clipboard.writeText(acc.iban); toast.success("IBAN kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
+                          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                        </button>
+                      </div>
+                      {acc.account_holder && (
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground">Hesap Sahibi:</span>
+                            <span className="text-xs text-foreground">{acc.account_holder}</span>
+                          </div>
+                          <button onClick={() => { navigator.clipboard.writeText(acc.account_holder); toast.success("Hesap adı kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
+                        </div>
+                      )}
+                      {acc.description && (
+                        <div className="flex items-center gap-1.5 pt-0.5">
+                          <span className="text-[10px] text-muted-foreground">Açıklama:</span>
+                          <span className="text-xs text-muted-foreground">{acc.description}</span>
+                        </div>
+                      )}
                     </div>
-                    {acc.description && (
-                      <p className="text-xs text-muted-foreground italic">{acc.description}</p>
-                    )}
                   </div>
                 ))}
               </CardContent>
