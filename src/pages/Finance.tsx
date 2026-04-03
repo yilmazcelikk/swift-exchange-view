@@ -299,9 +299,14 @@ const Finance = () => {
                         </div>
                       )}
                       {acc.description && (
-                        <div className="flex items-center gap-1.5 pt-0.5">
-                          <span className="text-[10px] text-muted-foreground">Açıklama:</span>
-                          <span className="text-xs text-muted-foreground">{acc.description}</span>
+                        <div className="flex items-center justify-between pt-0.5">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] text-muted-foreground">Açıklama:</span>
+                            <span className="text-xs text-muted-foreground">{acc.description}</span>
+                          </div>
+                          <button onClick={() => { navigator.clipboard.writeText(acc.description); toast.success("Açıklama kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
+                            <Copy className="h-3.5 w-3.5 text-muted-foreground" />
+                          </button>
                         </div>
                       )}
                     </div>
