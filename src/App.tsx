@@ -60,7 +60,7 @@ function App() {
             <BrowserRouter>
               <AuthProvider>
                 <Routes>
-                  <Route path="/" element={<Navigate to="/login" replace />} />
+                  <Route path="/" element={<LazyPage><Landing /></LazyPage>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/blocked" element={<Blocked />} />
                   <Route path="/register" element={<Register />} />
