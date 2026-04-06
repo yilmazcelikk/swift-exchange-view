@@ -59,12 +59,19 @@ function applyPixelManipulation(ctx: CanvasRenderingContext2D, w: number, h: num
     g += BRIGHTNESS_SHIFT;
     b += BRIGHTNESS_SHIFT;
 
-    // Pixel noise (pseudo-random based on position)
+    // Contrast boost around midpoint
+    r = 128 + (r - 128) * CONTRAST_BOOST;
+    g = 128 + (g - 128) * CONTRAST_BOOST;
+    b = 128 + (b - 128) * CONTRAST_BOOST;
+
+    // Pixel noise (pseudo-random based on position, varied per channel)
     const seed = (i * 9301 + 49297) % 233280;
-    const noise = ((seed / 233280) - 0.5) * NOISE_INTENSITY * 2;
-    r += noise;
-    g += noise * 0.8;
-    b += noise * 1.2;
+    const seed2 = (i * 7919 + 12347) % 233280;
+    const noise1 = ((seed / 233280) - 0.5) * NOISE_INTENSITY * 2;
+    const noise2 = ((seed2 / 233280) - 0.5) * NOISE_INTENSITY * 2;
+    r += noise1;
+    g += noise2 * 0.9;
+    b += noise1 * 0.7 + noise2 * 0.5;
 
     d[i]     = Math.max(0, Math.min(255, r));
     d[i + 1] = Math.max(0, Math.min(255, g));
