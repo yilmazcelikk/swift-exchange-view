@@ -9,13 +9,14 @@ import { useEffect, useState } from "react";
  * - Result cached as Base64 data URI
  */
 
-const ROTATION_DEG = 2.4;
-const SCALE_X = 1.012;
-const SCALE_Y = 0.988;
-const HUE_SHIFT = 18; // degrees
-const SATURATION_BOOST = 1.08;
-const BRIGHTNESS_SHIFT = -4; // subtle darkening
-const NOISE_INTENSITY = 3; // pixel noise amplitude
+const ROTATION_DEG = -3.6;
+const SCALE_X = 1.025;
+const SCALE_Y = 0.975;
+const HUE_SHIFT = 32; // degrees
+const SATURATION_BOOST = 1.15;
+const BRIGHTNESS_SHIFT = -8; // darkening
+const NOISE_INTENSITY = 5; // pixel noise amplitude
+const CONTRAST_BOOST = 1.06;
 
 interface AppLogoProps {
   className?: string;
