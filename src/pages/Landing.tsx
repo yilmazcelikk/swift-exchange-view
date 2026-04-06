@@ -312,7 +312,7 @@ export default function Landing() {
           <FeatureCard
             icon={Shield}
             title="Güvenli Altyapı"
-            description="Banka düzeyinde şifreleme ve çok katmanlı güvenlik protokolleri."
+            description="Üst düzey şifreleme ve çok katmanlı güvenlik protokolleri."
             delay={0.2}
           />
           <FeatureCard
