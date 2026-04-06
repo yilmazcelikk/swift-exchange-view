@@ -13,6 +13,8 @@ import { PrivateRoute } from "@/components/PrivateRoute";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Blocked from "@/pages/Blocked";
+const Landing = lazy(() => import("@/pages/Landing"));
+import Blocked from "@/pages/Blocked";
 
 // Lazy load heavy pages
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
