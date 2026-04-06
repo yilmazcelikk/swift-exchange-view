@@ -13,6 +13,7 @@ import { PrivateRoute } from "@/components/PrivateRoute";
 import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Blocked from "@/pages/Blocked";
+const Landing = lazy(() => import("@/pages/Landing"));
 
 // Lazy load heavy pages
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -59,7 +60,7 @@ function App() {
             <BrowserRouter>
               <AuthProvider>
                 <Routes>
-                  <Route path="/" element={<Navigate to="/login" replace />} />
+                  <Route path="/" element={<LazyPage><Landing /></LazyPage>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/blocked" element={<Blocked />} />
                   <Route path="/register" element={<Register />} />
