@@ -272,7 +272,7 @@ export default function Landing() {
       {/* ─ Stats ─ */}
       <section className="relative z-10 py-16 border-y border-border/30">
         <div className="max-w-5xl mx-auto px-6 grid grid-cols-2 md:grid-cols-4 gap-8">
-          <StatItem value="50+" label="Finansal Enstrüman" delay={0} />
+          <StatItem value="900+" label="Finansal Enstrüman" delay={0} />
           <StatItem value="7/24" label="Piyasa Erişimi" delay={0.1} />
           <StatItem value="<1s" label="İşlem Hızı" delay={0.2} />
           <StatItem value="256-bit" label="SSL Şifreleme" delay={0.3} />
@@ -312,7 +312,7 @@ export default function Landing() {
           <FeatureCard
             icon={Shield}
             title="Güvenli Altyapı"
-            description="Banka düzeyinde şifreleme ve çok katmanlı güvenlik protokolleri."
+            description="Üst düzey şifreleme ve çok katmanlı güvenlik protokolleri."
             delay={0.2}
           />
           <FeatureCard
