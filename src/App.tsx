@@ -14,6 +14,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Blocked from "@/pages/Blocked";
 const Landing = lazy(() => import("@/pages/Landing"));
+const Maintenance = lazy(() => import("@/pages/Maintenance"));
 
 // Lazy load heavy pages
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
