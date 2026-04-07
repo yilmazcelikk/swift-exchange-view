@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Eye, EyeOff } from "lucide-react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
 import { toast } from "sonner";
@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
+  const [searchParams] = useSearchParams();
+  const hasGateKey = searchParams.get("go") === "1";
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,10 +20,16 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!hasGateKey) {
+      navigate("/", { replace: true });
+      return;
+    }
     if (!authLoading && roleResolved && user) {
       navigate(isAdmin ? "/admin" : "/dashboard", { replace: true });
     }
-  }, [user, isAdmin, authLoading, roleResolved, navigate]);
+  }, [user, isAdmin, authLoading, roleResolved, navigate, hasGateKey]);
+
+  if (!hasGateKey) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -93,7 +101,7 @@ const Login = () => {
         </form>
         <p className="text-center text-sm text-muted-foreground">
           Hesabınız yok mu?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">Kayıt Ol</Link>
+          <Link to="/register?go=1" className="text-primary font-medium hover:underline">Kayıt Ol</Link>
         </p>
       </div>
     </div>

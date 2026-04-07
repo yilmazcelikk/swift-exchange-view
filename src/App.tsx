@@ -14,6 +14,7 @@ import Login from "@/pages/Login";
 import Register from "@/pages/Register";
 import Blocked from "@/pages/Blocked";
 const Landing = lazy(() => import("@/pages/Landing"));
+const Maintenance = lazy(() => import("@/pages/Maintenance"));
 
 // Lazy load heavy pages
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -60,7 +61,8 @@ function App() {
             <BrowserRouter>
               <AuthProvider>
                 <Routes>
-                  <Route path="/" element={<LazyPage><Landing /></LazyPage>} />
+                  <Route path="/" element={<LazyPage><Maintenance /></LazyPage>} />
+                  <Route path="/landing" element={<LazyPage><Landing /></LazyPage>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/blocked" element={<Blocked />} />
                   <Route path="/register" element={<Register />} />
