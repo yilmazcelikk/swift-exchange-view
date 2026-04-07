@@ -10,6 +10,8 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const Login = () => {
   const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
+  const [searchParams] = useSearchParams();
+  const hasGateKey = searchParams.get("go") === "1";
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
