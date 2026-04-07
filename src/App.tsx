@@ -1,4 +1,5 @@
 import { useEffect, lazy, Suspense } from "react";
+import { useDynamicFavicon } from "@/hooks/useDynamicFavicon";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -37,6 +38,8 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
 );
 
 function App() {
+  useDynamicFavicon();
+
   useEffect(() => {
     const onRejection = (e: PromiseRejectionEvent) =>
       console.error("Unhandled promise rejection:", e.reason);
