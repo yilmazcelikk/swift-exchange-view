@@ -19,7 +19,7 @@ export function PrivateRoute({ children, adminOnly = false }: PrivateRouteProps)
   }
 
   if (!user) {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login?go=1" replace />;
   }
 
   if (isFullBanned && !adminOnly) {
