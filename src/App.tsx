@@ -38,6 +38,8 @@ const LazyPage = ({ children }: { children: React.ReactNode }) => (
 );
 
 function App() {
+  useDynamicFavicon();
+
   useEffect(() => {
     const onRejection = (e: PromiseRejectionEvent) =>
       console.error("Unhandled promise rejection:", e.reason);
