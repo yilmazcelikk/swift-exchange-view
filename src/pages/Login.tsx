@@ -18,10 +18,16 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!hasGateKey) {
+      navigate("/", { replace: true });
+      return;
+    }
     if (!authLoading && roleResolved && user) {
       navigate(isAdmin ? "/admin" : "/dashboard", { replace: true });
     }
-  }, [user, isAdmin, authLoading, roleResolved, navigate]);
+  }, [user, isAdmin, authLoading, roleResolved, navigate, hasGateKey]);
+
+  if (!hasGateKey) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
