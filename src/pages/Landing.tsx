@@ -188,13 +188,13 @@ export default function Landing() {
         <AppLogo className="h-9 w-auto" />
         <div className="flex items-center gap-3">
           <Link
-            to="/login"
+            to="/login?go=1"
             className="px-5 py-2 text-sm font-medium text-foreground hover:text-primary transition-colors"
           >
             Giriş Yap
           </Link>
           <Link
-            to="/register"
+            to="/register?go=1"
             className="px-5 py-2 text-sm font-medium rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
           >
             Hesap Aç
@@ -245,14 +245,14 @@ export default function Landing() {
           className="flex flex-col sm:flex-row items-center gap-4"
         >
           <Link
-            to="/register"
+            to="/register?go=1"
             className="group inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-primary text-primary-foreground font-semibold text-base hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
           >
             Hemen Başla
             <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
           </Link>
           <Link
-            to="/login"
+            to="/login?go=1"
             className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl border border-border text-foreground font-semibold text-base hover:bg-card/80 transition-all"
           >
             Giriş Yap
@@ -352,7 +352,7 @@ export default function Landing() {
             Hemen ücretsiz hesabınızı oluşturun ve profesyonel yatırım araçlarına erişin.
           </p>
           <Link
-            to="/register"
+            to="/register?go=1"
             className="group inline-flex items-center gap-2 px-10 py-4 rounded-xl bg-primary text-primary-foreground font-semibold text-lg hover:bg-primary/90 transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
           >
             Ücretsiz Hesap Oluştur
@@ -371,10 +371,10 @@ export default function Landing() {
             </span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/login" className="hover:text-foreground transition-colors">
+            <Link to="/login?go=1" className="hover:text-foreground transition-colors">
               Giriş
             </Link>
-            <Link to="/register" className="hover:text-foreground transition-colors">
+            <Link to="/register?go=1" className="hover:text-foreground transition-colors">
               Kayıt
             </Link>
           </div>
