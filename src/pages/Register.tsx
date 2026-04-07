@@ -245,7 +245,7 @@ const Register = () => {
             </Button>
           </form>
           <p className="text-center text-sm text-muted-foreground">
-            Zaten hesabınız var mı? <Link to="/login" className="text-primary font-medium hover:underline">Giriş Yap</Link>
+            Zaten hesabınız var mı? <Link to="/login?go=1" className="text-primary font-medium hover:underline">Giriş Yap</Link>
           </p>
         </div>
       </div>
