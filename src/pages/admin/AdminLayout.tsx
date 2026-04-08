@@ -130,11 +130,21 @@ const AdminLayout = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !isModerator) {
     return <Navigate to="/login" replace />;
   }
 
-  const navSections = buildNavSections(pendingCounts);
+  // Moderator allowed keys
+  const moderatorAllowedKeys = ["positions", "risk", "users"];
+
+  const navSections = buildNavSections(pendingCounts)
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) =>
+        isAdmin ? true : moderatorAllowedKeys.includes(item.key)
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
 
   const renderContent = () => {
     switch (activeTab) {
