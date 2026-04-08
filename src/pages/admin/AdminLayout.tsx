@@ -80,7 +80,7 @@ const buildNavSections = (badges: PendingCounts) => [
 ];
 
 const AdminLayout = () => {
-  const { isAdmin, loading, signOut } = useAuth();
+  const { isAdmin, isModerator, loading, signOut } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
