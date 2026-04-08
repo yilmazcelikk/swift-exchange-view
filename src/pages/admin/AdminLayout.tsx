@@ -232,7 +232,7 @@ const AdminLayout = () => {
           <div className="flex items-center gap-1.5 md:gap-2 ml-auto">
             <AdminNotifications />
             <ThemeToggle />
-            <span className="text-[10px] md:text-xs text-muted-foreground bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 md:py-1 rounded-full font-medium">Admin</span>
+            <span className="text-[10px] md:text-xs text-muted-foreground bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 md:py-1 rounded-full font-medium">{isAdmin ? "Admin" : "Moderatör"}</span>
           </div>
         </header>
 
