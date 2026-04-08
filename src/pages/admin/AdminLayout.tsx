@@ -120,7 +120,7 @@ const AdminLayout = () => {
         supabase.removeChannel(ordChannel);
       };
     }
-  }, [isAdmin]);
+  }, [isAdmin, isModerator]);
 
   if (loading) {
     return (
