@@ -51,26 +51,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const request = (async () => {
     try {
-      const { data, error } = await withTimeout(
-        supabase.rpc("has_role", {
-          _user_id: userId,
-          _role: "admin",
-        }),
+      // Check admin role
+      const { data: adminData, error: adminError } = await withTimeout(
+        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
         9000,
         { data: false, error: { message: "has_role timeout" } } as any,
       );
-      if (error) {
-        console.error("checkAdmin error:", error);
+      
+      // Check moderator role
+      const { data: modData } = await withTimeout(
+        supabase.rpc("has_role", { _user_id: userId, _role: "moderator" as any }),
+        9000,
+        { data: false } as any,
+      );
+      
+      if (adminError) {
+        console.error("checkAdmin error:", adminError);
         setIsAdmin(false);
+        setIsModerator(false);
         return false;
       }
 
-      const next = !!data;
-      setIsAdmin(next);
-      return next;
+      const isAdminResult = !!adminData;
+      const isModResult = !!modData;
+      setIsAdmin(isAdminResult);
+      setIsModerator(isModResult);
+      return isAdminResult || isModResult;
     } catch (err) {
       console.error("checkAdmin unexpected error:", err);
       setIsAdmin(false);
+      setIsModerator(false);
       return false;
     } finally {
       adminCheckInFlight.current.delete(userId);
