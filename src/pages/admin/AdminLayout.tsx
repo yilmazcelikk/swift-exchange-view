@@ -82,7 +82,7 @@ const buildNavSections = (badges: PendingCounts) => [
 const AdminLayout = () => {
   const { isAdmin, isModerator, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(isModerator && !isAdmin ? "positions" : "dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ finance: 0, kyc: 0, pendingOrders: 0 });
 
