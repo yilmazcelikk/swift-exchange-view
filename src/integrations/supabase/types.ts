@@ -451,6 +451,7 @@ export type Database = {
         Returns: Json
       }
       generate_random_meta_id: { Args: never; Returns: number }
+      has_any_admin_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -464,7 +465,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "admin" | "user"
+      app_role: "admin" | "user" | "moderator"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -592,7 +593,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["admin", "user"],
+      app_role: ["admin", "user", "moderator"],
     },
   },
 } as const

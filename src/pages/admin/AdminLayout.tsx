@@ -80,9 +80,9 @@ const buildNavSections = (badges: PendingCounts) => [
 ];
 
 const AdminLayout = () => {
-  const { isAdmin, loading, signOut } = useAuth();
+  const { isAdmin, isModerator, loading, signOut } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(isModerator && !isAdmin ? "positions" : "dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [pendingCounts, setPendingCounts] = useState<PendingCounts>({ finance: 0, kyc: 0, pendingOrders: 0 });
 
@@ -95,7 +95,7 @@ const AdminLayout = () => {
       ]);
       setPendingCounts({ finance: financeRes.count || 0, kyc: kycRes.count || 0, pendingOrders: ordersRes.count || 0 });
     };
-    if (isAdmin) {
+    if (isAdmin || isModerator) {
       loadBadges();
 
       // Realtime instead of 30s polling
@@ -120,7 +120,7 @@ const AdminLayout = () => {
         supabase.removeChannel(ordChannel);
       };
     }
-  }, [isAdmin]);
+  }, [isAdmin, isModerator]);
 
   if (loading) {
     return (
@@ -130,11 +130,21 @@ const AdminLayout = () => {
     );
   }
 
-  if (!isAdmin) {
+  if (!isAdmin && !isModerator) {
     return <Navigate to="/login" replace />;
   }
 
-  const navSections = buildNavSections(pendingCounts);
+  // Moderator allowed keys
+  const moderatorAllowedKeys = ["positions", "risk", "users"];
+
+  const navSections = buildNavSections(pendingCounts)
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item) =>
+        isAdmin ? true : moderatorAllowedKeys.includes(item.key)
+      ),
+    }))
+    .filter((section) => section.items.length > 0);
 
   const renderContent = () => {
     switch (activeTab) {
@@ -222,7 +232,7 @@ const AdminLayout = () => {
           <div className="flex items-center gap-1.5 md:gap-2 ml-auto">
             <AdminNotifications />
             <ThemeToggle />
-            <span className="text-[10px] md:text-xs text-muted-foreground bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 md:py-1 rounded-full font-medium">Admin</span>
+            <span className="text-[10px] md:text-xs text-muted-foreground bg-primary/10 text-primary px-1.5 md:px-2 py-0.5 md:py-1 rounded-full font-medium">{isAdmin ? "Admin" : "Moderatör"}</span>
           </div>
         </header>
 

@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isModerator: boolean;
   isFullBanned: boolean;
   loading: boolean;
   roleResolved: boolean;
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   isAdmin: false,
+  isModerator: false,
   isFullBanned: false,
   loading: true,
   roleResolved: false,
@@ -28,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isModerator, setIsModerator] = useState(false);
   const [isFullBanned, setIsFullBanned] = useState(false);
   const [loading, setLoading] = useState(true);
   const [roleResolved, setRoleResolved] = useState(false);
@@ -48,26 +51,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const request = (async () => {
     try {
-      const { data, error } = await withTimeout(
-        supabase.rpc("has_role", {
-          _user_id: userId,
-          _role: "admin",
-        }),
+      // Check admin role
+      const { data: adminData, error: adminError } = await withTimeout(
+        supabase.rpc("has_role", { _user_id: userId, _role: "admin" }),
         9000,
         { data: false, error: { message: "has_role timeout" } } as any,
       );
-      if (error) {
-        console.error("checkAdmin error:", error);
+      
+      // Check moderator role
+      const { data: modData } = await withTimeout(
+        supabase.rpc("has_role", { _user_id: userId, _role: "moderator" as any }),
+        9000,
+        { data: false } as any,
+      );
+      
+      if (adminError) {
+        console.error("checkAdmin error:", adminError);
         setIsAdmin(false);
+        setIsModerator(false);
         return false;
       }
 
-      const next = !!data;
-      setIsAdmin(next);
-      return next;
+      const isAdminResult = !!adminData;
+      const isModResult = !!modData;
+      setIsAdmin(isAdminResult);
+      setIsModerator(isModResult);
+      return isAdminResult || isModResult;
     } catch (err) {
       console.error("checkAdmin unexpected error:", err);
       setIsAdmin(false);
+      setIsModerator(false);
       return false;
     } finally {
       adminCheckInFlight.current.delete(userId);
@@ -140,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ]);
         } else {
           setIsAdmin(false);
+          setIsModerator(false);
           setIsFullBanned(false);
         }
       } catch (err) {
@@ -200,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setIsModerator(false);
     setRoleResolved(true);
 
     try {
@@ -233,7 +248,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isAdmin, isFullBanned, loading, roleResolved, signOut }}>
+    <AuthContext.Provider value={{ user, session, isAdmin, isModerator, isFullBanned, loading, roleResolved, signOut }}>
       {children}
     </AuthContext.Provider>
   );

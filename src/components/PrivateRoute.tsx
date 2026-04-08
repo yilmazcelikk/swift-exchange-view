@@ -9,7 +9,7 @@ interface PrivateRouteProps {
 }
 
 export function PrivateRoute({ children, adminOnly = false }: PrivateRouteProps) {
-  const { user, isAdmin, isFullBanned, loading, roleResolved } = useAuth();
+  const { user, isAdmin, isModerator, isFullBanned, loading, roleResolved } = useAuth();
   const [searchParams] = useSearchParams();
   const gateOpen = checkGate(searchParams);
 
@@ -33,11 +33,11 @@ export function PrivateRoute({ children, adminOnly = false }: PrivateRouteProps)
     return <Navigate to="/blocked" replace />;
   }
 
-  if (adminOnly && !isAdmin) {
+  if (adminOnly && !isAdmin && !isModerator) {
     return <Navigate to="/dashboard" replace />;
   }
 
-  if (!adminOnly && isAdmin) {
+  if (!adminOnly && (isAdmin || isModerator)) {
     return <Navigate to="/admin" replace />;
   }
 
