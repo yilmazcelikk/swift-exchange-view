@@ -153,6 +153,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ]);
         } else {
           setIsAdmin(false);
+          setIsModerator(false);
           setIsFullBanned(false);
         }
       } catch (err) {
