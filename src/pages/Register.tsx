@@ -6,6 +6,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AppLogo from "@/components/AppLogo";
+import { checkGate } from "@/lib/gatekeeper";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +18,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Register = () => {
   const [searchParams] = useSearchParams();
-  const hasGateKey = searchParams.get("go") === "1";
+  const hasGateKey = checkGate(searchParams);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: "", phone: "", tcIdentity: "",

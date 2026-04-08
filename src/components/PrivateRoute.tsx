@@ -1,6 +1,7 @@
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { checkGate } from "@/lib/gatekeeper";
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -9,6 +10,12 @@ interface PrivateRouteProps {
 
 export function PrivateRoute({ children, adminOnly = false }: PrivateRouteProps) {
   const { user, isAdmin, isFullBanned, loading, roleResolved } = useAuth();
+  const [searchParams] = useSearchParams();
+  const gateOpen = checkGate(searchParams);
+
+  if (!gateOpen) {
+    return <Navigate to="/" replace />;
+  }
 
   if (loading || !roleResolved) {
     return (
