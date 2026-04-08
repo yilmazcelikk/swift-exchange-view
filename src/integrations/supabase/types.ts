@@ -451,6 +451,7 @@ export type Database = {
         Returns: Json
       }
       generate_random_meta_id: { Args: never; Returns: number }
+      has_any_admin_role: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
