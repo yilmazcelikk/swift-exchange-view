@@ -9,7 +9,7 @@ interface PrivateRouteProps {
 }
 
 export function PrivateRoute({ children, adminOnly = false }: PrivateRouteProps) {
-  const { user, isAdmin, isFullBanned, loading, roleResolved } = useAuth();
+  const { user, isAdmin, isModerator, isFullBanned, loading, roleResolved } = useAuth();
   const [searchParams] = useSearchParams();
   const gateOpen = checkGate(searchParams);
 
