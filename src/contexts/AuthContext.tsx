@@ -214,6 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    setIsModerator(false);
     setRoleResolved(true);
 
     try {
