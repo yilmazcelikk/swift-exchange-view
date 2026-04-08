@@ -74,7 +74,7 @@ const AdminReferrals = () => {
   };
 
   const copyLink = (code: string) => {
-    const link = `${SITE_URL}/register?ref=${code}`;
+    const link = `${SITE_URL}/register?go=1&ref=${code}`;
     navigator.clipboard.writeText(link);
     toast.success("Link kopyalandı");
   };
