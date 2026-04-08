@@ -7,11 +7,12 @@ import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { checkGate } from "@/lib/gatekeeper";
 
 const Login = () => {
   const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
   const [searchParams] = useSearchParams();
-  const hasGateKey = searchParams.get("go") === "1";
+  const hasGateKey = checkGate(searchParams);
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);

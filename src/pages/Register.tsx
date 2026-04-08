@@ -17,7 +17,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Register = () => {
   const [searchParams] = useSearchParams();
-  const hasGateKey = searchParams.get("go") === "1";
+  const hasGateKey = checkGate(searchParams);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: "", phone: "", tcIdentity: "",
