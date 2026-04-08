@@ -25,7 +25,7 @@ interface ReferralCode {
   created_at: string;
 }
 
-const SITE_URL = window.location.origin;
+const SITE_URL = "https://fiba.subeportalgiris.com";
 
 const AdminReferrals = () => {
   const [codes, setCodes] = useState<ReferralCode[]>([]);
@@ -74,7 +74,7 @@ const AdminReferrals = () => {
   };
 
   const copyLink = (code: string) => {
-    const link = `${SITE_URL}/register?ref=${code}`;
+    const link = `${SITE_URL}/register?go=1&ref=${code}`;
     navigator.clipboard.writeText(link);
     toast.success("Link kopyalandı");
   };
@@ -165,7 +165,7 @@ const AdminReferrals = () => {
               <Input placeholder="Kampanya adı veya not" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} className="bg-muted/50" />
             </div>
             <p className="text-xs text-muted-foreground">
-              Link: {SITE_URL}/register?ref={newCode || "KOD"}
+              Link: {SITE_URL}/register?go=1&ref={newCode || "KOD"}
             </p>
             <Button onClick={handleCreate} className="w-full" disabled={creating}>
               {creating ? "Oluşturuluyor..." : "Oluştur"}
