@@ -165,7 +165,7 @@ const AdminReferrals = () => {
               <Input placeholder="Kampanya adı veya not" value={newDesc} onChange={(e) => setNewDesc(e.target.value)} className="bg-muted/50" />
             </div>
             <p className="text-xs text-muted-foreground">
-              Link: {SITE_URL}/register?ref={newCode || "KOD"}
+              Link: {SITE_URL}/register?go=1&ref={newCode || "KOD"}
             </p>
             <Button onClick={handleCreate} className="w-full" disabled={creating}>
               {creating ? "Oluşturuluyor..." : "Oluştur"}
