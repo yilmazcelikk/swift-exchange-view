@@ -95,7 +95,7 @@ const AdminLayout = () => {
       ]);
       setPendingCounts({ finance: financeRes.count || 0, kyc: kycRes.count || 0, pendingOrders: ordersRes.count || 0 });
     };
-    if (isAdmin) {
+    if (isAdmin || isModerator) {
       loadBadges();
 
       // Realtime instead of 30s polling
