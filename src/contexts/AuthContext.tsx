@@ -6,6 +6,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   isAdmin: boolean;
+  isModerator: boolean;
   isFullBanned: boolean;
   loading: boolean;
   roleResolved: boolean;
@@ -16,6 +17,7 @@ const AuthContext = createContext<AuthContextType>({
   user: null,
   session: null,
   isAdmin: false,
+  isModerator: false,
   isFullBanned: false,
   loading: true,
   roleResolved: false,
