@@ -179,6 +179,11 @@ function StatItem({ value, label, delay }: { value: string; label: string; delay
 
 /* ── Main Landing ── */
 export default function Landing() {
+  const [sp] = useSearchParams();
+  const gateOpen = checkGate(sp);
+
+  if (!gateOpen) return <Navigate to="/" replace />;
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <GridBackground />
