@@ -4,11 +4,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
+import { checkGate, isGateOpen } from "@/lib/gatekeeper";
 
 
 import Login from "@/pages/Login";
@@ -16,6 +17,14 @@ import Register from "@/pages/Register";
 import Blocked from "@/pages/Blocked";
 const Landing = lazy(() => import("@/pages/Landing"));
 const Maintenance = lazy(() => import("@/pages/Maintenance"));
+
+/** If gate is already open, redirect to login; otherwise show maintenance */
+function MaintenanceGate() {
+  const [sp] = useSearchParams();
+  const opened = checkGate(sp);
+  if (opened) return <Navigate to="/login" replace />;
+  return <LazyPage><Maintenance /></LazyPage>;
+}
 
 // Lazy load heavy pages
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
@@ -64,7 +73,7 @@ function App() {
             <BrowserRouter>
               <AuthProvider>
                 <Routes>
-                  <Route path="/" element={<LazyPage><Maintenance /></LazyPage>} />
+                  <Route path="/" element={<MaintenanceGate />} />
                   <Route path="/landing" element={<LazyPage><Landing /></LazyPage>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/blocked" element={<Blocked />} />

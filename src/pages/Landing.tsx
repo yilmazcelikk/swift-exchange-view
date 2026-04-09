@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, Navigate } from "react-router-dom";
+import { checkGate } from "@/lib/gatekeeper";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
@@ -178,6 +179,11 @@ function StatItem({ value, label, delay }: { value: string; label: string; delay
 
 /* ── Main Landing ── */
 export default function Landing() {
+  const [sp] = useSearchParams();
+  const gateOpen = checkGate(sp);
+
+  if (!gateOpen) return <Navigate to="/" replace />;
+
   return (
     <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <GridBackground />
