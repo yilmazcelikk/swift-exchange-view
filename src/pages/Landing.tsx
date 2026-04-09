@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams, Navigate } from "react-router-dom";
+import { checkGate } from "@/lib/gatekeeper";
 import { motion } from "framer-motion";
 import {
   TrendingUp,
