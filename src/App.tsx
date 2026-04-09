@@ -64,7 +64,7 @@ function App() {
             <BrowserRouter>
               <AuthProvider>
                 <Routes>
-                  <Route path="/" element={<LazyPage><Maintenance /></LazyPage>} />
+                  <Route path="/" element={<MaintenanceGate />} />
                   <Route path="/landing" element={<LazyPage><Landing /></LazyPage>} />
                   <Route path="/login" element={<Login />} />
                   <Route path="/blocked" element={<Blocked />} />
