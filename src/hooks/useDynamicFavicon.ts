@@ -6,14 +6,14 @@ import { useEffect } from "react";
  * so the browser tab icon matches the in-app logo.
  */
 
-const ROTATION_DEG = -3.6;
-const SCALE_X = 1.025;
-const SCALE_Y = 0.975;
-const HUE_SHIFT = 32;
-const SATURATION_BOOST = 1.15;
-const BRIGHTNESS_SHIFT = -8;
-const NOISE_INTENSITY = 5;
-const CONTRAST_BOOST = 1.06;
+const ROTATION_DEG = 2.8;
+const SCALE_X = 0.98;
+const SCALE_Y = 1.02;
+const HUE_SHIFT = -18;
+const SATURATION_BOOST = 1.08;
+const BRIGHTNESS_SHIFT = 5;
+const NOISE_INTENSITY = 4;
+const CONTRAST_BOOST = 1.04;
 
 function applyPixelManipulation(ctx: CanvasRenderingContext2D, w: number, h: number) {
   const imageData = ctx.getImageData(0, 0, w, h);
