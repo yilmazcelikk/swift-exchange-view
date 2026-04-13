@@ -72,10 +72,14 @@ const Finance = () => {
     if (!authUser || !depositAmount) return;
     setSubmitting(true);
     try {
-      const fileExt = receiptFile.name.split(".").pop();
-      const filePath = `${authUser.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, receiptFile);
-      if (uploadError) throw uploadError;
+      let receiptPath: string | null = null;
+      if (receiptFile) {
+        const fileExt = receiptFile.name.split(".").pop();
+        const filePath = `${authUser.id}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, receiptFile);
+        if (uploadError) throw uploadError;
+        receiptPath = filePath;
+      }
 
       const { error } = await supabase.from("transactions").insert({
         user_id: authUser.id,
@@ -83,7 +87,7 @@ const Finance = () => {
         amount: parseFloat(depositAmount),
         method: "bank_transfer",
         currency: "TRY",
-        receipt_url: filePath,
+        ...(receiptPath ? { receipt_url: receiptPath } : {}),
       } as any);
       if (error) throw error;
 
