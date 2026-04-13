@@ -69,7 +69,7 @@ const Finance = () => {
   };
 
   const handleDeposit = async () => {
-    if (!authUser || !depositAmount || !receiptFile) return;
+    if (!authUser || !depositAmount) return;
     setSubmitting(true);
     try {
       const fileExt = receiptFile.name.split(".").pop();
