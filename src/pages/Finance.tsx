@@ -316,41 +316,73 @@ const Finance = () => {
             </Card>
           )}
 
-          <Card className="bg-card border-border">
-            <CardContent className="p-4 space-y-3">
-              <div>
-                <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
+          <Card className="bg-card border-border overflow-hidden">
+            <CardContent className="p-5 space-y-5">
+              {/* Tutar */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold tracking-wide text-foreground/80 uppercase block">Tutar (TRY)</label>
                 <Input
                   type="number"
                   placeholder="0.00"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  className="bg-muted/50 font-mono text-lg h-12"
+                  className="bg-muted/40 font-mono text-xl h-14 border-border/60 focus:border-primary/60 transition-colors rounded-xl"
                 />
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {[1000, 5000, 10000, 25000].map((v) => (
-                  <button
-                    key={v}
-                    onClick={() => setDepositAmount(v.toString())}
-                    className="px-3 py-1.5 rounded text-xs font-mono font-medium bg-muted text-muted-foreground hover:bg-primary hover:text-primary-foreground transition-colors"
-                  >
-                    {v.toLocaleString("tr-TR")}
-                  </button>
-                ))}
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {[1000, 5000, 10000, 25000].map((v) => (
+                    <button
+                      key={v}
+                      onClick={() => setDepositAmount(v.toString())}
+                      className={`px-4 py-2 rounded-lg text-xs font-mono font-semibold border transition-all duration-200 ${
+                        depositAmount === v.toString()
+                          ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
+                          : "bg-muted/60 text-foreground/70 border-border/50 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
+                      }`}
+                    >
+                      {v.toLocaleString("tr-TR")}
+                    </button>
+                  ))}
+                </div>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-1 block">Dekont Yükle</label>
-                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
-                  <Upload className="h-6 w-6 text-muted-foreground mb-1" />
-                  <span className="text-xs text-muted-foreground">{receiptFile ? receiptFile.name : "Dekont seçin"}</span>
+              {/* Dekont */}
+              <div className="space-y-2">
+                <label className="text-sm font-semibold tracking-wide text-foreground/80 uppercase block">Dekont Yükle</label>
+                <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${
+                  receiptFile
+                    ? "border-primary/50 bg-primary/5"
+                    : "border-border/60 hover:border-primary/40 hover:bg-primary/5 bg-muted/20"
+                }`}>
+                  {receiptFile ? (
+                    <>
+                      <CheckCircle className="h-7 w-7 text-primary mb-1.5" />
+                      <span className="text-xs text-primary font-medium truncate max-w-[200px]">{receiptFile.name}</span>
+                      <span className="text-[10px] text-muted-foreground mt-0.5">Değiştirmek için tıklayın</span>
+                    </>
+                  ) : (
+                    <>
+                      <div className="p-2.5 rounded-full bg-muted/60 mb-2">
+                        <Upload className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <span className="text-xs text-muted-foreground font-medium">Dekont seçin veya sürükleyin</span>
+                      <span className="text-[10px] text-muted-foreground/60 mt-0.5">PNG, JPG, PDF</span>
+                    </>
+                  )}
                   <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
                 </label>
               </div>
 
-              <Button className="w-full h-11 font-semibold" disabled={isDepositDisabled} onClick={handleDeposit}>
-                {submitting ? "Gönderiliyor..." : "Para Yatır"}
+              <Button
+                className="w-full h-12 font-bold text-base rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200"
+                disabled={isDepositDisabled}
+                onClick={handleDeposit}
+              >
+                {submitting ? (
+                  <span className="flex items-center gap-2">
+                    <span className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
+                    Gönderiliyor...
+                  </span>
+                ) : "Para Yatır"}
               </Button>
             </CardContent>
           </Card>
