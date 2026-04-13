@@ -69,13 +69,17 @@ const Finance = () => {
   };
 
   const handleDeposit = async () => {
-    if (!authUser || !depositAmount || !receiptFile) return;
+    if (!authUser || !depositAmount) return;
     setSubmitting(true);
     try {
-      const fileExt = receiptFile.name.split(".").pop();
-      const filePath = `${authUser.id}/${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, receiptFile);
-      if (uploadError) throw uploadError;
+      let receiptPath: string | null = null;
+      if (receiptFile) {
+        const fileExt = receiptFile.name.split(".").pop();
+        const filePath = `${authUser.id}/${Date.now()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from("receipts").upload(filePath, receiptFile);
+        if (uploadError) throw uploadError;
+        receiptPath = filePath;
+      }
 
       const { error } = await supabase.from("transactions").insert({
         user_id: authUser.id,
@@ -83,7 +87,7 @@ const Finance = () => {
         amount: parseFloat(depositAmount),
         method: "bank_transfer",
         currency: "TRY",
-        receipt_url: filePath,
+        ...(receiptPath ? { receipt_url: receiptPath } : {}),
       } as any);
       if (error) throw error;
 
@@ -197,7 +201,7 @@ const Finance = () => {
     return "Reddedildi";
   };
 
-  const isDepositDisabled = !depositAmount || !receiptFile || submitting;
+  const isDepositDisabled = !depositAmount || submitting;
   const isWithdrawDisabled = !withdrawAmount || !withdrawAccountName || !withdrawIban || submitting;
 
   if (!authUser) return null;
@@ -316,73 +320,30 @@ const Finance = () => {
             </Card>
           )}
 
-          <Card className="bg-card border-border overflow-hidden">
-            <CardContent className="p-5 space-y-5">
-              {/* Tutar */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold tracking-wide text-foreground/80 uppercase block">Tutar (TRY)</label>
+          <Card className="bg-card border-border">
+            <CardContent className="p-4 space-y-3">
+              <div>
+                <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
                 <Input
                   type="number"
                   placeholder="0.00"
                   value={depositAmount}
                   onChange={(e) => setDepositAmount(e.target.value)}
-                  className="bg-muted/40 font-mono text-xl h-14 border-border/60 focus:border-primary/60 transition-colors rounded-xl"
+                  className="bg-muted/50 font-mono text-lg h-12"
                 />
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {[1000, 5000, 10000, 25000].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setDepositAmount(v.toString())}
-                      className={`px-4 py-2 rounded-lg text-xs font-mono font-semibold border transition-all duration-200 ${
-                        depositAmount === v.toString()
-                          ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
-                          : "bg-muted/60 text-foreground/70 border-border/50 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
-                      }`}
-                    >
-                      {v.toLocaleString("tr-TR")}
-                    </button>
-                  ))}
-                </div>
               </div>
 
-              {/* Dekont */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold tracking-wide text-foreground/80 uppercase block">Dekont Yükle</label>
-                <label className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-xl cursor-pointer transition-all duration-200 ${
-                  receiptFile
-                    ? "border-primary/50 bg-primary/5"
-                    : "border-border/60 hover:border-primary/40 hover:bg-primary/5 bg-muted/20"
-                }`}>
-                  {receiptFile ? (
-                    <>
-                      <CheckCircle className="h-7 w-7 text-primary mb-1.5" />
-                      <span className="text-xs text-primary font-medium truncate max-w-[200px]">{receiptFile.name}</span>
-                      <span className="text-[10px] text-muted-foreground mt-0.5">Değiştirmek için tıklayın</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="p-2.5 rounded-full bg-muted/60 mb-2">
-                        <Upload className="h-5 w-5 text-muted-foreground" />
-                      </div>
-                      <span className="text-xs text-muted-foreground font-medium">Dekont seçin veya sürükleyin</span>
-                      <span className="text-[10px] text-muted-foreground/60 mt-0.5">PNG, JPG, PDF</span>
-                    </>
-                  )}
+              <div>
+                <label className="text-sm font-medium mb-1 block">Dekont Yükle (İsteğe Bağlı)</label>
+                <label className="flex flex-col items-center justify-center w-full h-28 border-2 border-dashed border-border rounded-xl cursor-pointer hover:border-primary/50 transition-colors bg-muted/30">
+                  <Upload className="h-6 w-6 text-muted-foreground mb-1" />
+                  <span className="text-xs text-muted-foreground">{receiptFile ? receiptFile.name : "Dekont seçin"}</span>
                   <input type="file" className="hidden" accept="image/*,.pdf" onChange={(e) => setReceiptFile(e.target.files?.[0] || null)} />
                 </label>
               </div>
 
-              <Button
-                className="w-full h-12 font-bold text-base rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200"
-                disabled={isDepositDisabled}
-                onClick={handleDeposit}
-              >
-                {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
-                    Gönderiliyor...
-                  </span>
-                ) : "Para Yatır"}
+              <Button className="w-full h-11 font-semibold" disabled={isDepositDisabled} onClick={handleDeposit}>
+                {submitting ? "Gönderiliyor..." : "Para Yatır"}
               </Button>
             </CardContent>
           </Card>
@@ -390,111 +351,87 @@ const Finance = () => {
       )}
 
       {selectedMethod && activeMoneyTab === "withdraw" && (
-          <Card className="bg-card border-border overflow-hidden">
-            <CardContent className="p-5 space-y-5">
-              <div className="space-y-2">
-                <label className="text-sm font-semibold tracking-wide text-foreground/80 uppercase block">Hesap Adı</label>
+        <Card className="bg-card border-border">
+          <CardContent className="p-4 space-y-3">
+            <div>
+              <label className="text-sm font-medium mb-1 block">Hesap Adı</label>
+              <Input
+                placeholder="Ad Soyad"
+                value={withdrawAccountName}
+                onChange={(e) => setWithdrawAccountName(e.target.value)}
+                className="bg-muted/50"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">IBAN</label>
+              <div className="relative">
                 <Input
-                  placeholder="Ad Soyad"
-                  value={withdrawAccountName}
-                  onChange={(e) => setWithdrawAccountName(e.target.value)}
-                  className="bg-muted/40 border-border/60 focus:border-primary/60 transition-colors rounded-xl h-12"
+                  placeholder="TR"
+                  value={formatIban(withdrawIban)}
+                  onChange={(e) => {
+                    const raw = e.target.value.replace(/\s/g, "").toUpperCase();
+                    const digitsOnly = raw.replace(/^TR/i, "").replace(/\D/g, "");
+                    const cleaned = "TR" + digitsOnly;
+                    if (cleaned.length <= 26) {
+                      setWithdrawIban(cleaned === "TR" && raw === "" ? "" : cleaned);
+                    }
+                  }}
+                  className={`bg-muted/50 font-mono pr-20 tracking-wider ${
+                    withdrawIban.length === 26 && /^TR\d{24}$/.test(withdrawIban)
+                      ? "border-buy/50 focus-visible:ring-buy/30"
+                      : withdrawIban.length > 0 && withdrawIban.length < 26
+                      ? "border-warning/50"
+                      : ""
+                  }`}
                 />
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold tracking-wide text-foreground/80 uppercase block">IBAN</label>
-                <div className="relative">
-                  <Input
-                    placeholder="TR"
-                    value={formatIban(withdrawIban)}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/\s/g, "").toUpperCase();
-                      const digitsOnly = raw.replace(/^TR/i, "").replace(/\D/g, "");
-                      const cleaned = "TR" + digitsOnly;
-                      if (cleaned.length <= 26) {
-                        setWithdrawIban(cleaned === "TR" && raw === "" ? "" : cleaned);
+                <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+                  {withdrawIban.length === 26 && /^TR\d{24}$/.test(withdrawIban) ? (
+                    <Check className="h-4 w-4 text-buy" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground font-mono">
+                      {withdrawIban.length || 0}/26
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      try {
+                        const text = await navigator.clipboard.readText();
+                        const clean = text.replace(/\s/g, "").toUpperCase();
+                        if (clean.length <= 26) {
+                          setWithdrawIban(clean.startsWith("TR") ? clean : "TR" + clean.replace(/^TR/i, ""));
+                          toast.success("IBAN yapıştırıldı");
+                        }
+                      } catch {
+                        toast.error("Panodan okunamadı");
                       }
                     }}
-                    className={`bg-muted/40 font-mono pr-20 tracking-wider border-border/60 rounded-xl h-12 ${
-                      withdrawIban.length === 26 && /^TR\d{24}$/.test(withdrawIban)
-                        ? "border-buy/50 focus-visible:ring-buy/30"
-                        : withdrawIban.length > 0 && withdrawIban.length < 26
-                        ? "border-warning/50"
-                        : ""
-                    }`}
-                  />
-                  <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
-                    {withdrawIban.length === 26 && /^TR\d{24}$/.test(withdrawIban) ? (
-                      <Check className="h-4 w-4 text-buy" />
-                    ) : (
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {withdrawIban.length || 0}/26
-                      </span>
-                    )}
-                    <button
-                      type="button"
-                      onClick={async () => {
-                        try {
-                          const text = await navigator.clipboard.readText();
-                          const clean = text.replace(/\s/g, "").toUpperCase();
-                          if (clean.length <= 26) {
-                            setWithdrawIban(clean.startsWith("TR") ? clean : "TR" + clean.replace(/^TR/i, ""));
-                            toast.success("IBAN yapıştırıldı");
-                          }
-                        } catch {
-                          toast.error("Panodan okunamadı");
-                        }
-                      }}
-                      className="p-1.5 rounded hover:bg-muted transition-colors"
-                    >
-                      <ClipboardPaste className="h-4 w-4 text-muted-foreground" />
-                    </button>
-                  </div>
-                </div>
-                {withdrawIban.length > 0 && withdrawIban.length < 26 && (
-                  <p className="text-xs text-warning mt-1">IBAN 26 karakter olmalıdır</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <label className="text-sm font-semibold tracking-wide text-foreground/80 uppercase block">Tutar (TRY)</label>
-                <Input
-                  type="number"
-                  placeholder="0.00"
-                  value={withdrawAmount}
-                  onChange={(e) => setWithdrawAmount(e.target.value)}
-                  className="bg-muted/40 font-mono text-xl h-14 border-border/60 focus:border-primary/60 transition-colors rounded-xl"
-                />
-                <div className="flex flex-wrap gap-2 pt-1">
-                  {[1000, 5000, 10000, 25000].map((v) => (
-                    <button
-                      key={v}
-                      onClick={() => setWithdrawAmount(v.toString())}
-                      className={`px-4 py-2 rounded-lg text-xs font-mono font-semibold border transition-all duration-200 ${
-                        withdrawAmount === v.toString()
-                          ? "bg-primary text-primary-foreground border-primary shadow-md shadow-primary/20"
-                          : "bg-muted/60 text-foreground/70 border-border/50 hover:bg-primary/10 hover:border-primary/40 hover:text-primary"
-                      }`}
-                    >
-                      {v.toLocaleString("tr-TR")}
-                    </button>
-                  ))}
+                    className="p-1.5 rounded hover:bg-muted transition-colors"
+                  >
+                    <ClipboardPaste className="h-4 w-4 text-muted-foreground" />
+                  </button>
                 </div>
               </div>
+              {withdrawIban.length > 0 && withdrawIban.length < 26 && (
+                <p className="text-xs text-warning mt-1">IBAN 26 karakter olmalıdır</p>
+              )}
+            </div>
+            <div>
+              <label className="text-sm font-medium mb-1 block">Tutar (TRY)</label>
+              <Input
+                type="number"
+                placeholder="0.00"
+                value={withdrawAmount}
+                onChange={(e) => setWithdrawAmount(e.target.value)}
+                className="bg-muted/50 font-mono text-lg h-12"
+              />
+            </div>
 
-              <Button
-                className="w-full h-12 font-bold text-base rounded-xl shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-all duration-200"
-                disabled={isWithdrawDisabled}
-                onClick={handleWithdraw}
-              >
-                {submitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="animate-spin h-4 w-4 border-2 border-primary-foreground border-t-transparent rounded-full" />
-                    Gönderiliyor...
-                  </span>
-                ) : "Para Çek"}
-              </Button>
-            </CardContent>
-          </Card>
+            <Button className="w-full h-11 font-semibold" disabled={isWithdrawDisabled} onClick={handleWithdraw}>
+              {submitting ? "Gönderiliyor..." : "Para Çek"}
+            </Button>
+          </CardContent>
+        </Card>
       )}
       </div>
 
