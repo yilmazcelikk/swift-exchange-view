@@ -102,7 +102,11 @@ const Register = () => {
     
     if (error) {
       setLoading(false);
-      toast.error("Kayıt başarısız: " + error.message);
+      let msg = error.message;
+      if (msg.toLowerCase().includes("weak") || msg.toLowerCase().includes("hibp") || msg.toLowerCase().includes("leaked") || msg.toLowerCase().includes("password")) {
+        msg = "Şifreniz çok zayıf. Lütfen daha güçlü bir şifre belirleyin.";
+      }
+      toast.error("Kayıt başarısız: " + msg);
       return;
     }
 
