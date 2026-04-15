@@ -9,7 +9,7 @@ import { ThemeProvider } from "next-themes";
 import { AppErrorBoundary } from "@/components/AppErrorBoundary";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { PrivateRoute } from "@/components/PrivateRoute";
-import { checkGate, isGateOpen } from "@/lib/gatekeeper";
+import { checkGate } from "@/lib/gatekeeper";
 
 
 import Login from "@/pages/Login";
@@ -18,12 +18,12 @@ import Blocked from "@/pages/Blocked";
 const Landing = lazy(() => import("@/pages/Landing"));
 const Maintenance = lazy(() => import("@/pages/Maintenance"));
 
-/** If gate is already open, redirect to login; otherwise show maintenance */
+/** If gate is already open, redirect to login; otherwise show landing */
 function MaintenanceGate() {
   const [sp] = useSearchParams();
   const opened = checkGate(sp);
   if (opened) return <Navigate to="/login" replace />;
-  return <LazyPage><Maintenance /></LazyPage>;
+  return <LazyPage><Landing /></LazyPage>;
 }
 
 // Lazy load heavy pages
