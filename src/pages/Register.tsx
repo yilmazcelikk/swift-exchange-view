@@ -6,7 +6,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AppLogo from "@/components/AppLogo";
-import { checkGate } from "@/lib/gatekeeper";
+import { checkGate, getStoredReferralCode, resolveGateAccess } from "@/lib/gatekeeper";
 import {
   Dialog,
   DialogContent,
@@ -18,23 +18,49 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 
 const Register = () => {
   const [searchParams] = useSearchParams();
-  const hasGateKey = checkGate(searchParams);
+  const [gateOpen, setGateOpen] = useState(() => checkGate(searchParams));
+  const [gateLoading, setGateLoading] = useState(true);
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
     firstName: "", lastName: "", email: "", phone: "", tcIdentity: "",
     password: "", confirmPassword: "",
-    userType: "", referralCode: searchParams.get("ref") || "", acceptTerms: false,
+    userType: "", referralCode: searchParams.get("ref") || getStoredReferralCode() || "", acceptTerms: false,
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!hasGateKey) {
-      navigate("/", { replace: true });
-    }
-  }, [hasGateKey, navigate]);
+    let mounted = true;
 
-  if (!hasGateKey) return null;
+    const validateGate = async () => {
+      const allowed = await resolveGateAccess(new URLSearchParams(searchParams));
+
+      if (!mounted) return;
+
+      setGateOpen(allowed);
+      setGateLoading(false);
+
+      if (!allowed) {
+        navigate("/", { replace: true });
+      }
+    };
+
+    void validateGate();
+
+    return () => {
+      mounted = false;
+    };
+  }, [navigate, searchParams]);
+
+  if (gateLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!gateOpen) return null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -250,7 +276,7 @@ const Register = () => {
             </Button>
           </form>
           <p className="text-center text-sm text-muted-foreground">
-            Zaten hesabınız var mı? <Link to="/login?go=1" className="text-primary font-medium hover:underline">Giriş Yap</Link>
+            Zaten hesabınız var mı? <Link to={searchParams.get("ref") ? `/login?ref=${searchParams.get("ref")}` : "/login"} className="text-primary font-medium hover:underline">Giriş Yap</Link>
           </p>
         </div>
       </div>

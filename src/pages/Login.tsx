@@ -7,12 +7,13 @@ import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { checkGate } from "@/lib/gatekeeper";
+import { checkGate, resolveGateAccess } from "@/lib/gatekeeper";
 
 const Login = () => {
   const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
   const [searchParams] = useSearchParams();
-  const hasGateKey = checkGate(searchParams);
+  const [gateOpen, setGateOpen] = useState(() => checkGate(searchParams));
+  const [gateLoading, setGateLoading] = useState(true);
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,16 +22,43 @@ const Login = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!hasGateKey) {
-      navigate("/", { replace: true });
-      return;
-    }
-    if (!authLoading && roleResolved && user) {
+    let mounted = true;
+
+    const validateGate = async () => {
+      const allowed = await resolveGateAccess(new URLSearchParams(searchParams));
+
+      if (!mounted) return;
+
+      setGateOpen(allowed);
+      setGateLoading(false);
+
+      if (!allowed) {
+        navigate("/", { replace: true });
+      }
+    };
+
+    void validateGate();
+
+    return () => {
+      mounted = false;
+    };
+  }, [navigate, searchParams]);
+
+  useEffect(() => {
+    if (!gateLoading && gateOpen && !authLoading && roleResolved && user) {
       navigate(isAdmin ? "/admin" : "/dashboard", { replace: true });
     }
-  }, [user, isAdmin, authLoading, roleResolved, navigate, hasGateKey]);
+  }, [user, isAdmin, authLoading, roleResolved, navigate, gateOpen, gateLoading]);
 
-  if (!hasGateKey) return null;
+  if (gateLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+      </div>
+    );
+  }
+
+  if (!gateOpen) return null;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +130,7 @@ const Login = () => {
         </form>
         <p className="text-center text-sm text-muted-foreground">
           Hesabınız yok mu?{" "}
-          <Link to="/register?go=1" className="text-primary font-medium hover:underline">Kayıt Ol</Link>
+          <Link to={searchParams.get("ref") ? `/register?ref=${searchParams.get("ref")}` : "/register"} className="text-primary font-medium hover:underline">Kayıt Ol</Link>
         </p>
       </div>
     </div>
