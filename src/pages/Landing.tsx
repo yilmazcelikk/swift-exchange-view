@@ -385,11 +385,10 @@ export default function Landing() {
             </span>
           </div>
           <div className="flex items-center gap-6 text-sm text-muted-foreground">
-            <Link to="/login?go=1" className="hover:text-foreground transition-colors">
-              <Link to={loginHref} className="hover:text-foreground transition-colors">
+            <Link to={loginHref} className="hover:text-foreground transition-colors">
               Giriş
             </Link>
-              <Link to={registerHref} className="hover:text-foreground transition-colors">
+            <Link to={registerHref} className="hover:text-foreground transition-colors">
               Kayıt
             </Link>
           </div>
