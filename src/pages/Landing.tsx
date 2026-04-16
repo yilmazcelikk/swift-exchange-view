@@ -9,8 +9,11 @@ import {
   Globe,
   ArrowRight,
   ChevronDown,
+  MessageCircle,
 } from "lucide-react";
 import AppLogo from "@/components/AppLogo";
+
+const WHATSAPP_URL = "https://wa.me/905389325903";
 
 /* ── Animated grid background ── */
 function GridBackground() {
@@ -380,6 +383,27 @@ export default function Landing() {
           </div>
         </div>
       </footer>
+
+      <motion.a
+        href={WHATSAPP_URL}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="WhatsApp üzerinden bize yazın"
+        initial={{ opacity: 0, x: 24 }}
+        animate={{ opacity: 1, x: 0, y: [0, -6, 0] }}
+        transition={{
+          opacity: { duration: 0.5, delay: 0.8 },
+          x: { duration: 0.5, delay: 0.8 },
+          y: { duration: 2.4, repeat: Infinity, ease: "easeInOut" },
+        }}
+        className="fixed right-4 z-20 inline-flex items-center gap-3 rounded-full border border-border/60 bg-card/90 px-4 py-3 text-sm font-semibold text-foreground shadow-lg backdrop-blur-md transition-all hover:border-primary/40 hover:bg-card"
+        style={{ bottom: "max(1rem, env(safe-area-inset-bottom))" }}
+      >
+        <span className="flex h-11 w-11 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-md">
+          <MessageCircle className="h-5 w-5" />
+        </span>
+        <span className="hidden sm:inline">WhatsApp Destek</span>
+      </motion.a>
     </div>
   );
 }
