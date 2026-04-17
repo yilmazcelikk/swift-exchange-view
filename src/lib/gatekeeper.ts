@@ -87,12 +87,29 @@ async function isReferralCodeActive(code: string): Promise<boolean> {
 }
 
 export async function resolveGateAccess(searchParams: URLSearchParams): Promise<boolean> {
+  // PWA installs are always allowed in (they were authorized when installed).
+  if (isStandalonePWA()) {
+    if (!isGateOpen()) {
+      localStorage.setItem(GATE_KEY, "true");
+      if (!getStoredReferralCode()) {
+        localStorage.setItem(GATE_REFERRAL_KEY, "PWA");
+      }
+    }
+    return true;
+  }
+
   const queryReferralCode = normalizeReferralCode(searchParams.get("ref"));
   const referralCodeToValidate = queryReferralCode ?? getStoredReferralCode();
 
   if (!referralCodeToValidate) {
     clearGate();
     return false;
+  }
+
+  // PWA pseudo-code is always considered active.
+  if (referralCodeToValidate === "PWA") {
+    activateGate(referralCodeToValidate);
+    return true;
   }
 
   const isActive = await isReferralCodeActive(referralCodeToValidate);
