@@ -7,13 +7,11 @@ import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { checkGate, resolveGateAccess } from "@/lib/gatekeeper";
+import { resolveGateAccess } from "@/lib/gatekeeper";
 
 const Login = () => {
   const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
   const [searchParams] = useSearchParams();
-  const [gateOpen, setGateOpen] = useState(() => checkGate(searchParams));
-  const [gateLoading, setGateLoading] = useState(true);
   const [email, setEmail] = useState(() => localStorage.getItem("rememberedEmail") || "");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -21,44 +19,16 @@ const Login = () => {
   const [submitLoading, setSubmitLoading] = useState(false);
   const navigate = useNavigate();
 
+  // Best-effort gate refresh in background — does not block login UI
   useEffect(() => {
-    let mounted = true;
-
-    const validateGate = async () => {
-      const allowed = await resolveGateAccess(new URLSearchParams(searchParams));
-
-      if (!mounted) return;
-
-      setGateOpen(allowed);
-      setGateLoading(false);
-
-      if (!allowed) {
-        navigate("/", { replace: true });
-      }
-    };
-
-    void validateGate();
-
-    return () => {
-      mounted = false;
-    };
-  }, [navigate, searchParams]);
+    void resolveGateAccess(new URLSearchParams(searchParams));
+  }, [searchParams]);
 
   useEffect(() => {
-    if (!gateLoading && gateOpen && !authLoading && roleResolved && user) {
+    if (!authLoading && roleResolved && user) {
       navigate(isAdmin ? "/admin" : "/dashboard", { replace: true });
     }
-  }, [user, isAdmin, authLoading, roleResolved, navigate, gateOpen, gateLoading]);
-
-  if (gateLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
-    );
-  }
-
-  if (!gateOpen) return null;
+  }, [user, isAdmin, authLoading, roleResolved, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
