@@ -7,7 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import AppLogo from "@/components/AppLogo";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { resolveGateAccess } from "@/lib/gatekeeper";
+import { activateGate, resolveGateAccess } from "@/lib/gatekeeper";
 
 const Login = () => {
   const { user, isAdmin, loading: authLoading, roleResolved } = useAuth();
@@ -54,6 +54,9 @@ const Login = () => {
         toast.error("Oturum bilgisi alınamadı. Lütfen tekrar deneyin.");
         return;
       }
+
+      // Authenticated users are pre-authorized — open the gate so PrivateRoute won't bounce them back.
+      activateGate("AUTH");
 
       navigate("/dashboard", { replace: true });
     } catch (err) {
