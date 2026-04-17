@@ -6,7 +6,7 @@ import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import AppLogo from "@/components/AppLogo";
-import { getStoredReferralCode, resolveGateAccess } from "@/lib/gatekeeper";
+import { activateGate, getStoredReferralCode, resolveGateAccess } from "@/lib/gatekeeper";
 import {
   Dialog,
   DialogContent,
@@ -108,6 +108,8 @@ const Register = () => {
 
     setLoading(false);
     toast.success("Kayıt başarılı! Giriş yapabilirsiniz.");
+    // Pre-authorize the gate so the new user can reach login/dashboard without a ref param.
+    activateGate(validatedReferralCode || "AUTH");
     navigate("/login");
   };
 

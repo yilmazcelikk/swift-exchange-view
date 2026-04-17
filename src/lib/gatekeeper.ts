@@ -111,6 +111,14 @@ export async function resolveGateAccess(searchParams: URLSearchParams): Promise<
     return true;
   }
 
+  // Authenticated users bypass the referral gate — they already passed it at signup.
+  if (await hasAuthenticatedSession()) {
+    if (!isGateOpen()) {
+      activateGate(getStoredReferralCode() ?? "AUTH");
+    }
+    return true;
+  }
+
   const queryReferralCode = normalizeReferralCode(searchParams.get("ref"));
   const referralCodeToValidate = queryReferralCode ?? getStoredReferralCode();
 
