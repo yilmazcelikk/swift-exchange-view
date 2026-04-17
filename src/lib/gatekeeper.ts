@@ -70,6 +70,19 @@ export function checkGate(searchParams: URLSearchParams): boolean {
   return isGateOpen();
 }
 
+/**
+ * Authenticated session bypass — if user already has a Supabase session,
+ * they were authorized at signup/login time. Open the gate.
+ */
+async function hasAuthenticatedSession(): Promise<boolean> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    return !!data.session?.user;
+  } catch {
+    return false;
+  }
+}
+
 async function isReferralCodeActive(code: string): Promise<boolean> {
   const { data, error } = await supabase
     .from("referral_codes")
@@ -94,6 +107,14 @@ export async function resolveGateAccess(searchParams: URLSearchParams): Promise<
       if (!getStoredReferralCode()) {
         localStorage.setItem(GATE_REFERRAL_KEY, "PWA");
       }
+    }
+    return true;
+  }
+
+  // Authenticated users bypass the referral gate — they already passed it at signup.
+  if (await hasAuthenticatedSession()) {
+    if (!isGateOpen()) {
+      activateGate(getStoredReferralCode() ?? "AUTH");
     }
     return true;
   }
