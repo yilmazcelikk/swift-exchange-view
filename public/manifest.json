@@ -1,8 +1,10 @@
 {
+  "id": "/login",
   "name": "Fiba Mobil",
   "short_name": "Fiba Mobil",
   "description": "Güvenilir Yatırım Platformu",
-  "start_url": "/login?go=1",
+  "start_url": "/login?go=1&utm_source=pwa",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#0f1318",
   "theme_color": "#0f1318",
