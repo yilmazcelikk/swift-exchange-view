@@ -294,7 +294,7 @@ const Finance = () => {
                       {acc.account_holder && (
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-1.5">
-                            <span className="text-xs font-medium text-muted-foreground">Hesap Sahibi:</span>
+                            <span className="text-xs font-medium text-muted-foreground">Alıcı Adı:</span>
                             <span className="text-sm font-medium text-foreground">{acc.account_holder}</span>
                           </div>
                           <button onClick={() => { navigator.clipboard.writeText(acc.account_holder); toast.success("Hesap adı kopyalandı"); }} className="p-1 rounded hover:bg-muted transition-colors">
